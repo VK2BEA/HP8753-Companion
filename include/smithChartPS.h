@@ -626,7 +626,7 @@ OR INDUCTIVE SUSCEPTANCE \\(-jB/Yo\\)) \
 /prevLeftOrRight -1 def \
 \
 /formatSmithOrPolarSymbols [ [(V) /degree] [(dB) /degree] [(U) (U)] [/Omega /Omega] [(S) (S)]] def \
-/sweepSymbols [ (Hz) (Hz) (Hz) (Hz) (dBm) (s) ] def \
+/sweepSymbols [ (Hz) (Hz) (Hz) (s) (dBm) ] def \
 \
 /rightJustifyShow { \
   dup \

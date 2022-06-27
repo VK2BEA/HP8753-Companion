@@ -37,7 +37,7 @@
 
 const	gchar *formatSymbols[] = { "dB", "°", "s", "U", "U", "U", "U", "", "U", "U" };
 const	gchar *formatSmithOrPolarSymbols[][2] = { {"V", "°"}, {"dB", "°"}, {"U", "U"}, {"Ω", "Ω"}, {"S", "S"} };
-const	gchar *sweepSymbols[] = { "Hz", "Hz", "Hz", "Hz", "dBm", "s" };
+const	gchar *sweepSymbols[] = { "Hz", "Hz", "Hz", "s", "dBm" };
 
 /*!     \brief  find the width of the string in the current font
  *

@@ -333,6 +333,7 @@ plotCartesianTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlob
 					switch( pGlobal->HP8753.channels[channel].sweepType ) {
 					case eSWP_LINFREQ:
 					case eSWP_LSTFREQ:
+					default:
 						sweepValue = LIN_INTERP(pChannel->sweepStart,
 								pChannel->sweepStop, xFract);
 						break;
@@ -341,33 +342,27 @@ plotCartesianTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlob
 						logFreqStop = log10( pChannel->sweepStop );
 						sweepValue = pow( 10.0, logFreqStart + (logFreqStop-logFreqStart) * xFract );
 						break;
-					default:
-						break;
 					}
 
-					switch( pGlobal->HP8753.channels[channel].sweepType ) {
-					case eSWP_LINFREQ:
-					case eSWP_LSTFREQ:
-					case eSWP_LOGFREQ:
-						sLabel = engNotation( sweepValue, 2, eENG_SEPARATE, &sPrefix );
-						g_snprintf( sNote, BUFFER_SIZE_100, "  %sHz", sPrefix);
-						setTraceColor( cr, pGrid->overlay.bAny, channel );
-						// Where to place the text indicating the freq / value
-						if( pGrid->overlay.bAny && channel == eCH_TWO )
-							ylabel= pGrid->bottomMargin + pGrid->gridHeight * 0.09;
-						else
-							ylabel= pGrid->bottomMargin + pGrid->gridHeight;
 
-						xlabel = pGrid->leftMargin + 0.095 * pGrid->gridWidth;
+					sLabel = engNotation( sweepValue, 2, eENG_SEPARATE, &sPrefix );
+					g_snprintf( sNote, BUFFER_SIZE_100, "  %s%s", sPrefix,
+							sweepSymbols[pGlobal->HP8753.channels[channel].sweepType]);
+					setTraceColor( cr, pGrid->overlay.bAny, channel );
+					// Where to place the text indicating the freq / value
+					if( pGrid->overlay.bAny && channel == eCH_TWO )
+						ylabel= pGrid->bottomMargin + pGrid->gridHeight * 0.09;
+					else
+						ylabel= pGrid->bottomMargin + pGrid->gridHeight;
 
-						filmCreditsCairoText( cr, sLabel, sNote, 0, xlabel, ylabel, eTopLeft );
-						g_snprintf( sNote, BUFFER_SIZE_100, "%.1f", y);
-						filmCreditsCairoText( cr, sNote, "  dB", 1, xlabel, ylabel, eTopLeft);
-						g_free( sLabel );
-						break;
-					default:
-						break;
-					}
+					xlabel = pGrid->leftMargin + 0.095 * pGrid->gridWidth;
+
+					filmCreditsCairoText( cr, sLabel, sNote, 0, xlabel, ylabel, eTopLeft );
+					g_snprintf( sNote, BUFFER_SIZE_100, "%.1f", y);
+					gchar *sUnits = g_strdup_printf( "  %s", formatSymbols[pGlobal->HP8753.channels[channel].format]);
+					filmCreditsCairoText( cr, sNote, sUnits, 1, xlabel, ylabel, eTopLeft);
+					g_free( sUnits );
+					g_free( sLabel );
 				}
 			}
 		}
