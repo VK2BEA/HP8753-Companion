@@ -1,0 +1,49 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      type="topic" style="guide"
+      id="starting">
+
+  <info>
+    <link type="guide" xref="index#setup"/>
+    <revision pkgversion="7.10.1" date="2018-06-17" status="candidate" />
+
+    <credit type="author">
+      <name>Michael Katzmann</name>
+      <email>michaelk@IEEE.org</email>
+    </credit>
+
+    <include href="legal.xml" xmlns="http://www.w3.org/2001/XInclude"/>
+
+    <desc>Using HP8753 Companion for the first time</desc>
+  </info>
+  
+  <title>GPIB connection to the HP8753</title>
+
+  <p>The first and most important setup task is to establish communication with the HP8753 Network analyzer over the HPIB (GPIB).</p>
+  <p >When you start <app>Gutenberg</app> for the first time, there will be no saved calibration &amp; setup profiles nor will there be any saved traces.</p>
+  <p>A necessary prerequisite for for the program to communicate with the HP8753 is the installation of the Linux GPIB driver and libraries.</p>
+  <p>For details on installing the Linux GPIB driver refer to the site, <link href="https://linux-gpib.sourceforge.io/">https://linux-gpib.sourceforge.io/</link> 
+  or to install RPMs on a Fedora distribution, see <link href="https://copr.fedorainfracloud.org/coprs/vk2bea/GPIB/">https://copr.fedorainfracloud.org/coprs/vk2bea/GPIB/</link></p>
+
+
+<section>
+  <title>Establishing a GPIB connection to HP8753</title>
+  <steps>
+    <item><p>Select the GPIB page</p></item>
+    <item><p>Check the <em>'Use Card Index &amp; ID'</em> box to select the controller card and GPIB PID directly, or leave unchecked to refer to the GPIB controller and device by the names defined in the <code>/etc/gpib.conf</code> file. </p></item>
+    <item><p>Set the controller and HP8753 names used in the GPIB configuration file (<code>/etc/gpib.conf</code> or <code>/usr/local/etc/gpib.conf</code>), or set the card index and GPIB PID</p></item>
+    <item><p>Observe the status line to ensure that communications has been established</p></item>
+  </steps>
+  <p><media type="image" width="300" mime="image/png" src="media/HP8753-GPIBsetup.png" /></p>
+ </section>
+<section>
+  <title>Interrogate the HP8753 Learn String</title>
+  <p>Some data on the state of the HP8753 is not obtainable using the documented HPIB commands; however, these data are present embedded in the <em>Learn String</em>. The format of the <em>Learn String</em> differs between firmware versions so it is necessary to perform some probing of the netwok analyzer and examination the altered <em>Learn String</em> in order to identifi>y where the missing information is be found.</p>
+  <steps>
+   <item><p>Select the <em>Options</em> page</p></item>
+   <item><p>Press the <key>Analyze Learn String</key> to commence probing.</p><p>Settings on the HP8753 are altered using HPIB commands and the <em>Learn String</em> otained and compared to a baseline.</p></item>
+  </steps>
+  <note style="important"><p>This is a one-time process. The information on the <em>Learn String</em> (for the version of the firmware obtained from the HP8753) and the GPIB settings are saved and restored upon program start.</p></note>
+  <p><gui style="tab"></gui> </p>
+  <p><media type="image" width="300" mime="image/png" src="media/options.png" /></p>
+</section>
+</page>

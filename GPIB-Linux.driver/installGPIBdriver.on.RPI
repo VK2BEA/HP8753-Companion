@@ -1,0 +1,108 @@
+#! /bin/bash
+
+# Michael G. Katzmann - 29 Dec 2020
+
+VERSION=1.11
+
+# 1.11 - 2022-Jun-06 - update 
+
+
+### This is a script to install the linux GPIB driver from the SVN source
+## onto the raspberry-pi.
+##
+## There are, no doubt many other ways to do this but this will give you an
+## of the steps needed 
+##
+
+GPIB_VER=4.3.4
+
+GRN="\e[32m"
+BLU="\e[34m"
+BLD="\e[1m"
+
+DEF="\e[39m"
+if [[ $EUID -ne 0 ]]; then
+   echo "You must be root to run this scrpt."
+   exit 1
+fi
+
+apt-get -y install dkms fxload automake autogen flex bison subversion raspberrypi-kernel-headers libtool
+
+command -v dkms >/dev/null 2>&1 || { echo "dkms is not installed. Aborting." >&2; exit 1; }
+command -v fxload >/dev/null 2>&1 || { echo "fxload is not installed. Aborting." >&2; exit 1; }
+command -v automake >/dev/null 2>&1 || { echo "automake is not installed. Aborting." >&2; exit 1; }
+command -v autogen >/dev/null 2>&1 || { echo "autogen is not installed. Aborting." >&2; exit 1; }
+command -v libtoolize >/dev/null 2>&1 || { echo "libtool is not installed. Aborting." >&2; exit 1; }
+command -v flex >/dev/null 2>&1 || { echo "flex is not installed. Aborting." >&2; exit 1; }
+command -v bison >/dev/null 2>&1 || { echo "bison is not installed. Aborting." >&2; exit 1; }
+command -v svn >/dev/null 2>&1 || { echo "subversion is not installed. Aborting." >&2; exit 1; }
+
+dpkg -l raspberrypi-kernel-headers >/dev/null 2>&1 || { echo "raspberrypi-kernel-headers is not installed. Aborting" >&2; exit 1; }
+
+SCRIPTDIR="$(dirname "${BASH_SOURCE[0]}")"
+pushd "${SCRIPTDIR}" > /dev/null
+
+# Make and install Linux GPIB library, scripts and programms
+#  https://sourceforge.net/projects/linux-gpib/files
+
+printf "0: ${GRN}Get SVN linux gpib kernel module and user programs and firmware${DEF}\n"
+svn checkout https://svn.code.sf.net/p/linux-gpib/code/trunk linux-gpib-code
+wget --content-disposition --no-check-certificate http://linux-gpib.sourceforge.net/firmware/gpib_firmware-2008-08-10.tar.gz
+tar xvfz gpib_firmware-2008-08-10.tar.gz
+
+printf "1: ${GRN}Make and install Linux GPIB library, scripts and programms${DEF}\n"
+
+pushd linux-gpib-code/linux-gpib-user >/dev/null
+  make distclean >/dev/null
+  touch ChangeLog
+#  libtoolize
+  autoreconf -i
+  ./configure >/dev/null
+  make install >/dev/null
+  ldconfig
+popd >/dev/null
+
+# Install the gpib kernel modules so that they get installed with new kernels (use dkms)
+printf "0: ${GRN}Copy kernel module source to /usr/src for dkms${DEF}\n"
+if [[ "$(dkms status -m linux-gpib)" != "" ]]; then
+  dkms remove -m linux-gpib/${GPIB_VER} --all >/dev/null
+fi
+cp -a linux-gpib-code/linux-gpib-kernel /usr/src/linux-gpib-${GPIB_VER}
+cp dkms.conf /usr/src/linux-gpib-${GPIB_VER}
+dkms add -m linux-gpib -v ${GPIB_VER}
+dkms build -m linux-gpib -v ${GPIB_VER}
+dkms install -m linux-gpib -v ${GPIB_VER} > /dev/null
+
+# Copy the systemd service files
+#  https://copr.fedorainfracloud.org/coprs/vddvss/linux-gpib/ (with modifications of file locations for Pi-OS / Debian)
+printf "3: ${GRN}Copy the systemd service files
+     (originally from https://github.com/vddvss)${DEF}\n"
+  cp Systemd/*.service /lib/systemd/system/
+
+# Copy the script that is executed by systemd (specified in service files above) when GPIB controller is connected
+#   eventually executing gpib-config with information gathered
+printf "4: ${GRN}Copy the script that is executed by systemd (specified in service files above) when GPIB controller is connected${DEF}\n"
+  cp Systemd/linux-gpib-config-systemd /usr/libexec/
+
+# Copy udev rules to:
+#   1: configure the driver for the gpib controller type
+#   2: load the firmware (if required e.g. by Agilent/Keysight 82357b) 
+printf "5: ${GRN}Copy udev rules to:
+       - configure the driver for the gpib controller type
+       - load the firmware (if required e.g. by Agilent/Keysight 82357b)${DEF}\n" 
+  cp Systemd/{60-linux-gpib-adapter.rules,61-linux-gpib-firmware.rules} /etc/udev/rules.d/
+
+# Copy firmare files:
+printf "6: ${GRN}Copy firmare files ( originally from https://linux-gpib.sourceforge.io )${DEF}\n"
+  cp -a gpib_firmware-2008-08-10/{agilent_82357a,hp_82341,hp_82350a,ni_gpib_usb_b} /lib/firmware
+printf "6a: ${GRN}Trigger reload of udev rules${DEF}\n"
+  udevadm control --reload
+# Copy gpib configuration file (a convienience)
+printf "7: ${GRN}Copy gpib configuration file ${BLU} (a convienience .. edit for your controller & devices${DEF})\n"
+  cp gpib.conf /etc/
+
+popd > /dev/null
+
+printf "${BLD}\nUse 'ibtest' or 'ibterm' to test GPIB...${NOR}
+
+

@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# This script configures the Linux-GPIB driver for Agilent 82357A/B and National
+# Instruments GPIB-USB adapters. It is intended to be called from a systemd unit
+# file.
+
+usage() {
+    echo "Usage: $0 <sysfs path>"
+    echo -ne "Configure Linux GPIB driver for Agilent 82357A/B and NI "
+    echo "adapters at <sysfs path>."
+}
+
+case $1 in
+    -h|--help)
+        usage
+        exit 0
+        ;;
+    ?*)
+        # Get the adapter serial number from sysfs. This isn't necessarily the
+        # same as the ID_SERIAL_SHORT environment variable, which udev can
+        # mangle, but it will be the same as the serial number in struct
+        # usb_device, which the --serial parameter of gpib_config matches
+        # against.
+        serial_from_sysfs=$(cat $1/serial)
+
+        # Since we can only realistically pass one argument into the systemd
+        # unit file, we can get the environment variables defined in the udev
+        # rules from udevadm, See:
+        # https://superuser.com/questions/924683/passing-udev-environment-variables-to-systemd-service-execution
+        eval $(udevadm info --query=env --export $1)
+
+        /usr/bin/logger --journald <<end
+MESSAGE_ID=a50ec012c08b44d28a3bdcfe92951e1a
+MESSAGE=Preparing to configure $ID_GPIB_BOARD_TYPE adapater with serial number $serial_from_sysfs on /dev/gbib$ID_GPIB_MINOR
+end
+        echo "$MEASSAGE" | systemd-cat -p info
+        /usr/local/sbin/gpib_config \
+            --minor $ID_GPIB_MINOR \
+            --board-type $ID_GPIB_BOARD_TYPE \
+#           --serial $serial_from_sysfs
+        ;;
+    *)
+        usage
+        exit 1
+esac
+

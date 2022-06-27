@@ -1,0 +1,9 @@
+[Unit]
+Description=NI GPIB-USB-B firmware loader
+
+[Service]
+Environment=NI_FWDIR="/lib/firmware/ni_usb_gpib"
+Type=oneshot
+RemainAfterExit=no
+TimeoutSec=30
+ExecStart=/sbin/fxload -D %I -t fx2 -I ${NI_FWDIR}/niusbb_firmware.hex -s ${NI_FWDIR}/niusbb_loader.hex

@@ -1,0 +1,42 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      xmlns:its="http://www.w3.org/2005/11/its"
+      type="topic" style="guide"
+      id="overview">
+
+  <info>
+    <link type="guide" xref="index" group="#first"/>
+    <revision pkgversion="7.10.1" date="2018-06-17" status="candidate" />
+
+    <credit type="author">
+      <name>Michael Katzmann</name>
+      <email its:translate="no">michaelk@IEEE.org</email>
+    </credit>
+
+    <include href="legal.xml" xmlns="http://www.w3.org/2001/XInclude"/>
+
+    <desc></desc>
+  </info>
+
+  <title>Overview</title>
+
+  <p><app>HP8753 Companion</app> is a program to enhance and extend the capabilities of the Hewlett Packard 8753 Network Anlayzer</p>
+  <p>The 8753 was built to connect to peripherals <em>(disk drives, plotters)</em> that are difficult to obtain thirty years after release or have functions that can be better performed by more modern, cheaper and more capable devices.</p>
+  <p>Communicating with network analyzer over the HPIB, the HP8753 Companion can:</p>
+  <list>
+  <item><p>Save the calibration correction and setup profile</p></item>
+  <item><p>Restore previously saved calibration correction and setup profiles</p></item>
+  <item><p>Display and save the traces shown on the HP8753</p></item>
+  <item><p>Display previously saved traces</p></item>
+  <item><p>Using the mouse, interrogate the displayed traces</p></item>
+  <item><p>Save traces, or trace data in several formats:</p>
+     <list>
+   	<item><p>PNG image</p></item>
+        <item><p>PDF page</p></item>
+        <item><p>CSV file</p></item>
+        <item><p>High resolution Smith chart PDF</p></item>
+        <item><p>Touchstone S2P file</p></item>
+    </list>
+  </item>
+</list>
+
+</page>

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=HP8753 Companion
+Comment=Save and  restore calibration and traces to the HP8753 network analyzer
+Exec=hp8753
+Icon=hp8753
+Categories=Application;Electronics;
+Terminal=false
+Type=Application
+Encoding=UTF-8
+X-Desktop-File-Install-Version=0.21

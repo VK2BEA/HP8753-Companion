@@ -1,0 +1,18 @@
+#set mode/ownership for gpib device files
+KERNEL=="gpib[0-9]*", MODE="0660", GROUP="gpib"
+
+#example specifying NI gpib-usb-hs+ with serial number 01ABC414 should be
+#configured on /dev/gpib1
+#SUBSYSTEM=="usb", ACTION=="add|change", ATTRS{idVendor}=="3923", ATTRS{idProduct}=="7618", ATTRS{serial}=="01ABC414", ENV{GPIB_CONFIG_OPTIONS}="--minor 1"
+
+#example specifying that an agilent_82357a with serial number MY12345678
+#should be configured on /dev/gpib2
+#SUBSYSTEM=="usb", ACTION=="add|change", ATTRS{idVendor}=="0957", ATTRS{idProduct}=="0107", ATTRS{serial}=="MY12345678", ENV{GPIB_CONFIG_OPTIONS}="--minor 2"
+
+#example specifying that an agilent_82357b with serial number MY0986754
+#should be configured on /dev/gpib3
+#SUBSYSTEM=="usb", ACTION=="add|change", ATTRS{idVendor}=="0957", ATTRS{idProduct}=="0718", ATTRS{serial}=="MY0987654", ENV{GPIB_CONFIG_OPTIONS}="--minor 3"
+
+#example specifying a board with a specific device path should be
+#configured on /dev/gpib4
+#ACTION=="add|change", DEVPATH=="/devices/pci0000:00/0000:00:13.5/usb1/1-1/1-1:1.0", ENV{GPIB_CONFIG_OPTIONS}="--minor 4"

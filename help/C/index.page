@@ -1,0 +1,40 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      xmlns:its="http://www.w3.org/2005/11/its"
+      xmlns:e="http://projectmallard.org/experimental/"
+      type="guide" style="task"
+      id="index">
+
+  <info>
+    <revision pkgversion="7.10.1" date="2018-06-17" status="review"/>
+    <title type="text">HP8753 Companion</title>
+    <include href="legal.xml" xmlns="http://www.w3.org/2001/XInclude"/>
+
+    <credit type="author">
+      <name>Michael G. Katzmann (NV3Z / VK2BEA / G4NYV)</name>
+    </credit>
+
+    <desc><app>HP8753 Companion</app>, a program to extract, save and restore setup, colibration and trace data.</desc>
+
+  </info>
+
+  <title>
+    <media its:translate="no" style = "floatstart center" type="image" mime="image/png" src="media/HP8753C.png" width="60"/>
+    HP8753 Companion
+  </title>
+  <p></p>
+  <p><app>HP8753 Companion</app> is a program for Linux to enhance and extend the capabilities of the Hewlett Packard 8753 Network Anlayzer</p>
+  <p>The computer communicates with the network analyzer over the GPIB (aka HPIB and IEEE-488) bus.</p>
+  <p>The calibration and setup configuration of the analyzer may be retrieved from the HP8753 for storage and can be sent back at a later time to restore 
+  the operating state.</p>
+  <p>The trace data can be read from the analyzer and displayed, printed or saved as an image. The plots which include marker data (if enabled) are of higher
+  resolution than is shown on the HP8753 screen.</p>
+  
+  <section id="setup" style="2column">
+    <title>Setup and Options</title>
+  </section>
+
+  <section id="operations" style="2column">
+    <title>Operation</title>
+  </section>
+
+</page>

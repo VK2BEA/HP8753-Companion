@@ -1,0 +1,64 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      xmlns:its="http://www.w3.org/2005/11/its"
+      type="topic" style="guide"
+      id="calibrationFunction">
+
+  <info>
+    <link type="guide" xref="index#operations"/>
+    <revision pkgversion="7.10.1" date="2018-06-17" status="candidate" />
+
+    <credit type="author">
+      <name>Michael Katzmann</name>
+      <email its:translate="no">michaelk@IEEE.org</email>
+    </credit>
+
+    <include href="legal.xml" xmlns="http://www.w3.org/2001/XInclude"/>
+
+    <desc>Save and restore the setup and calibration sate of the HP8753 Network analyzer</desc>
+  </info>
+
+  <title>HP8753 Setup and Calibration</title>
+  <p>The setup and calibration error correction arrays of the HP8753 Network Analyzer may be accessed via the HPIB. A user may use <app>HP8753 Companion</app> to retrieve this information, store it in a database and rapidly retrieve it for later system restoration.</p>
+  <p>Typically, the calibration process is time consuming. Frequently though, the same setup and configuration is used repeatedly for measurements over a frequency range of interest and using the same cabling arrangement. It is thus advantageous to be able to quickly restore the analyzer to an operational state ready for measurement.</p> 
+  <media its:translate="no" type="image" mime="image/png" src="media/setup+calibration.png" />
+  
+    <section id="calibration" style="2column">
+    <title>Operation to save and restore setup and calibration</title>
+    <p>The calibration coefficient arrays of the HP8753 may be extracted and saved for later restoration.</p>
+    <p>Since the calibration is applicable only to a particular setup <em>(frequency span, resolution bandwidth and number of points)</em>, the setup (learn string) is also extracted and saved with the calibration arrays.</p>
+    <p>The number of calibration arrays saved is related to the calibration type and whether the sources for the two channels are coupled. This number can be up to twenty four for a full 2-port calibration with uncoupled channels.</p>
+    <p>A descriptive note may be saved with the setup and calibration. This is intented to assist the user in identifying the configuration relevent to the calibration.</p>
+    <section>
+    <table>
+      <tr>
+  	<td><p><key>Save</key></p></td>
+  	<td>
+  	    <p>Ensure the <em>Cal. &amp; Setup</em> radio button is selected.</p>
+  	    <p>Either select an existing profile using the drop-down selection box, or enter the name of a profile to create. Optionally add or modify the descriptive note in the edit box of the <em>Calibration</em> page.</p>
+  	    <p>Press the <em>save</em> button is initiate the retrieval (from the 8753) and storage (to a database) of the current setup and calibration arrays.</p>
+        </td>
+     </tr>
+     <tr>
+  	<td><p><key>Restore</key></p></td>
+  	<td><p>Select the <em>Cal. &amp; Setup</em> radio button.</p>
+  	    <p>Select a setup and calibration profile using the drop-down selection box. The calibration note and other relevant information describing the setup is displayed.</p>
+  	    <p>Press the <em>restore</em> button to recover the selected setup and calibration profile from the database which is sent this to the 8753.</p></td>
+     </tr>
+     <tr>
+  	<td><p><key>Delete</key></p></td>
+  	<td><p>Select the <em>Cal. &amp; Setup</em> radio button.</p>
+  	    <p>Select a setup and calibration profile using the drop-down selection box. The calibration note and other relevant information describing the setup is displayed.</p>
+  	    <p>Press the <em>delete</em> button to delete the profile from the database. The 8753 is not effected by this action.</p></td>
+     </tr>
+     </table>
+
+    </section>
+
+    <section id="calibrationNotes" style="2column">
+    	<p>If <em>interpolative correction</em> has occured, the interpolated callibration coefficient arrays are saved and restored instead of the original calibration</p>
+   	 <note style="important"><p>Prior to extracting the settings (learn string), the interpolative correction setting is turned off (if enabled).</p>
+   	 	<p>Upon recovery of the settings and calibration arrays, <em>interpolative correction</em> is re-enabled (if it was originally enabled). This dramatically speeds up the restoration of the setup and calibration</p></note>
+   	<note style="bug"><p>A quirk of this procedure is that the HP8753 display calibration notification shows the symbol <code>C</code> rather than <code>C?</code> when the interplative corrected calibration is restored.</p></note>
+	</section>
+  </section>
+</page>

@@ -1,0 +1,12 @@
+[Unit]
+Description=Linux-GPIB configuration service
+
+After=%i.device
+Requires=%i.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=no
+TimeoutSec=30
+ExecStart=/usr/libexec/linux-gpib-config-systemd %f
+

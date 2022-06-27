@@ -1,0 +1,45 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      type="topic" style="guide"
+      id="options">
+
+  <info>
+    <link type="guide" xref="index#setup"/>
+    <revision pkgversion="7.10.1" date="2018-06-17" status="candidate" />
+
+    <credit type="author">
+      <name>Michael Katzmann</name>
+      <email>michaelk@IEEE.org</email>
+    </credit>
+
+    <include href="legal.xml" xmlns="http://www.w3.org/2001/XInclude"/>
+
+    <desc>Available option settings</desc>
+  </info>
+  
+  <title>Options</title>
+  <p><media type="image" width="300" mime="image/png" src="media/options.png" /></p>
+  <p>There are several options available to alter the display of traces</p>
+  <section id="interploation">
+     <title>Bezier polar &amp; Smith spline</title>
+    <p>The HP8753 linearly interpolates between sample points. This is may be appropriate with cartesian plots; however, it produces less convining results on polar and Smith plots. </p>
+    <p>The user has the ability to select Bezier interolation for polar and Smith plots. This will draw a Bezier curve between points that more smoothely renders these plots 
+       <em>(the second derivative of the curve is zero at the sample points)</em></p>
+    <p>The composite Bezier curve exactly goes through all samples, it is only the interpolated points between samples that differ from the linearly interpolated plot.</p>
+    <note style="information"><p>Since the markers are sampled on the HP8753 using linear interpolation, the Bezier interpolated curves may not necessarily exactly go through the marker points.</p></note>
+  </section>
+  <section id="date+time">
+    <title>Show Date &amp; Time on plot</title>
+    <p>Display the date and time that the trace was captured on the plot.</p>
+  </section>
+  <section id="admitance">
+    <title>Admitance / Susceptance Smith grid</title>
+    <p>Show the admitance and susceptance grid or the impeadance and reactance grids on Smith plots.</p>
+    <p>This also changes the display for live markers.</p>
+  </section>
+  <section id="delta">
+    <title>Delta marker actual values</title>
+    <p>When using delta markers, the HP8753 displays the stimulus and response values of the selected reference marker as zero.</p>
+    <p>This option is available to display the absolute value of the reference marker stimulus and response values.</p>
+  </section>
+
+</page>

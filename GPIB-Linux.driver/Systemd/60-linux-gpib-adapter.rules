@@ -1,0 +1,25 @@
+# Give systemd access to all gpib device events
+KERNEL=="gpib[0-9]*", TAG+="systemd"
+
+# Allow users to have access to /dev/gpib*
+ACTION!="remove", KERNEL=="gpib[0-9]*", TAG+="uaccess"
+
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", GOTO="usb_start"
+GOTO="gpib_adapter_end"
+LABEL="usb_start"
+
+# Give systemd access to all supported adapters, including those without firmware
+ENV{PRODUCT}=="957/107/*|957/7/*|957/[57]18/*", ENV{ID_GPIB_BOARD_TYPE}="agilent_82357a", TAG+="systemd"
+ENV{PRODUCT}=="3923/702[ab]/*|3923/713b/*|3923/709b/*|3923/7618/*", ENV{ID_GPIB_BOARD_TYPE}="ni_usb_b", TAG+="systemd"
+
+# Agilent/Keysight 82357A/B with firmware loaded
+ATTR{idVendor}=="0957", ATTR{idProduct}=="0107|0718", ENV{ID_GPIB_ADAPTER}="1"
+# NI adapters with firmware loaded
+ATTR{idVendor}=="3923", ATTR{idProduct}=="702a|709b|7618", ENV{ID_GPIB_ADAPTER}="1"
+
+# Default to minor id = 0
+ENV{ID_GPIB_ADAPTER}=="1", ENV{ID_GPIB_MINOR}!="[0-9]|[0-9][0-9]", ENV{ID_GPIB_MINOR}="0"
+
+ENV{ID_GPIB_ADAPTER}=="1", ENV{SYSTEMD_WANTS}="linux-gpib-config@.service"
+
+LABEL="gpib_adapter_end"
