@@ -12,9 +12,8 @@ This is a program to augment functionality of the HP 8753 Vector Nework Analyzer
 4. Save trace data in CSV or Touchstone S2P format
 5. Print traces to connected printer
 
-Please see the YouTube description here:
-
-[![HP8753 Companion video](https://img.youtube.com/vi/ORWQE22tbRo/0.jpg)](https://www.youtube.com/watch?v=ORWQE22tbRo)
+Please see the YouTube description here:  
+[![HP8753 Companion video](https://user-images.githubusercontent.com/3782222/175981747-694a58f8-853c-42fa-a6b7-16cd8f814a27.png)](https://www.youtube.com/watch?v=ORWQE22tbRo)
 
 To install on the Linux Fedora distribution:
 -------------------------------------------
