@@ -192,7 +192,11 @@ plotSmithGrid (cairo_t *cr, gboolean bAnnotate, tGridParameters *pGrid, eChannel
 			x = Rcircles[i] / (Rcircles[i] + 1.0);
 			if( bAdmitance )
 				x = -x;
+#ifdef FIFTY_OHM_GREEN
 			if( Rcircles[i] == 1.0 ) {
+#else
+			if( FALSE ) {
+#endif
 				cairo_stroke( cr );
 				cairo_save( cr );
 				cairo_set_line_width (cr, SMITH_LINE_THICKNESS * 2 * gammaScale);
