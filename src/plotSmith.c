@@ -597,7 +597,7 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 
 				// draw circle around response point on trace
 				setCairoColor(cr, eColorRed );
-				cairo_set_line_width (cr, 2 / pGrid->scale);
+				cairo_set_line_width (cr, (pGrid->areaWidth / 1000.0 * 3.0) / pGrid->scale);
 				cairo_new_path( cr );
 				if (bValidSample) {
 					cairo_arc( cr, gammaReal, gammaImag, UNIT_CIRCLE * gammaScale/50.0, 0.0, 2 * G_PI );
@@ -646,7 +646,7 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 				}
 
 				setCairoColor(cr, eColorRed );
-				cairo_set_line_width (cr, 2.0);
+				cairo_set_line_width (cr, pGrid->areaWidth / 1000.0 * 3.0);
 				// the actual xMouse position must be rescaled and translated
 				// because 0,0 is at the center of the smith chart
 				cairo_move_to( cr, xMouse,
