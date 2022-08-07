@@ -18,11 +18,23 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.02"
+   #define VERSION "1.10-2"
 #endif
 
 #include <glib-2.0/glib.h>
 #include <gpib/ib.h>
+#include "calibrationKit.h"
+
+/*!     \brief Debugging levels
+ */
+enum _debug
+{
+        eDEBUG_NONE      = 0,
+        eDEBUG_INFO      = 1,
+        eDEBUG_MINOR     = 3,
+        eDEBUG_EXTENSIVE = 5,
+        eDEBUG_MAXIMUM   = 7
+};
 #include <gtk/gtk.h>
 #include <cairo/cairo.h>
 
@@ -122,8 +134,7 @@ typedef enum {
 	eColorLast
 } eColor;
 
-#define COLOR_GRID			eColorLightBlue
-#define COLOR_GRID_OVERLAY	eColorLightPeach
+typedef enum { eDB_CALandSETUP, eDB_TRACE, eDB_CALKIT } tDBtable;
 
 extern const tGrid gridType[];
 
@@ -229,9 +240,11 @@ typedef struct {
 
 typedef enum { eCH_ONE = 0, eCH_SINGLE = 0, eCH_TWO = 1, eNUM_CH = 2, eCH_BOTH = 2 } eChannel;
 
-#define CH_ONE_COLOR	eColorDarkGreen
-#define CH_TWO_COLOR	eColorDarkBlue
-#define CH_ALL_COLOR	eColorBlack
+#define CH_ONE_COLOR				eColorDarkGreen
+#define CH_TWO_COLOR				eColorDarkBlue
+#define CH_ALL_COLOR				eColorBlack
+#define COLOR_GRID					eColorLightBlue
+#define COLOR_GRID_OVERLAY	eColorLightPeach
 
 enum { eNoInterplativeCalibration = 0, eInterplativeCalibration = 1, eInterplativeCalibrationButNotEnabled = 2 };
 typedef struct {
@@ -306,8 +319,8 @@ typedef struct {
 typedef struct {
 	tHP8753 HP8753;
 	tHP8753cal HP8753cal;
+	tHP8753calibrationKit HP8753calibrationKit;
 
-	GHashTable *widgetHashTable;
 	struct {
 		unsigned short bSmithSpline     		: 1;
 		unsigned short bGPIB_UseCardNoAndPID	: 1;
@@ -315,9 +328,12 @@ typedef struct {
 		unsigned short bShowDateTime			: 1;
 		unsigned short bAdmitanceSmith			: 1;
 		unsigned short bDeltaMarkerZero			: 1;
+		unsigned short bSaveUserKit             : 1;
 		unsigned short bRunning         		: 1;
 		unsigned short bbDebug					: 3;
 	} flags;
+
+	GHashTable *widgetHashTable;
 
 	gint	 GPIBcontrollerIndex,  GPIBdevicePID;
 	gchar 	*sGPIBcontrollerName, *sGPIBdeviceName;
@@ -326,6 +342,7 @@ typedef struct {
 	gchar			 *sLastDirectory;
 	gchar			 *sCalProfile;
 	gchar			 *sTraceProfile;
+	gchar			 *sCalKit;
 
 	GSource *		messageEventSource;
 	GAsyncQueue *	messageQueueToMain;
@@ -333,6 +350,7 @@ typedef struct {
 
 	GList *pCalList;
 	GList *pTraceList;
+	GList *pCalKitList;
 
 	GThread * pGThread;
 	tComplex mousePosition[ eNUM_CH ];
@@ -416,10 +434,14 @@ gint recoverTraceData( tGlobal *, gchar * );
 gint saveCalibrationAndSetup( tGlobal *, gchar * );
 gint saveLearnStringAnalysis( tGlobal *, tLearnStringIndexes * );
 gint saveTraceData( tGlobal *, gchar * );
-gint getSavedSetupsAndCal(tGlobal *);
+gint inventorySavedSetupsAndCal(tGlobal *);
 gint compareCalItem( gpointer , gpointer );
-guint getSavedTraceNames( tGlobal * );
-guint deleteDBentry( tGlobal *, gchar *, gboolean );
+guint inventorySavedTraceNames( tGlobal * );
+gint inventorySavedCalibrationKits( tGlobal * );
+gint compareCalKitIdentifierItem( gpointer pCalKitIdentfierItem, gpointer sLabel );
+gint recoverCalibrationKit(tGlobal *pGlobal, gchar *sLabel);
+gint saveCalKit(tGlobal *pGlobal);
+guint deleteDBentry( tGlobal *, gchar *, tDBtable );
 void hide_Frame_Plot_B (tGlobal *);
 
 void FORM1toDouble( guint8 *, gdouble *, gdouble * );
@@ -443,6 +465,7 @@ gint recoverProgramOptions( tGlobal * ) ;
 gboolean setGtkComboBox( GtkComboBox *, gchar * );
 gint compareCalItemForSort( gpointer pCalItem1, gpointer pCalItem2 );
 void setUseGPIBcardNoAndPID( tGlobal *, gboolean );
+gint sendHP8753calibrationKit(gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );
 
 extern tGlobal globalData;
 
@@ -475,6 +498,7 @@ void updateCalCombobox( gpointer , gpointer  );
 void sensitiseControlsInUse( tGlobal *pGlobal, gboolean bSensitive );
 GList *createIconList( void );
 gint getTimeStamp( gchar ** );
+void logVersion(void);
 #define DATETIME_SIZE  64
 
 #define NHGRIDS   10
@@ -511,6 +535,16 @@ g_memdup2(gconstpointer mem, gsize byte_size) {
 }
 #endif /* !GLIB_CHECK_VERSION(2, 67, 3) */
 
+#define LOG( level, message, ...) \
+    g_log_structured (G_LOG_DOMAIN, level, \
+		  "SYSLOG_IDENTIFIER", "hp8753", \
+		  "CODE_FUNC", __FUNCTION__, \
+		  "CODE_LINE", G_STRINGIFY(__LINE__), \
+		  "MESSAGE", message, ## __VA_ARGS__)
+
+#define DBG( level, message, ... ) \
+	if( globalData.flags.bbDebug >= level ) \
+		LOG( G_LOG_LEVEL_DEBUG, message, ## __VA_ARGS__)
 
 #undef DELTA_MARKER_ZERO
 #endif /* HP8753COMMS_H_ */

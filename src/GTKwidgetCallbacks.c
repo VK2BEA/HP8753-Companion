@@ -22,7 +22,8 @@
 #include <cairo/cairo.h>
 #include <cairo/cairo-pdf.h>
 #include <glib-2.0/glib.h>
-#include <hp8753.h>
+#include "hp8753.h"
+#include "calibrationKit.h"
 
 #include "messageEvent.h"
 
@@ -80,11 +81,14 @@ sensitiseControlsInUse( tGlobal *pGlobal, gboolean bSensitive ) {
 			g_hash_table_lookup ( pGlobal->widgetHashTable,	(gconstpointer)"WID_Btn_AnalyzeLS") );
 	GtkWidget *wBtnS2P = GTK_WIDGET(
 			g_hash_table_lookup ( pGlobal->widgetHashTable,	(gconstpointer)"WID_S2P") );
+	GtkWidget *wBtnSendCalKit = GTK_WIDGET(
+			g_hash_table_lookup ( pGlobal->widgetHashTable,	(gconstpointer)"WID_Btn_SendCalKit") );
 
 	gtk_widget_set_sensitive ( wBBsaveRecall, bSensitive );
 	gtk_widget_set_sensitive ( wBBgetTrace, bSensitive );
 	gtk_widget_set_sensitive ( wBtnAnalyzeLS, bSensitive );
 	gtk_widget_set_sensitive ( wBtnS2P, bSensitive );
+	gtk_widget_set_sensitive ( wBtnSendCalKit, g_list_length( pGlobal->pCalKitList ) > 0 ? bSensitive : FALSE );
 }
 
 void
@@ -304,7 +308,8 @@ CB_BtnRemove (GtkButton * button, tGlobal *pGlobal)
 		}
 		gtk_widget_destroy(dialog);
 
-		if( bAuthorized && deleteDBentry( pGlobal, name, pGlobal->flags.bCalibrationOrTrace ) == 0 ) {
+		if( bAuthorized && deleteDBentry( pGlobal, name,
+				pGlobal->flags.bCalibrationOrTrace ? eDB_CALandSETUP : eDB_TRACE ) == 0 ) {
 			// look through all the combobox labels to see if the selected text matches.
 			GtkTreeModel *tm = gtk_combo_box_get_model(GTK_COMBO_BOX(wCombo));
 
@@ -351,7 +356,7 @@ CB_BtnS2P (GtkButton * button, tGlobal *pGlobal)
     GDateTime *now = g_date_time_new_now_local ();
     static gchar *lastFilename = NULL;
     gchar *sFilename = NULL;
-    gchar *filenameWithoutPath = NULL;
+    GtkFileFilter *filter;
 
 	dialog = gtk_file_chooser_dialog_new ("Acquire S-paramater data and save to S2P file",
 					NULL,
@@ -360,6 +365,15 @@ CB_BtnS2P (GtkButton * button, tGlobal *pGlobal)
 					"_Save", GTK_RESPONSE_ACCEPT,
 					NULL);
 	chooser = GTK_FILE_CHOOSER (dialog);
+	filter = gtk_file_filter_new ();
+    gtk_file_filter_set_name ( filter, ".s2p" );
+    gtk_file_filter_add_pattern (filter, "*.[sS][12][pP]");
+	gtk_file_chooser_add_filter ( chooser, filter );
+	//gtk_file_chooser_set_filter ( chooser, filter );
+    filter = gtk_file_filter_new ();
+    gtk_file_filter_set_name (filter, "All files");
+    gtk_file_filter_add_pattern (filter, "*");
+    gtk_file_chooser_add_filter (chooser, filter);
 
 	gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
 
@@ -376,31 +390,23 @@ CB_BtnS2P (GtkButton * button, tGlobal *pGlobal)
 		gchar *filename, *extPos = NULL;
 
 		filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-		filenameWithoutPath = g_strrstr( filename, "/");
-
-		if( filenameWithoutPath == NULL )
-			filenameWithoutPath = filename;
-		else
-			filenameWithoutPath++;
-
-		if( strcmp( filenameWithoutPath, sFilename ) != 0 ) {
-			g_free( lastFilename );
-			lastFilename  = g_strdup( filenameWithoutPath );
-		}
 
 		g_free( pGlobal->sLastDirectory );
 		pGlobal->sLastDirectory = gtk_file_chooser_get_current_folder( chooser );
 
-		// now do high resolution smith charts
-		// create two filenames from the provided name 'name.1.png and name.2.png'
 		GString *sFilename = g_string_new( filename );
+		g_free( filename );	// don't need this
 		extPos = g_strrstr( sFilename->str, ".s2p" );
 		if( !extPos )
 			g_string_append( sFilename, ".s2p");
 
+		g_free( lastFilename );
+		lastFilename = g_strdup(sFilename->str);
+
 		sensitiseControlsInUse( pGlobal, FALSE );
 		postDataToGPIBThread (TG_MEASURE_and_RETRIEVe_S2P_from_HP8753, sFilename->str);
 
+		// sFilename->str is freed by thread
 		g_string_free (sFilename, FALSE);
 	}
 
@@ -441,10 +447,12 @@ CB_BtnSavePNG (GtkButton * button, tGlobal *pGlobal)
     cairo_surface_t *cs;
     GtkWidget *dialog;
     GtkFileChooser *chooser;
-    GDateTime *now = g_date_time_new_now_utc ();
+    GtkFileFilter *filter;
+    GDateTime *now = g_date_time_new_now_local ();
     static gchar *lastFilename = NULL;
     gchar *sFilename = NULL;
-    gchar *filenameWithoutPath = NULL;
+    gchar *sSuggestedFilename = g_date_time_format( now, "HP8753.%d%b%y.%H%M%S.png");
+    static gboolean bUsedSuggested = FALSE;
 	gboolean bBoth = pGlobal->HP8753.flags.bDualChannel
 			&& pGlobal->HP8753.flags.bSplitChannels;
 
@@ -467,38 +475,47 @@ CB_BtnSavePNG (GtkButton * button, tGlobal *pGlobal)
 					NULL);
 	chooser = GTK_FILE_CHOOSER (dialog);
 
+	filter = gtk_file_filter_new ();
+    gtk_file_filter_set_name ( filter, ".png" );
+    gtk_file_filter_add_pattern (filter, "*.[pP][nN][gG]");
+	gtk_file_chooser_add_filter ( chooser, filter );
+	//gtk_file_chooser_set_filter ( chooser, filter );
+    filter = gtk_file_filter_new ();
+    gtk_file_filter_set_name (filter, "All files");
+    gtk_file_filter_add_pattern (filter, "*");
+    gtk_file_chooser_add_filter (chooser, filter);
+
 	gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
 
-	if( lastFilename )
+	if( lastFilename && !bUsedSuggested) {
 		sFilename = g_strdup( lastFilename);
-	else
-		sFilename = g_date_time_format( now, "HP8753C.%d%b%y.%k%M%S.png");
-	gtk_file_chooser_set_current_name (chooser, sFilename);
+		gtk_file_chooser_set_filename( chooser, sFilename );
+	} else {
+		sFilename = g_strdup( sSuggestedFilename );
+		gtk_file_chooser_set_current_name (chooser, sFilename);
+	}
 
 	if( pGlobal->sLastDirectory)
 		gtk_file_chooser_set_current_folder( chooser, pGlobal->sLastDirectory );
 
 	if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
-		gchar *filename;
+		gchar *sChosenFilename;
 
-		filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-		filenameWithoutPath = g_strrstr( filename, "/");
+		sChosenFilename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
-		if( filenameWithoutPath == NULL )
-			filenameWithoutPath = filename;
-		else
-			filenameWithoutPath++;
+		// see if they used our suggestion
+		gchar *sBaseName = g_path_get_basename( sChosenFilename );
+		bUsedSuggested = (g_strcmp0( sBaseName, sSuggestedFilename ) == 0);
+		g_free( sBaseName );
 
-		if( strcmp( filenameWithoutPath, sFilename ) != 0 ) {
-			g_free( lastFilename );
-			lastFilename  = g_strdup( filenameWithoutPath );
-		}
+		g_free( lastFilename );
+		lastFilename = g_strdup( sChosenFilename );
 
 		cairo_surface_flush (cs);
 		if ( bBoth ) {
 			gchar *extPos = NULL;
 			// create two filenames from the provided name 'name.1.png and name.2.png'
-			GString *sFilename = g_string_new( filename );
+			GString *sFilename = g_string_new( sChosenFilename );
 			extPos = g_strrstr( sFilename->str, ".png" );
 			if( extPos )
 				g_string_insert( sFilename, extPos  - sFilename->str, ".1" );
@@ -518,12 +535,13 @@ CB_BtnSavePNG (GtkButton * button, tGlobal *pGlobal)
 
 			g_string_free( sFilename, TRUE );
 		} else {
-			cairo_surface_write_to_png (cs, filename);
+			cairo_surface_write_to_png (cs, sChosenFilename);
 		}
+
 		g_free( pGlobal->sLastDirectory );
 		pGlobal->sLastDirectory = gtk_file_chooser_get_current_folder( chooser );
 
-		g_free (filename);
+		g_free (sChosenFilename);
 	}
 
 	g_free( sFilename );
@@ -543,10 +561,12 @@ CB_BtnSavePDF (GtkButton * button, tGlobal *pGlobal)
     cairo_surface_t *cs;
     GtkWidget *dialog;
     GtkFileChooser *chooser;
+    GtkFileFilter *filter;
     GDateTime *now = g_date_time_new_now_local ();
     static gchar *lastFilename = NULL;
     gchar *sFilename = NULL;
-    gchar *filenameWithoutPath = NULL;
+    gchar *sSuggestedFilename = g_date_time_format( now, "HP8753.%d%b%y.%H%M%S.pdf");
+    static gboolean bUsedSuggested = FALSE;
 	gboolean bBoth = pGlobal->HP8753.flags.bDualChannel
 			&& pGlobal->HP8753.flags.bSplitChannels;
 
@@ -559,34 +579,43 @@ CB_BtnSavePDF (GtkButton * button, tGlobal *pGlobal)
 					NULL);
 	chooser = GTK_FILE_CHOOSER (dialog);
 
+	filter = gtk_file_filter_new ();
+    gtk_file_filter_set_name ( filter, ".pdf" );
+    gtk_file_filter_add_pattern (filter, "*.[pP][dD][fF]");
+	gtk_file_chooser_add_filter ( chooser, filter );
+	//gtk_file_chooser_set_filter ( chooser, filter );
+    filter = gtk_file_filter_new ();
+    gtk_file_filter_set_name (filter, "All files");
+    gtk_file_filter_add_pattern (filter, "*");
+    gtk_file_chooser_add_filter (chooser, filter);
+
 	gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
 
-	if( lastFilename )
+	if( lastFilename && !bUsedSuggested) {
 		sFilename = g_strdup( lastFilename);
-	else
-		sFilename = g_date_time_format( now, "HP8753C.%d%b%y.%H%M%S.pdf");
-	gtk_file_chooser_set_current_name (chooser, sFilename);
+		gtk_file_chooser_set_filename( chooser, sFilename );
+	} else {
+		sFilename = g_strdup( sSuggestedFilename );
+		gtk_file_chooser_set_current_name (chooser, sFilename);
+	}
 
 	if( pGlobal->sLastDirectory )
 		gtk_file_chooser_set_current_folder( chooser, pGlobal->sLastDirectory );
 
 	if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
-		gchar *filename, *extPos = NULL;
+		gchar *sChosenFilename = NULL, *extPos = NULL;
 
-		filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-		filenameWithoutPath = g_strrstr( filename, "/");
+		sChosenFilename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
-		if( filenameWithoutPath == NULL )
-			filenameWithoutPath = filename;
-		else
-			filenameWithoutPath++;
+		// see if they used our suggestion
+		gchar *sBaseName = g_path_get_basename( sChosenFilename );
+		bUsedSuggested = (g_strcmp0( sBaseName, sSuggestedFilename ) == 0);
+		g_free( sBaseName );
 
-		if( strcmp( filenameWithoutPath, sFilename ) != 0 ) {
-			g_free( lastFilename );
-			lastFilename  = g_strdup( filenameWithoutPath );
-		}
+		g_free( lastFilename );
+		lastFilename = g_strdup( sChosenFilename );
 
-		cs = cairo_pdf_surface_create (filename, PDF_WIDTH, PDF_HEIGHT );
+		cs = cairo_pdf_surface_create (sChosenFilename, PDF_WIDTH, PDF_HEIGHT );
 		cr = cairo_create (cs);
 		cairo_save( cr ); {
 			plotA(PDF_WIDTH, PDF_HEIGHT, cr, pGlobal);
@@ -605,7 +634,7 @@ CB_BtnSavePDF (GtkButton * button, tGlobal *pGlobal)
 
 		// now do high resolution smith charts
 		// create two filenames from the provided name 'name.1.png and name.2.png'
-		GString *sFilename = g_string_new( filename );
+		GString *sFilename = g_string_new( sChosenFilename );
 		extPos = g_strrstr( sFilename->str, ".pdf" );
 		if( extPos )
 			g_string_insert( sFilename, extPos  - sFilename->str, ".HR" );
@@ -619,9 +648,9 @@ CB_BtnSavePDF (GtkButton * button, tGlobal *pGlobal)
 				smithHighResPDF(pGlobal, sFilename->str, eCH_ONE );
 		else if( pGlobal->HP8753.channels[eCH_TWO].format == eFMT_SMITH )
 							smithHighResPDF(pGlobal, sFilename->str, eCH_TWO );
-		g_string_free( sFilename, TRUE );
 
-		g_free (filename);
+		g_string_free( sFilename, TRUE );
+		g_free (sChosenFilename);
 	}
 
 	g_free( sFilename );
@@ -691,10 +720,14 @@ CB_BtnSaveCSV (GtkButton *wButton, tGlobal *pGlobal)
 {
     GtkWidget *dialog;
     GtkFileChooser *chooser;
+    GtkFileFilter *filter;
     GDateTime *now = g_date_time_new_now_local ();
     static gchar *lastFilename = NULL;
+    static gboolean bUsedSuggested = FALSE;
+
     gchar *sFilename = NULL;
-    gchar *filenameWithoutPath = NULL;
+    gchar *sSuggestedFilename = g_date_time_format( now, "HP8753.%d%b%y.%H%M%S.csv");
+
     FILE *fCSV = NULL;
     tFormat	fmtCh1 = pGlobal->HP8753.channels[ eCH_ONE ].format,
     		fmtCh2 = pGlobal->HP8753.channels[ eCH_TWO ].format;
@@ -716,46 +749,56 @@ CB_BtnSaveCSV (GtkButton *wButton, tGlobal *pGlobal)
 					NULL);
 	chooser = GTK_FILE_CHOOSER (dialog);
 
+	filter = gtk_file_filter_new ();
+    gtk_file_filter_set_name ( filter, ".csv" );
+    gtk_file_filter_add_pattern (filter, "*.[cC][sS][vV]");
+	gtk_file_chooser_add_filter ( chooser, filter );
+	//gtk_file_chooser_set_filter ( chooser, filter );
+    filter = gtk_file_filter_new ();
+    gtk_file_filter_set_name (filter, "All files");
+    gtk_file_filter_add_pattern (filter, "*");
+    gtk_file_chooser_add_filter (chooser, filter);
+
 	gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
 
-	if( lastFilename )
+	if( lastFilename && !bUsedSuggested) {
 		sFilename = g_strdup( lastFilename);
-	else
-		sFilename = g_date_time_format( now, "HP8753C.%d%b%y.%H%M%S.csv");
-	gtk_file_chooser_set_current_name (chooser, sFilename);
+		gtk_file_chooser_set_filename( chooser, sFilename );
+	} else {
+		sFilename = g_strdup( sSuggestedFilename );
+		gtk_file_chooser_set_current_name (chooser, sFilename);
+	}
 
 	if( pGlobal->sLastDirectory )
 		gtk_file_chooser_set_current_folder( chooser, pGlobal->sLastDirectory );
 
 	if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
-		gchar *filename, *extPos = NULL;
+		gchar *sChosenFilename, *extPos = NULL;
 
-		filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-		filenameWithoutPath = g_strrstr( filename, "/");
+		sChosenFilename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
 
-		if( filenameWithoutPath == NULL )
-			filenameWithoutPath = filename;
-		else
-			filenameWithoutPath++;
-
-		if( strcmp( filenameWithoutPath, sFilename ) != 0 ) {
-			g_free( lastFilename );
-			lastFilename  = g_strdup( filenameWithoutPath );
-		}
+		// see if they used our suggestion
+		gchar *sBaseName = g_path_get_basename( sChosenFilename );
+		bUsedSuggested = (g_strcmp0( sBaseName, sSuggestedFilename ) == 0);
+		g_free( sBaseName );
 
 		g_free( pGlobal->sLastDirectory );
 		pGlobal->sLastDirectory = gtk_file_chooser_get_current_folder( chooser );
 
 		// now do high resolution smith charts
 		// create two filenames from the provided name 'name.1.png and name.2.png'
-		GString *sFilename = g_string_new( filename );
+		GString *sFilename = g_string_new( sChosenFilename );
+		g_free( sChosenFilename );
 		extPos = g_strrstr( sFilename->str, ".csv" );
 		if( !extPos )
 			g_string_append( sFilename, ".csv");
 
+		g_free( lastFilename );
+		lastFilename = g_strdup( sFilename->str );
+
 		// todo ... save CSV data
 		if( (fCSV = fopen( sFilename->str, "w" )) == NULL ) {
-			gchar *sError = g_strdup_printf( "Cannot write: %s", (gchar *)filename);
+			gchar *sError = g_strdup_printf( "Cannot write: %s", (gchar *)sChosenFilename);
 			postError( sError );
 			g_free( sError );
 		} else {
@@ -805,6 +848,8 @@ CB_BtnSaveCSV (GtkButton *wButton, tGlobal *pGlobal)
 	}
 
 	g_free( sFilename );
+	g_free( sSuggestedFilename );
+
 	gtk_widget_destroy (dialog);
 }
 
@@ -1121,5 +1166,175 @@ CB_Notebook_Select( GtkNotebook *wNotebook,   GtkWidget* page,
 	} else if ( nPage == 1 ) {
 		gtk_button_clicked( GTK_BUTTON( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_RadioTraces")) );
 	}
+}
+
+
+void
+CB_ComboBoxCalKitSelection (GtkComboBox *wCalKitProfile, tGlobal *pGlobal) {
+	GtkLabel *wCalKitDescription = GTK_LABEL(
+			g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer)"WID_Lbl_CalKitDescription") );
+	gint n = gtk_combo_box_get_active( wCalKitProfile );
+
+	if( n != INVALID ) {
+		tCalibrationKitIdentifier *pCalKitIentifier = (tCalibrationKitIdentifier *)g_list_nth( pGlobal->pCalKitList, n )->data;
+		gtk_label_set_label( wCalKitDescription, pCalKitIentifier->sDescription );
+	}
+}
+
+void
+CB_ReadXKT (GtkButton * button, tGlobal *pGlobal)
+{
+    GtkWidget *dialog;
+    GtkFileChooser *chooser;
+    static gchar *lastFilename = NULL;
+    GtkFileFilter *filter;
+	GtkComboBoxText *wComboBoxCalKit = GTK_COMBO_BOX_TEXT(
+			g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer)"WID_Combo_CalKit") );
+
+	dialog = gtk_file_chooser_dialog_new ("Import Calibration Kit",
+					NULL,
+					GTK_FILE_CHOOSER_ACTION_OPEN,
+					"_Cancel", GTK_RESPONSE_CANCEL,
+					"_Open", GTK_RESPONSE_ACCEPT,
+					NULL);
+	chooser = GTK_FILE_CHOOSER (dialog);
+	filter = gtk_file_filter_new ();
+    gtk_file_filter_set_name ( filter, ".xkt" );
+    gtk_file_filter_add_pattern (filter, "*.[xX][kK][tT]");
+	gtk_file_chooser_add_filter ( chooser, filter );
+	//gtk_file_chooser_set_filter ( chooser, filter );
+    filter = gtk_file_filter_new ();
+    gtk_file_filter_set_name (filter, "All files");
+    gtk_file_filter_add_pattern (filter, "*");
+    gtk_file_chooser_add_filter (chooser, filter);
+	if( pGlobal->sLastDirectory )
+		gtk_file_chooser_set_current_folder( chooser, pGlobal->sLastDirectory );
+
+	if( lastFilename )
+		gtk_file_chooser_set_filename (chooser, lastFilename);
+
+	if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
+		gchar *sChosenFilename = NULL;
+
+		sChosenFilename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+
+		g_free( lastFilename );
+		lastFilename = g_strdup( sChosenFilename );
+
+		g_free( pGlobal->sLastDirectory );
+		pGlobal->sLastDirectory = gtk_file_chooser_get_current_folder( chooser );
+
+    	if( parseCalibrationKit( sChosenFilename, &pGlobal->HP8753calibrationKit ) == 0 ) {
+    		saveCalKit( pGlobal );
+
+    		GList *listElement = g_list_find_custom( pGlobal->pCalKitList,
+    				pGlobal->HP8753calibrationKit.label, (GCompareFunc)compareCalKitIdentifierItem );
+    		// remove all combo box text items, then add themn back from the GList
+    		gtk_list_store_clear (GTK_LIST_STORE( gtk_combo_box_get_model(GTK_COMBO_BOX(wComboBoxCalKit))));
+    		for( GList *l = pGlobal->pCalKitList; l != NULL; l = l->next ){
+    			gtk_combo_box_text_append_text( wComboBoxCalKit, ((tCalibrationKitIdentifier *)l->data)->sLabel );
+    		}
+
+    		gtk_combo_box_set_active( GTK_COMBO_BOX(wComboBoxCalKit), g_list_position( pGlobal->pCalKitList, listElement ));
+
+    		GtkWidget *wBtnSendCalKit = GTK_WIDGET(
+    				g_hash_table_lookup ( pGlobal->widgetHashTable,	(gconstpointer)"WID_Btn_SendCalKit") );
+    		gtk_widget_set_sensitive( GTK_WIDGET( wBtnSendCalKit ), TRUE );
+
+    	}
+
+    	g_free( sChosenFilename );
+	}
+
+	gtk_widget_destroy (dialog);
+}
+
+void
+CB_BtnDeleteCalKit (GtkButton * button, tGlobal *pGlobal)
+{
+	GtkComboBoxText *wCombo;
+	gchar *name = NULL;
+	GtkWidget *dialog;
+	gboolean bAuthorized = TRUE;
+	gchar *sQuestion = NULL;
+
+	wCombo = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_CalKit") );
+	name = g_markup_escape_text ( gtk_combo_box_text_get_active_text( wCombo ), -1 );
+	sQuestion = g_strdup_printf(
+			"You look as though you know what you are doing but..."
+			"\n\t\t\t\t\t...are you sure you want to delete the:\n\n"
+			"\t\"<b>%s</b>\"\n\n⚖️ calibration kit?", name);
+
+
+	if ( name != NULL && strlen( name ) != 0 ) {
+		gboolean bFound = FALSE;
+		GtkTreeIter iter;
+		gint n;
+		gchar *string;
+
+		dialog = gtk_message_dialog_new( NULL,
+				GTK_DIALOG_DESTROY_WITH_PARENT,
+				GTK_MESSAGE_WARNING,
+				GTK_BUTTONS_YES_NO, " ");
+		gtk_window_set_title(GTK_WINDOW(dialog), "Caution");
+		gtk_message_dialog_set_markup ( GTK_MESSAGE_DIALOG( dialog ), sQuestion );
+
+		if( gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_YES ) {
+			bAuthorized = TRUE;
+		} else {
+			bAuthorized = FALSE;
+		}
+		gtk_widget_destroy(dialog);
+
+		if( bAuthorized && deleteDBentry( pGlobal, name, eDB_CALKIT ) == 0 ) {
+			// look through all the combobox labels to see if the selected text matches.
+			GtkTreeModel *tm = gtk_combo_box_get_model(GTK_COMBO_BOX(wCombo));
+
+			n = gtk_tree_model_iter_n_children(gtk_combo_box_get_model(GTK_COMBO_BOX(wCombo)), NULL);
+			if (n > 0) {
+				gtk_tree_model_get_iter_first(tm, &iter);
+				for (gint pos = 0; !bFound && pos < n; pos++, gtk_tree_model_iter_next(tm, &iter)) {
+					gtk_tree_model_get(tm, &iter, 0, &string, -1);
+					if (g_strcmp0(name, string) == 0) {
+						gtk_combo_box_text_remove(wCombo, pos);
+						bFound = TRUE;
+					}
+				}
+			}
+			if (bFound) {
+				gtk_combo_box_set_active(GTK_COMBO_BOX(wCombo), 0);
+			}
+		}
+	} else {
+		gtk_label_set_text( GTK_LABEL(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Lbl_Status")),
+				"No calibration kit selected");
+	}
+
+	g_free( name );
+	g_free( sQuestion );
+}
+
+void
+CB_BtnSendCalKit(GtkButton *wButton, tGlobal *pGlobal) {
+	gint index;
+	gchar *sLabel;
+	GtkComboBoxText *wComboBoxCalKit = GTK_COMBO_BOX_TEXT(
+			g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer)"WID_Combo_CalKit") );
+
+	if( (index = gtk_combo_box_get_active ( GTK_COMBO_BOX( wComboBoxCalKit ))) != -1 ) {
+		sLabel = ((tCalibrationKitIdentifier *)g_list_nth_data( pGlobal->pCalKitList, index ))->sLabel;
+
+		if( recoverCalibrationKit(pGlobal, sLabel) == 0 ) {
+			postDataToGPIBThread (TG_SEND_CALKIT_to_HP8753, NULL);
+			sensitiseControlsInUse( pGlobal, FALSE );
+		} else {
+			postError( "Cannot recover calibration kit");
+		}
+	}
+}
+
+void
+CB_ChkUserCalKit(GtkCheckButton * button, tGlobal *pGlobal) {
+	pGlobal->flags.bSaveUserKit = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( button ) );
 }
 

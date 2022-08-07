@@ -1,0 +1,263 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      xmlns:its="http://www.w3.org/2005/11/its"
+      type="topic" style="guide"
+      id="calibrationKit">
+
+  <info>
+    <link type="guide" xref="index#operations"/>
+    <revision pkgversion="7.10.1" date="2018-06-17" status="candidate" />
+
+    <credit type="author">
+      <name>Michael Katzmann</name>
+      <email its:translate="no">michaelk@IEEE.org</email>
+    </credit>
+
+    <include href="legal.xml" xmlns="http://www.w3.org/2001/XInclude"/>
+
+    <desc>Import XKT format (XML) calibration kits and send to the HP8753 Network analyzer</desc>
+  </info>
+
+  <title>Calibration Kits</title>
+  <p>The HP8753 Network Analyzer has several built-in calibration kit parameter sets (HP8753C has APC 7mm, 3.5mm, 50Ω N, 75Ω N). The parameters for each of these sets may be temporarily modified and the modified set may be saved as a user kit. The user kit is retained in quasi non-volitile memory (preserved with power from a super capacitor or backup battery).</p>
+  <p>The <app>HP8753 Companion</app> has the capability of importing the parameters of calibration kits formated as XML files (in .xkt format). The Keysight <link href="https://na.support.keysight.com/pna/apps/applications.html">Cal Kit Editor</link> may be used to create or modify calibration kit definition files, or an xkt file may be created or edited in a text editor. An example xkt file is shown below.</p>
+  <p>The Keysight document <link href="https://na.support.keysight.com/pna/Calibration-Kit-Definitions.pdf">"Calibration Kit Standards Definitions"</link> provides the paramaters for Keysight calibration kits (standards and classes). This is a useful reference and starting point in developing a user kit definition file.</p>
+  <p>The Keysight application notre 
+	 <link href="https://www.keysight.com/us/en/assets/7018-01375/application-notes/5989-4840.pdf">"Specifying Calibration Standards and Kits for Keysight Vector Network Analyzers"</link> provides guidance in creating calibration kits for use with Keysight Vector Network Analyzers. It includes detailed information including insight into the derivation for each type of calibration standard model to enable users to define their own calibration standards with confidence. It also shows how to define the interaction between calibration standards and the various calibration algorithms included in Keysight Vector Network Analyzers.</p>
+	 <note style="bug"><p>Newer Keysight PNAs have the ability to define more standards than are accomodated in the HP8753. Each calibration kit saved in the HP8753 can define up to 8 standards. If the <code>.xkt</code> contains standards greater than 8, they are silently dropped.</p></note>
+	 <note style="bug"><p>TRL calibration was introduced with the HP8753D. If the <code>.xkt</code> contains class definitions for TRL calibration, these are not transmitted to the HP8753 unless the firmware version is 5.00 or greater.</p></note>
+  <media its:translate="no" type="image" mime="image/png" src="media/HP8753-CalKit.png" />
+  
+  <section id="calkit" style="2column">
+    <title>Calibration Kit Operations</title>
+    <section id="calkitImport" style="2column">
+      <title>Import Calibration Kit (.xkt) file</title>
+      <p>A calibration kit definition file may be imported and saved in the <app>HP8753 Companion</app> database for subsequent transmission to the network analyzer.</p>
+      <steps>
+        <item><p>Select the <em>Cal Kit</em> page</p></item>
+        <item><p>Press the <key>Read XKT</key> button and use the file dialog to select the calibration kit definition file.</p><p>The imported calibration kit will be imported if it is properly formatted and its label displayed in the combo box. The description from the calibration kit is displayed when the kit is selected.</p></item>
+      </steps>
+    </section>
+    <section id="calkitSend" style="2column">
+      <title>Send Calibration Kit definitions to HP8753</title>
+      <p>The calibration kit defilitions that were previously imported into the <app>HP8753 Companion</app> database may be sent to the HP8753, and may optionally be saved as the user kit.</p>
+      <steps>
+        <item><p>Select the <em>Cal Kit</em> page</p></item>
+        <item><p>Select the stored calibration kit using the pull down combo box.</p></item>
+        <item><p>Press the <key>Send Kit</key> button to send the paramaters to the HP8753.</p>
+              <note style="info"><p>The GPIB commands to send the paramaters are preceeded by the recall of the 50Ω N kit. It is this kit that is modified.</p></note>
+              <note style="info"><p>If the kit is to be saved as the user kit, then the <key>+ save as user key</key> box must be checked.</p></note>
+        </item>
+      </steps>
+    </section>
+    <section id="calkitDelete" style="2column">
+      <title>Delete saved Calibration Kit definitions</title>
+      <p>The calibration kit defilitions that were previously imported into the <app>HP8753 Companion</app> database may be deleted.</p>
+      <steps>
+        <item><p>Select the <em>Cal Kit</em> page</p></item>
+        <item><p>Select the stored calibration kit using the pull down combo box.</p></item>
+        <item><p>Press the <key>Delete</key> button to remove the selected calibration kit definitions from the <app>HP8753 Companion</app> database.</p></item>
+      </steps>
+    </section>
+
+  </section>
+    <section id="calkit" style="2column">
+    <title>Example <code>.xkt</code> file</title>
+    <code mime="application/xml"><![CDATA[
+<?xml version="1.0"?>
+<CalKit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <CalKitLabel>SMA</CalKitLabel>
+  <CalKitVersion />
+  <CalKitDescription>NV3Z SMA Male/Female</CalKitDescription>
+  <ConnectorList>
+    <Coaxial>
+      <Family>SMA</Family>
+      <Gender>Female</Gender>
+      <MaximumFrequencyHz>6000000000</MaximumFrequencyHz>
+      <MinimumFrequencyHz>0</MinimumFrequencyHz>
+      <SystemZ0>50</SystemZ0>
+    </Coaxial>
+    <Coaxial>
+      <Family>SMA</Family>
+      <Gender>Male</Gender>
+      <MaximumFrequencyHz>999000000000</MaximumFrequencyHz>
+      <MinimumFrequencyHz>0</MinimumFrequencyHz>
+      <SystemZ0>50</SystemZ0>
+    </Coaxial>
+  </ConnectorList>
+  <StandardList>
+    <OpenStandard>
+      <Label>OPEN -F-</Label>
+      <Description>SMA female open</Description>
+      <PortConnectorIDs>SMA Female</PortConnectorIDs>
+      <MaximumFrequencyHz>6000000000</MaximumFrequencyHz>
+      <MinimumFrequencyHz>0</MinimumFrequencyHz>
+      <StandardNumber>1</StandardNumber>
+      <C0>-4.8700000000000006E-15</C0>
+      <C1>-1.1403E-24</C1>
+      <C2>2.1765E-33</C2>
+      <C3>-2.135E-43</C3>
+      <Offset>
+        <OffsetDelay>3.5729999999999996E-11</OffsetDelay>
+        <OffsetLoss>2870000000</OffsetLoss>
+        <OffsetZ0>50</OffsetZ0>
+      </Offset>
+    </OpenStandard>
+    <ShortStandard>
+      <Label>SHORT -F-</Label>
+      <Description>SMA female short</Description>
+      <PortConnectorIDs>SMA Female</PortConnectorIDs>
+      <MaximumFrequencyHz>6000000000</MaximumFrequencyHz>
+      <MinimumFrequencyHz>0</MinimumFrequencyHz>
+      <StandardNumber>2</StandardNumber>
+      <L0>0</L0>
+      <L1>0</L1>
+      <L2>0</L2>
+      <L3>0</L3>
+      <Offset>
+        <OffsetDelay>3.16E-11</OffsetDelay>
+        <OffsetLoss>3400000000</OffsetLoss>
+        <OffsetZ0>51.9</OffsetZ0>
+      </Offset>
+    </ShortStandard>
+    <FixedLoadStandard>
+      <Label>LOAD -F-</Label>
+      <Description>SMA female load</Description>
+      <PortConnectorIDs>SMA Female</PortConnectorIDs>
+      <MaximumFrequencyHz>6000000000</MaximumFrequencyHz>
+      <MinimumFrequencyHz>0</MinimumFrequencyHz>
+      <StandardNumber>3</StandardNumber>
+      <Offset>
+        <OffsetDelay>7.66E-11</OffsetDelay>
+        <OffsetLoss>0</OffsetLoss>
+        <OffsetZ0>50.95</OffsetZ0>
+      </Offset>
+    </FixedLoadStandard>
+    <OpenStandard>
+      <Label>OPEN -M-</Label>
+      <Description>SMA male open</Description>
+      <PortConnectorIDs>SMA Male</PortConnectorIDs>
+      <MaximumFrequencyHz>6000000000</MaximumFrequencyHz>
+      <MinimumFrequencyHz>0</MinimumFrequencyHz>
+      <StandardNumber>4</StandardNumber>
+      <C0>-2.6818E-13</C0>
+      <C1>-4.494E-26</C1>
+      <C2>1.88924E-33</C2>
+      <C3>-1.2358E-43</C3>
+      <Offset>
+        <OffsetDelay>3.404E-11</OffsetDelay>
+        <OffsetLoss>2620000000</OffsetLoss>
+        <OffsetZ0>50</OffsetZ0>
+      </Offset>
+    </OpenStandard>
+    <ShortStandard>
+      <Label>SHORT -M-</Label>
+      <Description>SMA male short</Description>
+      <PortConnectorIDs>SMA Male</PortConnectorIDs>
+      <MaximumFrequencyHz>6000000000</MaximumFrequencyHz>
+      <MinimumFrequencyHz>0</MinimumFrequencyHz>
+      <StandardNumber>5</StandardNumber>
+      <L0>0</L0>
+      <L1>0</L1>
+      <L2>0</L2>
+      <L3>0</L3>
+      <Offset>
+        <OffsetDelay>4.4829999999999995E-11</OffsetDelay>
+        <OffsetLoss>3210000000</OffsetLoss>
+        <OffsetZ0>50.58</OffsetZ0>
+      </Offset>
+    </ShortStandard>
+    <FixedLoadStandard>
+      <Label>LOAD -M-</Label>
+      <Description>SMA male load</Description>
+      <PortConnectorIDs>SMA Male</PortConnectorIDs>
+      <MaximumFrequencyHz>6000000000</MaximumFrequencyHz>
+      <MinimumFrequencyHz>0</MinimumFrequencyHz>
+      <StandardNumber>6</StandardNumber>
+      <Offset>
+        <OffsetDelay>9.156E-11</OffsetDelay>
+        <OffsetLoss>218000000</OffsetLoss>
+        <OffsetZ0>50.52</OffsetZ0>
+      </Offset>
+    </FixedLoadStandard>
+    <ThruStandard>
+      <Label>THRU</Label>
+      <Description>Insertable thru standard</Description>
+      <IsDevicePhysical>false</IsDevicePhysical>
+      <PortConnectorIDs>SMA Female</PortConnectorIDs>
+      <PortConnectorIDs>SMA Male</PortConnectorIDs>
+      <MaximumFrequencyHz>999000000000</MaximumFrequencyHz>
+      <MinimumFrequencyHz>0</MinimumFrequencyHz>
+      <StandardNumber>7</StandardNumber>
+      <Offset>
+        <OffsetDelay>0</OffsetDelay>
+        <OffsetLoss>2300000000</OffsetLoss>
+        <OffsetZ0>50</OffsetZ0>
+      </Offset>
+    </ThruStandard>
+    <ThruStandard>
+      <Label>THRU -F-</Label>
+      <Description>Insertable thru standard (female)</Description>
+      <PortConnectorIDs>SMA Female</PortConnectorIDs>
+      <PortConnectorIDs>SMA Female</PortConnectorIDs>
+      <MaximumFrequencyHz>999000000000</MaximumFrequencyHz>
+      <MinimumFrequencyHz>0</MinimumFrequencyHz>
+      <StandardNumber>8</StandardNumber>
+      <Offset>
+        <OffsetDelay>4.1E-11</OffsetDelay>
+        <OffsetLoss>2300000000</OffsetLoss>
+        <OffsetZ0>50</OffsetZ0>
+      </Offset>
+    </ThruStandard>
+  </StandardList>
+  <KitClasses>
+    <KitClassID>SA</KitClassID>
+    <StandardsList>1,4</StandardsList>
+    <KitClassLabel>OPENS</KitClassLabel>
+  </KitClasses>
+  <KitClasses>
+    <KitClassID>TRL_THRU</KitClassID>
+    <StandardsList />
+    <KitClassLabel>TRL_THRU</KitClassLabel>
+  </KitClasses>
+  <KitClasses>
+    <KitClassID>SB</KitClassID>
+    <StandardsList>2,5</StandardsList>
+    <KitClassLabel>SHORTS</KitClassLabel>
+  </KitClasses>
+  <KitClasses>
+    <KitClassID>SC</KitClassID>
+    <StandardsList>3,6</StandardsList>
+    <KitClassLabel>LOADS</KitClassLabel>
+  </KitClasses>
+  <KitClasses>
+    <KitClassID>REVERSE_MATCH</KitClassID>
+    <StandardsList>7,8</StandardsList>
+    <KitClassLabel>THRUS</KitClassLabel>
+  </KitClasses>
+  <KitClasses>
+    <KitClassID>ISOLATION</KitClassID>
+    <StandardsList>3,6</StandardsList>
+    <KitClassLabel>ISOLATION</KitClassLabel>
+  </KitClasses>
+  <KitClasses>
+    <KitClassID>FORWARD_THRU</KitClassID>
+    <StandardsList>7,8</StandardsList>
+    <KitClassLabel>THRUS</KitClassLabel>
+  </KitClasses>
+  <KitClasses>
+    <KitClassID>FORWARD_MATCH</KitClassID>
+    <StandardsList>7,8</StandardsList>
+    <KitClassLabel>THRUS</KitClassLabel>
+  </KitClasses>
+  <KitClasses>
+    <KitClassID>REVERSE_THRU</KitClassID>
+    <StandardsList>7,8</StandardsList>
+    <KitClassLabel>THRUS</KitClassLabel>
+  </KitClasses>
+  <TRLRefPlane>ThruStandard</TRLRefPlane>
+  <TRLZref>LineZ0</TRLZref>
+  <LRLAutoCharacterization>UseAutoCharacterization</LRLAutoCharacterization>
+</CalKit>
+    ]]></code>
+  </section>
+</page>

@@ -32,7 +32,9 @@
 
 tGlobal globalData = {
 		.HP8753 = {.flags = {.bSourceCoupled = 1, .bMarkersCoupled = 1}},
-		{{0}},
+		.HP8753cal = {{0}},
+		.HP8753calibrationKit = {{0}},
+		.flags ={0},
 		0 };
 
 gboolean
@@ -40,9 +42,10 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
 	GdkModifierType modmask;
 	guint modifier = 0;
 
+    modmask = gtk_accelerator_get_default_mod_mask ();
+    modifier = event->state & modmask;
+
    if (event->keyval >= GDK_KEY_F1 && event->keyval <= GDK_KEY_F12) {
-      modmask = gtk_accelerator_get_default_mod_mask ();
-      modifier = event->state & modmask;
 // GDK_CONTROL_MASK GDK_SHIFT_MASK GDK_MOD1_MASK (ALT) GDK_SUPER_MASK
 
       switch( event->keyval ) {
@@ -56,6 +59,8 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
       default:
     	  break;
       }
+   } else if( event->keyval == GDK_KEY_Escape &&  modifier == 0 ) {
+	   postDataToGPIBThread (TG_ABORT, NULL);
    }
    return FALSE;
 }
@@ -240,6 +245,9 @@ on_activate (GApplication *app, gpointer udata)
 	pGlobal->flags.bShowDateTime = TRUE;
 	recoverProgramOptions(pGlobal);
 
+	// debug level
+	pGlobal->flags.bbDebug = optDebug < 8 ? optDebug : 7;
+
 	gchar *sFWlabel = g_strdup_printf( "Firmware %d.%d", pGlobal->HP8753.analyzedLSindexes.version/100,
 			pGlobal->HP8753.analyzedLSindexes.version % 100 );
 	gtk_label_set_label( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Lbl_Firmware"),
@@ -248,29 +256,40 @@ on_activate (GApplication *app, gpointer udata)
 
 
 	// Get cal and trace profiles from sqlite3 database
-	getSavedSetupsAndCal( pGlobal );
-	getSavedTraceNames( pGlobal );
+	inventorySavedSetupsAndCal( pGlobal );
+	inventorySavedTraceNames( pGlobal );
+	inventorySavedCalibrationKits( pGlobal );
 	// fill the combo box with the setup/cal names
 	GtkComboBoxText *wComboBoxCal = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_CalibrationProfile") );
-	GtkComboBoxText *cbComboBoxTrace = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer)"WID_Combo_TraceProfile") );
+	GtkComboBoxText *wComboBoxTrace = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer)"WID_Combo_TraceProfile") );
+	GtkComboBoxText *wComboBoxCalKit = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer)"WID_Combo_CalKit") );
 
 	g_list_foreach ( pGlobal->pCalList, updateCalCombobox, wComboBoxCal );
 
-
-	// Fill in combobox with the available trace names recoverd from the sqlite3 database
+	// Fill in combobox with the available trace names recovered from the sqlite3 database
 	for( GList *l = pGlobal->pTraceList; l != NULL; l = l->next ){
-		gtk_combo_box_text_append_text( cbComboBoxTrace, l->data );
+		gtk_combo_box_text_append_text( wComboBoxTrace, l->data );
+	}
+
+	// Fill in combobox with the available calibration kits recovered from the sqlite3 database
+	for( GList *l = pGlobal->pCalKitList; l != NULL; l = l->next ){
+		gtk_combo_box_text_append_text( wComboBoxCalKit, ((tCalibrationKitIdentifier *)l->data)->sLabel );
 	}
 
 	// choose the entry in the combo box
 	// it also has the side effect of switching the radio button
 	// hense it matters in which order we do this
 	if( pGlobal->flags.bCalibrationOrTrace ) {
-		setGtkComboBox( GTK_COMBO_BOX(cbComboBoxTrace), pGlobal->sTraceProfile );
+		setGtkComboBox( GTK_COMBO_BOX(wComboBoxTrace), pGlobal->sTraceProfile );
 		setGtkComboBox( GTK_COMBO_BOX(wComboBoxCal), pGlobal->sCalProfile );
 	} else {
 		setGtkComboBox( GTK_COMBO_BOX(wComboBoxCal), pGlobal->sCalProfile );
-		setGtkComboBox( GTK_COMBO_BOX(cbComboBoxTrace), pGlobal->sTraceProfile );
+		setGtkComboBox( GTK_COMBO_BOX(wComboBoxTrace), pGlobal->sTraceProfile );
+	}
+	if( g_list_length( pGlobal->pCalKitList ) > 0 ) {
+		gtk_combo_box_set_active ( GTK_COMBO_BOX(wComboBoxCalKit), 0 );
+		gtk_widget_set_sensitive( GTK_WIDGET( g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer)"WID_Btn_CalKitDelete") ),
+				TRUE);
 	}
 
 	gtk_entry_set_text( GTK_ENTRY(g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer) "WID_Entry_GPIBcontroller" )), globalData.sGPIBcontrollerName );
@@ -330,6 +349,7 @@ clearHP8753traces( tHP8753 *pHP8753 ) {
 /*!     \brief  on_startup (startup signal callback)
  *
  * Setup application (get configuration and create main window (but do not show it))
+ * nb: this occures befor 'activate'
  *
  * \ingroup initialize
  *
@@ -341,6 +361,10 @@ on_startup (GApplication *app, gpointer udata)
 {
 	tGlobal *pGlobal = (tGlobal *)udata;
 	gboolean bAbort = FALSE;
+
+    LOG( G_LOG_LEVEL_INFO, "Starting");
+	setenv("IB_NO_ERROR", "1", 0);	// no noise
+	logVersion();
 
 	pGlobal->sGPIBdeviceName     = g_strdup( DEFAULT_GPIB_HP8753C_DEVICE_NAME );
 	pGlobal->sGPIBcontrollerName = g_strdup( DEFAULT_GPIB_CONTROLLER_NAME );
@@ -435,6 +459,8 @@ on_shutdown (GApplication *app, gpointer userData)
     g_source_unref ( pGlobal->messageEventSource );
 
 	g_hash_table_destroy( globalData.widgetHashTable );
+
+    LOG( G_LOG_LEVEL_INFO, "Ending");
 }
 
 /*!     \brief  Start of program
@@ -452,6 +478,7 @@ main(int argc, char *argv[]) {
     GMainLoop __attribute__((unused)) *loop;
 
     setlocale(LC_ALL, "en_US");
+    g_log_set_writer_func (g_log_writer_journald, NULL, NULL);
 
     // ensure only one instance of program runs ..
     app = gtk_application_new ("us.heterodyne.hp8753c", G_APPLICATION_HANDLES_OPEN);

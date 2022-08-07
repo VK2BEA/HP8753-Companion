@@ -23,6 +23,18 @@ AUTOCONF_ENV="SHELL=/bin/sh"
 LT_INIT
 AC_ENABLE_STATIC
 
+AC_ARG_ENABLE(debug,
+AS_HELP_STRING([--enable-debug],
+               [enable debugging, default: no]),
+[case "${enableval}" in
+             yes) debug=true ;;
+             no)  debug=false ;;
+             *)   AC_MSG_ERROR([bad value ${enableval} for --enable-debug]) ;;
+esac],
+[debug=false])
+
+AM_CONDITIONAL(DEBUG, test x"$debug" = x"true")
+
 # Some useful default flags
 CFLAGS="-Werror -Wall $CFLAGS"
 CXXFLAGS="-Werror -Wall $CXXFLAGS"
@@ -51,8 +63,11 @@ fi
 # libgpib
 AC_CHECK_LIB(gpib,ibask,,AC_MSG_ERROR([Please install Linux GPIB driver before continuing.]))
 
+# libsystemd
+# AC_CHECK_LIB(systemd,sd_journal_print,,AC_MSG_ERROR([Please install systemd library (libsystemd-dev on Debian type systems).]))
+
 # check for Noto font
-fc-list -q "Noto Emoji"
+fc-list -q "Noto Emoji" || fc-list -q "Noto Color Emoji"
 if [[ $? -ne 0 ]]; then
    AC_MSG_ERROR([Please install fonts-noto-color-emoji before proceeding.])
 else

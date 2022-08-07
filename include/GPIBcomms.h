@@ -22,12 +22,16 @@ gint GPIBread( gint GPIBdescriptor, void *sResult, gint length, gint *pGPIBstatu
 gint GPIBwrite( gint GPIBdescriptor, const void *sRequest, gint *GPIBstatus );
 gint GPIBwriteOneOfN( gint GPIBdescriptor, const void *sRequest, gint number, gint *GPIBstatus );
 
-typedef enum { eRD_OK=0, eRD_ERROR, eRD_TIMEOUT, eRD_ABORT, eRD_CONTINUE } tReadStatus;
+typedef enum { eRDWT_OK=0, eRDWT_ERROR, eRDWT_TIMEOUT, eRDWT_ABORT, eRDWT_CONTINUE, eRDWT_PREVIOUS_ERROR } tGPIBReadWriteStatus;
 
-tReadStatus GPIB_AsyncRead( gint GPIBdescriptor, void *readBuffer, long maxBytes, gint *pGPIBstatus,
-		gdouble timeout, GAsyncQueue *queue );
+tGPIBReadWriteStatus GPIBasyncRead( gint GPIBdescriptor, void *readBuffer, glong maxBytes, gint *pGPIBstatus,
+		gdouble timeout );
+tGPIBReadWriteStatus GPIBasyncWrite( gint GPIBdescriptor, const void *sData, gint *GPIBstatus, gdouble timeoutSecs );
 
 #define GPIBfailed(x) (((x) & ERR) == ERR)
 #define GPIBsucceeded(x) (((x) & ERR) != ERR)
+
+#define TIMEOUT_READ_1SEC   1.0
+#define TIMEOUT_READ_1MIN  60.0
 
 #endif /* GPIBCOMMS_H_ */

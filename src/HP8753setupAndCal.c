@@ -121,7 +121,7 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 			// If so, take those rather than the regular coefficients
 			if( i == 0 && pGlobal->HP8753.firmwareVersion >= 411 ) {	    // OUTPICALnn only available in FW 4.11 and above
 				GPIBwrite(descGPIB_HP8753, "OUTPICAL01;", pGPIBstatus);	    // https://na.support.keysight.com/8753/firmware/history.htm#53c413
-				GPIBread(descGPIB_HP8753, &CALheaderAndSize, HEADER_SIZE, pGPIBstatus);
+				GPIBasyncRead(descGPIB_HP8753, &CALheaderAndSize, HEADER_SIZE, pGPIBstatus, TIMEOUT_READ_1MIN);
 				CALsize = GUINT16_FROM_BE(CALheaderAndSize[1]);
 
 				// Flag as being interpolated if there is data in first interpolated array
@@ -133,7 +133,7 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 					pGlobal->HP8753cal.perChannelCal[ channel ].settings.bbInterplativeCalibration = eNoInterplativeCalibration;
 					// Get measured calibration arrays if there are no interpolated arrays
 					GPIBwrite(descGPIB_HP8753, "OUTPCALC01;", pGPIBstatus);
-					GPIBread(descGPIB_HP8753, &CALheaderAndSize, HEADER_SIZE, pGPIBstatus);
+					GPIBasyncRead(descGPIB_HP8753, &CALheaderAndSize, HEADER_SIZE, pGPIBstatus, TIMEOUT_READ_1MIN);
 					CALsize = GUINT16_FROM_BE(CALheaderAndSize[1]);
 				}
 			} else {
@@ -143,14 +143,16 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 							? "OUTPICAL%02d;" :"OUTPCALC%02d;", i + 1);
 				GPIBwrite(descGPIB_HP8753, sCommand, pGPIBstatus);
 				// first read header and size of data
-				GPIBread(descGPIB_HP8753, &CALheaderAndSize, HEADER_SIZE, pGPIBstatus);
+				GPIBasyncRead(descGPIB_HP8753, &CALheaderAndSize, HEADER_SIZE, pGPIBstatus, TIMEOUT_READ_1MIN);
 				CALsize = GUINT16_FROM_BE(CALheaderAndSize[1]);
 			}
 			// allocate and read calibration error coefficient array
 			if (CALsize > 0) {
 				pGlobal->HP8753cal.perChannelCal[ channel ].pCalArrays[i] = g_malloc( CALsize + HEADER_SIZE);
 				memmove(pGlobal->HP8753cal.perChannelCal[ channel ].pCalArrays[i], CALheaderAndSize, HEADER_SIZE);
-				GPIBread(descGPIB_HP8753, pGlobal->HP8753cal.perChannelCal[ channel ].pCalArrays[ i ] + HEADER_SIZE, CALsize, pGPIBstatus);
+				GPIBasyncRead(descGPIB_HP8753, pGlobal->HP8753cal.perChannelCal[ channel ].pCalArrays[ i ] + HEADER_SIZE,
+						CALsize, pGPIBstatus, TIMEOUT_READ_1MIN);
+
 				if( pGlobal->HP8753cal.settings.bSourceCoupled )
 					postInfoWithCount( "Retrieve calibration array %d", i+1, 0 );
 				else
@@ -222,7 +224,7 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 	GPIBwrite( descGPIB_HP8753, "CONT;", &GPIBstatus );
 	GPIBwrite( descGPIB_HP8753, "OPC?;WAIT;", &GPIBstatus);
 	// read "1" for complete
-	if( GPIB_AsyncRead( descGPIB_HP8753, &complete, 1, &GPIBstatus, 100.0, pGlobal->messageQueueToGPIB ) != eRD_OK ) {
+	if( GPIBasyncRead( descGPIB_HP8753, &complete, 1, &GPIBstatus, 100.0, pGlobal->messageQueueToGPIB ) != eRD_OK ) {
 		GPIBstatus = ERR;
 		break;
 	}
@@ -255,14 +257,13 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	eChannel channel = eCH_ONE;
 	int i;
 
-	GPIBwrite( descGPIB_HP8753, "FORM1;", pGPIBstatus);
-	GPIBwrite( descGPIB_HP8753, "INPULEAS;", pGPIBstatus);
+	GPIBwrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus);
 	// Includes the 4 byte header with size in bytes (big endian)
 	GPIBwriteBinary( descGPIB_HP8753,
 			pGlobal->HP8753cal.pHP8753C_learn,
 			GUINT16_FROM_BE(*(guint16 *)(pGlobal->HP8753cal.pHP8753C_learn+2)) + 4, pGPIBstatus );
 	GPIBwrite( descGPIB_HP8753, "OPC?;WAIT;", pGPIBstatus);
-	GPIBread( descGPIB_HP8753, &complete, 1, pGPIBstatus);
+	GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 8 * TIMEOUT_READ_1MIN);
 	// on restoration the trigger is in hold and the interpolative cal is disabled
 	//  these are restored after cal arrays are sent to the 8753
 
@@ -307,7 +308,7 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 
 			GPIBwrite( descGPIB_HP8753, "OPC?;SAVC;", pGPIBstatus);
 			// read "1" for complete
-			if( GPIB_AsyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, TIMEOUT_SWEEP, pGlobal->messageQueueToGPIB ) != eRD_OK ) {
+			if( GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, TIMEOUT_SWEEP ) != eRDWT_OK ) {
 				*pGPIBstatus = ERR;
 				break;
 			}
@@ -340,7 +341,7 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 		setHP8753channel( descGPIB_HP8753, pGlobal->HP8753cal.settings.bActiveChannel, pGPIBstatus );
 
 	GPIBwrite( descGPIB_HP8753, "OPC?;WAIT;", pGPIBstatus);
-	GPIB_AsyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, TIMEOUT_SWEEP, pGlobal->messageQueueToGPIB );
+	GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, TIMEOUT_SWEEP );
 
 	GPIBwrite( descGPIB_HP8753, "MENUOFF;", pGPIBstatus );
 	// beep

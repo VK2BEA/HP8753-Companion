@@ -21,8 +21,8 @@ gboolean askOption( gint descGPIB_HP8753, gchar *option, gint *pGPIBstatus );
 
 gint askHP8753C_dbl(gint descGPIB_HP8753, gchar *mnemonic, gdouble *dresult, gint *pGPIBstatus);
 
-gint getHP8753channelListFreqSegments(gint descGPIB_HP8753, tGlobal *pGlobal, gint whichChannel, gint *pGPIBstatus );
-gint getHP8753channelTrace(gint descGPIB_HP8753, tGlobal *pGlobal, gint whichChannel, gint *pGPIBstatus );
+gint getHP8753channelListFreqSegments(gint descGPIB_HP8753, tGlobal *pGlobal, eChannel channel, gint *pGPIBstatus );
+gint getHP8753channelTrace(gint descGPIB_HP8753, tGlobal *pGlobal, eChannel channel, gint *pGPIBstatus );
 gint get8753firmwareVersion(gint descGPIB_HP8753, gchar **psProduct, gint *pGPIBstatus);
 
 gint getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );

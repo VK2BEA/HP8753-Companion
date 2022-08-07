@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 
 #include "messageEvent.h"
+#include "calibrationKit.h"
 
 static sqlite3 *db = NULL;
 
@@ -103,6 +104,13 @@ openOrCreateDB(void) {
 				"generalFlags       INTEGER,"
 				"time			TEXT,"
 				"PRIMARY KEY (name, channel)"
+			");"
+			"CREATE TABLE IF NOT EXISTS CAL_KITS("
+				"label           TEXT,"
+				"description     TEXT,"
+				"standards       BLOB,"
+			    "classes         BLOB,"
+				"PRIMARY KEY (label)"
 			");"
 			"CREATE TABLE IF NOT EXISTS OPTIONS("
 				"ID			 INTEGER NOT NULL DEFAULT 0,"
@@ -224,7 +232,7 @@ compareCalItem( gpointer pCalItem, gpointer sName ) {
  * \return 				completion status
  */
 gint
-getSavedSetupsAndCal(tGlobal *pGlobal) {
+inventorySavedSetupsAndCal(tGlobal *pGlobal) {
 
 	g_list_free_full ( g_steal_pointer (&pGlobal->pCalList), (GDestroyNotify)freeCalItem );
 	pGlobal->pCalList = NULL;
@@ -293,6 +301,61 @@ getSavedSetupsAndCal(tGlobal *pGlobal) {
 	return OK;
 }
 
+
+/*!     \brief  Free the g_malloced strings in the tHP8753cal structure
+ *
+ * When we delete a calibration profile we free the allocated memory.
+ * When we recall from the database we also free the previously recalled
+ * allocated strings
+ *
+ * \param pCalItem	pointer to tHP8753cal holding the allocated strings
+ */
+void
+freeCalKitIdentifierItem( gpointer pCalItem ) {
+	tCalibrationKitIdentifier *pCal = (tCalibrationKitIdentifier *)pCalItem;
+
+	g_free( pCal->sLabel );
+	g_free( pCal->sDescription );
+
+	g_free( pCal );
+}
+
+
+/*!     \brief  Comparison routine for sorting the calibration kit identifier structures
+ *
+ * Determine if the name string in one tCalibrationKitIdentifier is greater, equal to or less than another.
+ *
+ * \param  pCalItem1	pointer to tCalibrationKitIdentifier holding the first name
+ * \param  pCalItem1	pointer tCalibrationKitIdentifier tHP8753cal holding the second name
+ * \return 0 for equal, +ve for greater than and -ve for less than
+ */
+gint
+compareCalKitIdentifierItemForSort( gpointer pCalKitIdenticierItem1, gpointer pCalKitIdenticierItem2 ) {
+	if( pCalKitIdenticierItem1 == NULL || pCalKitIdenticierItem2 == NULL )
+		return 0;
+	else
+		return strcmp(((tCalibrationKitIdentifier *)pCalKitIdenticierItem1)->sLabel,
+				((tCalibrationKitIdentifier *)pCalKitIdenticierItem2)->sLabel);
+}
+
+
+/*!     \brief  Comparison routine for searching for a calibration structures
+ *
+ * Determine if the label string in one tCalibrationKitIdentifier is greater, equal to or less than another.
+ *
+ * \param  pCalKitIdentfierItem    pointer to tCalibrationKitIdentifier holding the first label
+ * \param  sLabel                  pointer to label of the calibration kit
+ * \return 0                       for equal, +ve for greater than and -ve for less than
+ */
+gint
+compareCalKitIdentifierItem( gpointer pCalKitIdentfierItem, gpointer sLabel ) {
+	if( pCalKitIdentfierItem == NULL || sLabel == NULL )
+		return 0;
+	else
+		return strcmp(((tCalibrationKitIdentifier *)pCalKitIdentfierItem)->sLabel, sLabel);
+}
+
+
 /*!     \brief  Get the names of the saved trace profiles
  *
  * Populate a list of available trace profiles
@@ -301,7 +364,7 @@ getSavedSetupsAndCal(tGlobal *pGlobal) {
  * \return 				completion status
  */
 guint
-getSavedTraceNames(tGlobal *pGlobal) {
+inventorySavedTraceNames(tGlobal *pGlobal) {
 	gchar *zErrMsg = 0;
 	g_list_free_full ( g_steal_pointer (&pGlobal->pTraceList), (GDestroyNotify)g_free );
 	pGlobal->pTraceList = NULL;
@@ -618,24 +681,39 @@ recoverTraceData(tGlobal *pGlobal, gchar *sName) {
  * \return 			   completion status
  */
 guint
-deleteDBentry(tGlobal *pGlobal, gchar *sName, gboolean bCalibration) {
+deleteDBentry(tGlobal *pGlobal, gchar *sName, tDBtable whichTable) {
 	sqlite3_stmt *stmt = NULL;
 	gchar *sSQL = NULL;
+	GList *listElement = NULL;
 
-	if( bCalibration ) {
+	switch( whichTable ) {
+	case eDB_CALandSETUP:
 		sSQL = "DELETE FROM HP8753C_CALIBRATION WHERE name = (?);";
-		GList *calPreviewElement = g_list_find_custom( pGlobal->pCalList, sName, (GCompareFunc)compareCalItem );
-		if( calPreviewElement ) {
-			freeCalItem(  calPreviewElement->data );
-			pGlobal->pCalList = g_list_remove( pGlobal->pCalList, calPreviewElement->data );
+		listElement = g_list_find_custom( pGlobal->pCalList, sName, (GCompareFunc)compareCalItem );
+		if( listElement ) {
+			freeCalItem(  listElement->data );
+			pGlobal->pCalList = g_list_remove( pGlobal->pCalList, listElement->data );
 		}
-	} else {
+		break;
+	case eDB_TRACE:
 		sSQL = "DELETE FROM HP8753C_TRACEDATA WHERE name = (?);";
-		GList *traceName = g_list_find_custom( pGlobal->pTraceList, sName, (GCompareFunc)strcmp );
-		if( traceName ) {
-			g_free( traceName->data );
-			pGlobal->pTraceList = g_list_remove( pGlobal->pTraceList, traceName->data );
+		listElement = g_list_find_custom( pGlobal->pTraceList, sName, (GCompareFunc)strcmp );
+		if( listElement ) {
+			g_free( listElement->data );
+			pGlobal->pTraceList = g_list_remove( pGlobal->pTraceList, listElement->data );
 		}
+		break;
+	case eDB_CALKIT:
+		sSQL = "DELETE FROM CAL_KITS WHERE label = (?);";
+		listElement = g_list_find_custom( pGlobal->pCalKitList, sName, (GCompareFunc)compareCalKitIdentifierItem );
+		if( listElement ) {
+			freeCalKitIdentifierItem(  listElement->data );
+			pGlobal->pCalKitList = g_list_remove( pGlobal->pCalKitList, listElement->data );
+		}
+		break;
+	default:
+		return 0;
+		break;
 	}
 
 	if (sqlite3_prepare_v2(db, sSQL, -1, &stmt, NULL) != SQLITE_OK) {
@@ -1081,6 +1159,7 @@ recoverProgramOptions(tGlobal *pGlobal) {
 			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_ShowDateTime" )), pGlobal->flags.bShowDateTime);
 			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_SmithGBnotRX" )), pGlobal->flags.bAdmitanceSmith);
 			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_DeltaMarkerAbsolute" )), !pGlobal->flags.bDeltaMarkerZero);
+			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_UserCalKit" )), pGlobal->flags.bSaveUserKit);
 
 			g_free( pGlobal->sGPIBcontrollerName );
 			pGlobal->sGPIBcontrollerName = g_strdup( (gchar *)sqlite3_column_text(stmt, queryIndex++) );
@@ -1139,6 +1218,167 @@ recoverProgramOptions(tGlobal *pGlobal) {
 	}
 	return 0;
 }
+
+
+/*!     \brief  Get the label & description of saved calibration kits
+ *
+ * Populate a list of available calibration kits
+ * including the description.
+ *
+ * \param  pGlobal      pointer to tGlobal structure (containing the pointer to list)
+ * \return 				completion status
+ */
+gint
+inventorySavedCalibrationKits(tGlobal *pGlobal) {
+
+	g_list_free_full ( g_steal_pointer (&pGlobal->pCalKitList), (GDestroyNotify)freeCalItem );
+	pGlobal->pCalKitList = NULL;
+
+	tCalibrationKitIdentifier *pCal;
+	sqlite3_stmt *stmt = NULL;
+	gint queryIndex;
+
+	if (sqlite3_prepare_v2(db,
+			"SELECT a.label, a.description "
+			" FROM CAL_KITS a;", -1, &stmt, NULL) != SQLITE_OK) {
+		postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
+		return ERROR;
+	} else {
+		while (sqlite3_step(stmt) == SQLITE_ROW) {
+			pCal = g_new0(tCalibrationKitIdentifier, 1);
+			queryIndex = 0;
+
+			// label
+			pCal->sLabel = g_strdup( (gchar *)sqlite3_column_text(stmt, queryIndex++) );
+			// description
+			pCal->sDescription = g_strdup( (gchar *)sqlite3_column_text(stmt, queryIndex++) );
+
+			pGlobal->pCalKitList = g_list_prepend(pGlobal->pCalKitList, pCal);
+		}
+		sqlite3_finalize(stmt);
+	}
+
+	pGlobal->pCalKitList = g_list_sort (pGlobal->pCalKitList, (GCompareFunc)compareCalKitIdentifierItemForSort);
+	return OK;
+}
+
+/*!     \brief  Save the calibration kit
+ *
+ * Save the program options (on shutdown)
+ *
+ * \param pGlobal      pointer to tGlobal structure
+ * \return 			   completion status
+ */
+gint
+saveCalKit(tGlobal *pGlobal) {
+
+	sqlite3_stmt *stmt = NULL;
+	tCalibrationKitIdentifier *pCal;
+	gint queryIndex;
+
+	if (sqlite3_prepare_v2(db,
+			"INSERT OR REPLACE INTO CAL_KITS"
+			" (label, description, standards, classes)"
+			" VALUES (?,?,?,?)", -1, &stmt, NULL) != SQLITE_OK) {
+		postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
+		return ERROR;
+	}
+	queryIndex = 0;
+	if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->HP8753calibrationKit.label,
+			strlen( pGlobal->HP8753calibrationKit.label ), SQLITE_STATIC) != SQLITE_OK)
+			goto err;
+	if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->HP8753calibrationKit.description,
+			strlen( pGlobal->HP8753calibrationKit.description ), SQLITE_STATIC) != SQLITE_OK)
+			goto err;
+	if (sqlite3_bind_blob(stmt, ++queryIndex, &pGlobal->HP8753calibrationKit.calibrationStandards,
+			sizeof( tHP8753calibrationStandard) * MAX_CAL_STANDARDS, SQLITE_STATIC) != SQLITE_OK)
+		goto err;
+	if (sqlite3_bind_blob(stmt, ++queryIndex, &pGlobal->HP8753calibrationKit.calibrationClasses,
+			sizeof( tHP8753calibrationClass) * MAX_CAL_CLASSES, SQLITE_STATIC) != SQLITE_OK)
+		goto err;
+
+	if (sqlite3_step(stmt) != SQLITE_DONE)
+		goto err;
+	sqlite3_finalize(stmt);
+
+	GList *listElement = g_list_find_custom( pGlobal->pCalKitList,
+							pGlobal->HP8753calibrationKit.label, (GCompareFunc)compareCalKitIdentifierItem );
+	if( listElement ) {
+		g_free(  ((tCalibrationKitIdentifier *)listElement->data)->sDescription );
+		((tCalibrationKitIdentifier *)listElement->data)->sDescription = g_strdup( pGlobal->HP8753calibrationKit.description );
+	} else {
+		pCal = g_new0(tCalibrationKitIdentifier, 1);
+		// label
+		pCal->sLabel = g_strdup( pGlobal->HP8753calibrationKit.label );
+		// description
+		pCal->sDescription = g_strdup( pGlobal->HP8753calibrationKit.description );
+
+		pGlobal->pCalKitList = g_list_prepend(pGlobal->pCalKitList, pCal);
+		pGlobal->pCalKitList = g_list_sort (pGlobal->pCalKitList, (GCompareFunc)compareCalKitIdentifierItemForSort);
+	}
+	return OK;
+err:
+	postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
+	sqlite3_finalize(stmt);
+
+	return ERROR;
+}
+
+/*!     \brief  Recover the calibration kit
+ *
+ * Recover the calibration kit
+ *
+ * \param pGlobal      pointer to tGlobal structure
+ * \param sLabel       calibration kit label
+ * \return 			   completion status
+ */
+gint
+recoverCalibrationKit(tGlobal *pGlobal, gchar *sLabel) {
+	sqlite3_stmt *stmt = NULL;
+	gint length;
+	const guchar *tBlob;
+	gint queryIndex;
+	gboolean bError = FALSE;
+
+	if (sqlite3_prepare_v2(db,
+			"SELECT label, description, standards, "
+			"  classes FROM CAL_KITS WHERE label = (?);",
+			-1, &stmt, NULL) != SQLITE_OK) {
+		postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
+		return ERROR;
+	} else {
+
+		sqlite3_bind_text(stmt, 1, sLabel, strlen(sLabel), SQLITE_STATIC);
+
+		while (sqlite3_step(stmt) == SQLITE_ROW) {
+			queryIndex = 0;
+
+			g_strlcpy( pGlobal->HP8753calibrationKit.label, (gchar *)sqlite3_column_text(stmt, queryIndex++), MAX_CALKIT_LABEL_SIZE );
+			g_strlcpy( pGlobal->HP8753calibrationKit.description, (gchar *)sqlite3_column_text(stmt, queryIndex++), MAX_CALKIT_LABEL_SIZE );
+
+			length = sqlite3_column_bytes(stmt, queryIndex);
+			if( !bError && length == sizeof( tHP8753calibrationStandard ) * MAX_CAL_STANDARDS ) {
+				tBlob = sqlite3_column_blob(stmt, queryIndex++);
+				memcpy( &pGlobal->HP8753calibrationKit.calibrationStandards, tBlob, sizeof( tHP8753calibrationStandard ) * MAX_CAL_STANDARDS  );
+			} else {
+				bError = TRUE;
+			}
+
+			length = sqlite3_column_bytes(stmt, queryIndex);
+			if( !bError && length == sizeof( tHP8753calibrationClass ) * MAX_CAL_CLASSES ) {
+				tBlob = sqlite3_column_blob(stmt, queryIndex++);
+				memcpy( &pGlobal->HP8753calibrationKit.calibrationClasses, tBlob, sizeof( tHP8753calibrationClass ) * MAX_CAL_CLASSES  );
+			} else {
+				bError = TRUE;
+			}
+		}
+
+		sqlite3_finalize(stmt);
+	}
+	return (bError ? ERROR : 0);
+}
+
+
 
 /*!     \brief  Close the Sqlite3 database
  *

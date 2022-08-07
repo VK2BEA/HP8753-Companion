@@ -29,6 +29,7 @@
 #include <glib-2.0/glib.h>
 #include <hp8753.h>
 #include <math.h>
+#include <sys/utsname.h>
 
 // This factor defines the "curviness". Play with it!
 #define CURVE_F 0.25
@@ -139,6 +140,7 @@ pointInLine(tLine line, gdouble frac) {
  return C;
 }
 
+// De Casteljau's algorithm
 tComplex
 bezierInterpolate(
     tComplex pt0,  tComplex pt1, 
@@ -283,3 +285,27 @@ doubleToStringWithSpaces( gdouble value, gchar *sUnits ) {
 	}
 	return( g_string_free( strFreq, FALSE ));
 }
+
+/*! \brief Log version to journal
+ *
+ */
+
+void
+logVersion(void) {
+
+    struct utsname UTSbuffer;
+
+    errno = 0;
+    if ( uname(&UTSbuffer) != 0) {
+    	LOG( G_LOG_LEVEL_CRITICAL, "%s", strerror (errno) );
+        return;
+    }
+    LOG( G_LOG_LEVEL_INFO, "%s %s %s %s %s",
+            UTSbuffer.sysname, UTSbuffer.nodename,
+            UTSbuffer.release, UTSbuffer.version,
+            UTSbuffer.machine);
+    LOG( G_LOG_LEVEL_INFO, "HP8753 Companion version: %s", VERSION );
+
+    return;
+}
+

@@ -42,10 +42,10 @@ getSparam( gint descGPIB_HP8753, tGlobal *pGlobal, tComplex *Sparam[], gint *nPo
 	GPIBwrite(descGPIB_HP8753, "FORM2;", pGPIBstatus);
 	GPIBwrite(descGPIB_HP8753, "OUTPFORM;", pGPIBstatus);
 	// first read header and size of data
-	GPIBread(descGPIB_HP8753, headerAndSize, HEADER_SIZE, pGPIBstatus);
+	GPIBasyncRead(descGPIB_HP8753, headerAndSize, HEADER_SIZE, pGPIBstatus, 20 * TIMEOUT_READ_1SEC);
 	sizeF2 = GUINT16_FROM_BE(headerAndSize[1]);
 	pFORM2 = g_malloc(sizeF2);
-	GPIBread(descGPIB_HP8753, pFORM2, sizeF2, pGPIBstatus);
+	GPIBasyncRead(descGPIB_HP8753, pFORM2, sizeF2, pGPIBstatus, 30 * TIMEOUT_READ_1SEC);
 
 	*nPoints = sizeF2 / (sizeof(gint32) * 2);
 	*Sparam = g_realloc( *Sparam, sizeof(tComplex) * sizeF2 );
@@ -99,7 +99,7 @@ getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	setHP8753channel( descGPIB_HP8753, eCH_TWO, pGPIBstatus );
 	GPIBwrite(descGPIB_HP8753, "S21;SMIC;SING;OPC?;WAIT;", pGPIBstatus);
 	// read "1" for complete
-	if( GPIB_AsyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 600.0, pGlobal->messageQueueToGPIB ) != eRD_OK ) {
+	if( GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 600.0 ) != eRDWT_OK ) {
 		*pGPIBstatus = ERR;
 		goto err;
 	}
@@ -124,7 +124,7 @@ getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	postInfo("Set for S12 + S22");
 	GPIBwrite( descGPIB_HP8753, "S22;SMIC;SING;OPC?;WAIT;", pGPIBstatus);
 	// read "1" for complete
-	if( GPIB_AsyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 600.0, pGlobal->messageQueueToGPIB ) != eRD_OK ) {
+	if( GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 600.0 ) != eRDWT_OK ) {
 		*pGPIBstatus = ERR;
 		goto err;
 	}
@@ -139,14 +139,13 @@ getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 
 	postInfo("Restore setup");
 	// Return the analyzer to the previous configuration by sending back the learn string
-	GPIBwrite( descGPIB_HP8753, "FORM1;", pGPIBstatus);
-	GPIBwrite( descGPIB_HP8753, "INPULEAS;", pGPIBstatus);
+	GPIBwrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus);
 	// Includes the 4 byte header with size in bytes (big endian)
 	GPIBwriteBinary( descGPIB_HP8753,
 			learnString,
 			GUINT16_FROM_BE(*(guint16 *)(learnString+2)) + 4, pGPIBstatus );
 	GPIBwrite( descGPIB_HP8753, "OPC?;WAIT;", pGPIBstatus);
-	GPIBread( descGPIB_HP8753, &complete, 1, pGPIBstatus);
+	GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 10 * TIMEOUT_READ_1MIN);
 	g_free( learnString );
 
 	return( GPIBfailed( *pGPIBstatus )  );

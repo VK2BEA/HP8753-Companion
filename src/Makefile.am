@@ -2,12 +2,22 @@ MAINTAINERCLEANFILES = Makefile.in
 
 #pkginclude_HEADERS = ../include/GPIBcomms.h ../include/hp8753comms.h ../include/hp8753.h ../include/messageEvent.h ../include/smithChartPS.h
 #Library specific CPPFLAGS
+
+if DEBUG
+	AM_CFLAGS = -g3 -O0
+	AM_CXXFLAGS = -g3 -O0
+else
+	AM_CFLAGS = -O2
+	AM_CXXFLAGS = -O2
+endif
+
 hp8753_CPPFLAGS = "-I$(top_srcdir)/include"
 hp8753_CPPFLAGS += @GLIB_CFLAGS@ @GTK3_CFLAGS@ @SQLITE3_CFLAGS@
 
+hp8753_CFLAGS = $(AM_CFLAGS)
 hp8753_CXXFLAGS = $(AM_CXXFLAGS)
 
-hp8753_LDFLAGS = -lgpib -lm -lgs -lsystemd -rdynamic
+hp8753_LDFLAGS = -lgpib -lm -lgs -rdynamic
 hp8753_LDFLAGS += @GLIB_LIBS@ @GTK3_LIBS@ @SQLITE3_LIBS@
 
 #
@@ -24,11 +34,12 @@ hp8753_SOURCES = databaseSaveAndRestore.c GTKplotMarkers.c \
                  messageEvent.c utility.c GTKplot.c \
                  plotCartesian.c plotPolar.c plotSmith.c \
                  GTKwidgetCallbacks.c HP8753_S2P.c HPicon.c \
-                 resource.c 
+                 resource.c parseCalibrationKit.c
 hp8753_SOURCES += $(top_srcdir)/include/GPIBcomms.h \
 				  $(top_srcdir)/include/hp8753comms.h \
 				  $(top_srcdir)/include/hp8753.h \
 				  $(top_srcdir)/include/GTKplot.h \
 				  $(top_srcdir)/include/messageEvent.h \
-				  $(top_srcdir)/include/smithChartPS.h
+				  $(top_srcdir)/include/smithChartPS.h \
+				  $(top_srcdir)/include/calibrationKit.h
 
