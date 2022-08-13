@@ -1041,7 +1041,15 @@ CB_Spin_GPIB_HP8753_PID (GtkSpinButton* wSpin, tGlobal *pGlobal) {
 	postDataToGPIBThread (TG_SETUP_GPIB, NULL);
 }
 
-// Radio buttons for setup and calibration or trace
+/*!     \brief  Callback when selects Calibration or Trace GtkRadioButton
+ *
+ * Callback when selects Calibration or Trace GtkRadioButton.
+ * This will also sensitize the appropriate GtkComboxBoxText &
+ * change the GtkNoteBook page to the calibration or trace information / notes.
+ *
+ * \param  wCalibration pointer to radio button widget
+ * \param  tGlobal	    pointer global data
+ */
 void
 CB_Radio_Calibration ( GtkRadioButton *wCalibration, tGlobal *pGlobal ) {
 
@@ -1089,9 +1097,16 @@ CB_Radio_Calibration ( GtkRadioButton *wCalibration, tGlobal *pGlobal ) {
 	gtk_label_set_markup (wLabel, pGlobal->flags.bCalibrationOrTrace ? "delete ⚖" : "delete 📈" );
 }
 
-// Signal for change GtkEditable child of GtkComboBoxText widgets
-//   - validate against entries in database an if not found, desensitize Recall and Delete buttons
-
+/*!     \brief  Callback when user types in the ComboBoxText (editable) for the calibration profile name
+ *
+ * Callback when user types in the ComboBoxText (editable) for the calibration profile name.
+ * Sensitize the 'save' and 'delete' buttons if the text matches a saved profile, otherwise
+ * desensitize the buttons.
+ * If the profile name matches an existing profile .. display the info for that profile
+ *
+ * \param  wEditable    pointer to GtkCheckBoxText widget
+ * \param  tGlobal	    pointer global data
+ */
 void
 CB_EditableCalibrationProfileName( GtkEditable *editable, tGlobal *pGlobal ) {
 	GtkTextBuffer* wTBnote =  gtk_text_view_get_buffer( GTK_TEXT_VIEW( g_hash_table_lookup(pGlobal->widgetHashTable,
@@ -1118,6 +1133,13 @@ CB_EditableCalibrationProfileName( GtkEditable *editable, tGlobal *pGlobal ) {
 	}
 }
 
+/*!     \brief  Callback when user types in the ComboBoxText (editable) for the trace name
+ *
+ * Callback when user types in the ComboBoxText (editable) for the trace name
+ *
+ * \param  wEditable    pointer to GtkCheckBoxText widget
+ * \param  tGlobal	    pointer global data
+ */
 void
 CB_EditableTraceProfileName( GtkEditable *wEditable, tGlobal *pGlobal ) {
 	gtk_notebook_set_current_page ( GTK_NOTEBOOK( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_Note")), 1 );
@@ -1127,6 +1149,13 @@ CB_EditableTraceProfileName( GtkEditable *wEditable, tGlobal *pGlobal ) {
 	}
 }
 
+/*!     \brief  Callback / Cal Kit page / "Options" "Show Date/Time" GtkCheckButton
+ *
+ * Callback when the "Show Date/Time" GtkButton on the "Options" notebook page is pressed
+ *
+ * \param  wCkButton      pointer to analyze learn string button widget
+ * \param  tGlobal	    pointer global data
+ */
 void
 CB_ChkBtn_ShowDateTime (GtkCheckButton *wCkButton, tGlobal *pGlobal) {
 		pGlobal->flags.bShowDateTime = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( wCkButton ) );
@@ -1134,6 +1163,13 @@ CB_ChkBtn_ShowDateTime (GtkCheckButton *wCkButton, tGlobal *pGlobal) {
 				(gconstpointer)"WID_DrawingArea_Plot_A")));
 }
 
+/*!     \brief  Callback / Cal Kit page / "Options" "Admittance/Susceptance" GtkCheckButton
+ *
+ * Callback when the "Admittance/Susceptance" GtkButton on the "Options" notebook page is pressed
+ *
+ * \param  wCkButton      pointer to analyze learn string button widget
+ * \param  tGlobal	    pointer global data
+ */
 void
 CB_ChkBtn_SmithGBnotRX (GtkCheckButton *wCkButton, tGlobal *pGlobal) {
 	pGlobal->flags.bAdmitanceSmith = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( wCkButton ) );
@@ -1143,6 +1179,13 @@ CB_ChkBtn_SmithGBnotRX (GtkCheckButton *wCkButton, tGlobal *pGlobal) {
 			(gconstpointer)"WID_DrawingArea_Plot_B")));
 }
 
+/*!     \brief  Callback / Cal Kit page / "Options" "Delta Marker Actual" GtkCheckButton
+ *
+ * Callback when the "Delta Marker Actual" GtkButton on the "Options" notebook page is pressed
+ *
+ * \param  wCkButton      pointer to analyze learn string button widget
+ * \param  tGlobal	    pointer global data
+ */
 void
 CB_ChkBtn_DeltaMarkerActual (GtkCheckButton *wCkButton, tGlobal *pGlobal) {
 	pGlobal->flags.bDeltaMarkerZero = !gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( wCkButton ) );
@@ -1152,14 +1195,30 @@ CB_ChkBtn_DeltaMarkerActual (GtkCheckButton *wCkButton, tGlobal *pGlobal) {
 			(gconstpointer)"WID_DrawingArea_Plot_B")));
 }
 
+/*!     \brief  Callback / Cal Kit page / "Options" "Analyze Learn String" GtkButton
+ *
+ * Callback when the "Analyze Learn String" GtkButton on the "Options" notebook page is pressed
+ *
+ * \param  wButton      pointer to analyze learn string button widget
+ * \param  tGlobal	    pointer global data
+ */
 void
 CB_Btn_AnalyzeLS( GtkButton *wBtnAnalyzeLS, tGlobal *pGlobal ) {
 	sensitiseControlsInUse( pGlobal, FALSE );
 	postDataToGPIBThread (TG_ANALYZE_LEARN_STRING, NULL);
 }
 
+/*!     \brief  Callback / GtkNotebook page changed
+ *
+ * Callback when the GtkNotebook page has changed (Calibration/Trace/Data/Options/GPIB/Cal. Kits)
+ *
+ * \param  wNotebook      pointer to GtkNotebook widget
+ * \param  wPage          pointer to the current page (box or scrolled widget)
+ * \param  nPage          which page was selected
+ * \param  tGlobal	      pointer global data
+ */
 void
-CB_Notebook_Select( GtkNotebook *wNotebook,   GtkWidget* page,
+CB_Notebook_Select( GtkNotebook *wNotebook,   GtkWidget* wPage,
 		  guint nPage, tGlobal *pGlobal ) {
 	if( nPage == 0 ) {
 		gtk_button_clicked( GTK_BUTTON( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_RadioCal")) );
@@ -1168,12 +1227,18 @@ CB_Notebook_Select( GtkNotebook *wNotebook,   GtkWidget* page,
 	}
 }
 
-
+/*!     \brief  Callback / Cal Kit page / change calibration kit selection of GtkComboBoxText
+ *
+ * Callback when the calibration kit GtkComboBoxText on the Cal Kit notebook page is changed
+ *
+ * \param  wCalKitProfile      pointer to GtkComboBox widget
+ * \param  tGlobal	           pointer global data
+ */
 void
-CB_ComboBoxCalKitSelection (GtkComboBox *wCalKitProfile, tGlobal *pGlobal) {
+CB_ComboBoxCalKitSelection (GtkComboBoxText *wCalKitProfile, tGlobal *pGlobal) {
 	GtkLabel *wCalKitDescription = GTK_LABEL(
 			g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer)"WID_Lbl_CalKitDescription") );
-	gint n = gtk_combo_box_get_active( wCalKitProfile );
+	gint n = gtk_combo_box_get_active( GTK_COMBO_BOX( wCalKitProfile ));
 
 	if( n != INVALID ) {
 		tCalibrationKitIdentifier *pCalKitIentifier = (tCalibrationKitIdentifier *)g_list_nth( pGlobal->pCalKitList, n )->data;
@@ -1181,8 +1246,15 @@ CB_ComboBoxCalKitSelection (GtkComboBox *wCalKitProfile, tGlobal *pGlobal) {
 	}
 }
 
+/*!     \brief  Callback / Cal Kit page / "Read XKT" calibration kit GtkButton
+ *
+ * Callback when the "Read XKT" calibration kit GtkButton on the Cal Kit notebook page is pressed
+ *
+ * \param  wButton      pointer to send button widget
+ * \param  tGlobal	    pointer global data
+ */
 void
-CB_ReadXKT (GtkButton * button, tGlobal *pGlobal)
+CB_ReadXKT (GtkButton *wButton, tGlobal *pGlobal)
 {
     GtkWidget *dialog;
     GtkFileChooser *chooser;
@@ -1249,6 +1321,13 @@ CB_ReadXKT (GtkButton * button, tGlobal *pGlobal)
 	gtk_widget_destroy (dialog);
 }
 
+/*!     \brief  Callback / Cal Kit page / delete calibration kit GtkButton
+ *
+ * Callback when the delete calibration kit GtkButton on the Cal Kit notebook page is pressed
+ *
+ * \param  wButton      pointer to send button widget
+ * \param  tGlobal	    pointer global data
+ */
 void
 CB_BtnDeleteCalKit (GtkButton * button, tGlobal *pGlobal)
 {
@@ -1314,6 +1393,13 @@ CB_BtnDeleteCalKit (GtkButton * button, tGlobal *pGlobal)
 	g_free( sQuestion );
 }
 
+/*!     \brief  Callback / Cal Kit page / send calibration kit GtkButton
+ *
+ * Callback when the send calibration kit GtkButton on the Cal Kit notebook page is pressed
+ *
+ * \param  wButton      pointer to send button widget
+ * \param  tGlobal	    pointer global data
+ */
 void
 CB_BtnSendCalKit(GtkButton *wButton, tGlobal *pGlobal) {
 	gint index;
@@ -1333,8 +1419,15 @@ CB_BtnSendCalKit(GtkButton *wButton, tGlobal *pGlobal) {
 	}
 }
 
+/*!     \brief  Callback / Cal Kit page / GtkCheckButton
+ *
+ * Callback when the "+ user kit" GtkCheckButton on the Cal Kit notebook page is changed
+ *
+ * \param  wChkButton	pointer to check button widget
+ * \param  tGlobal	    pointer global data
+ */
 void
-CB_ChkUserCalKit(GtkCheckButton * button, tGlobal *pGlobal) {
-	pGlobal->flags.bSaveUserKit = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( button ) );
+CB_ChkUserCalKit(GtkCheckButton *wChkButton, tGlobal *pGlobal) {
+	pGlobal->flags.bSaveUserKit = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( wChkButton ) );
 }
 

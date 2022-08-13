@@ -165,7 +165,7 @@ drawMarkerText( cairo_t *cr,
 	gchar sUnits[INFO_LEN];
 	const gchar *sUnitsV1, *sUnitsV2;
 	gboolean bPolarOrSmith = FALSE, bUseEngNotation = TRUE;
-	const gchar *mkrLabel[] = {"1:", "2:", "3:", "4"};
+	const gchar *mkrLabel[] = {"1:", "2:", "3:", "4:", "Δ:"};
 
 	gdouble markerFontSize = pGrid->fontSize * 0.90;
 	gdouble lineSpacing = pGrid->lineSpacing * 0.90;
@@ -175,9 +175,8 @@ drawMarkerText( cairo_t *cr,
     	cairo_set_matrix( cr, &pGrid->initialMatrix );
     	cairo_reset_clip( cr );
 
-		cairo_select_font_face(cr, MARKER_FONT_NARROW, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );
+//		cairo_select_font_face(cr, MARKER_FONT_NARROW, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );
 		setCairoFontSize( cr, markerFontSize);
-
 
 		switch( pChannel->format ) {
 		case eFMT_SMITH:
@@ -217,7 +216,10 @@ drawMarkerText( cairo_t *cr,
 		cairo_select_font_face(cr, MARKER_FONT_NARROW, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD );
     	cairo_move_to( cr, X, Y );
     	cairo_show_text( cr, mkrLabel[ mkrNo ]);
-		cairo_select_font_face(cr, MARKER_FONT_NARROW, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );
+		if( pChannel->chFlags.bMkrsDelta && mkrNo == pChannel->deltaMarker )
+			cairo_select_font_face(cr, MARKER_FONT_NARROW, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD );
+		else
+			cairo_select_font_face(cr, MARKER_FONT_NARROW, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );
 
     	// X around which value and unit are given NNN.NNNN | UU
 		X = pGrid->areaWidth - pGrid->makerAreaWidth * 0.25;
@@ -381,7 +383,7 @@ drawMarkers( cairo_t *cr, tGlobal *pGlobal, tGridParameters *pGrid,
 	gdouble X=0.0, Y=0.0;
 	tChannel *pChannel = &pGlobal->HP8753.channels[ channel ];
 	gchar *mkrLabels[] = {"1", "2", "3", "4", ""};
-	gdouble bFixedMarker = FALSE;
+	gboolean bFixedMarker = FALSE;
 	gboolean bActiveShown;
 
 	for( mkrNo = 0, nMkrsShown=0, bActiveShown=FALSE, flagBit = 0x01; mkrNo < MAX_MKRS; mkrNo++, flagBit <<= 1 ) {
@@ -427,38 +429,38 @@ drawMarkers( cairo_t *cr, tGlobal *pGlobal, tGridParameters *pGrid,
 				break;
 			}
 
-		    if( !bFixedMarker ) {
-		    	gint mkrTextPosn;
-				drawMarkerSymbol( cr, pGrid, mkrLabels[mkrNo],
-						mkrNo == pChannel->activeMarker ? eACTIVE_MKR : eNONACTIVE_MKR,
-						pChannel->chFlags.bMkrsDelta && mkrNo == pChannel->deltaMarker,
-						X, Y);
 
-				// Show marker details on screen
-				if( bActiveShown )
-					mkrTextPosn = nMkrsShown;
-				else if ( mkrNo == pChannel->activeMarker )
-					mkrTextPosn = 0;
-				else
-					mkrTextPosn = nMkrsShown + 1;
-				if( pGlobal->flags.bDeltaMarkerZero
-						&& pChannel->chFlags.bMkrsDelta
-						&& mkrNo == pChannel->deltaMarker ) {
-					drawMarkerText( cr, pGlobal, pGrid, channel, mkrNo,
-							mkrNo == pChannel->activeMarker,
-							mkrTextPosn, 0.0, 0.0, 0.0);
-				} else {
-					drawMarkerText( cr, pGlobal, pGrid, channel, mkrNo,
-							mkrNo == pChannel->activeMarker,
-							mkrTextPosn, prtStimulus, prtValueR, prtValueI);
-				}
-
-				if ( mkrNo == pChannel->activeMarker )
-					bActiveShown = TRUE;
-				nMkrsShown++;
-		    } else {
+			gint mkrTextPosn;
+			if( !bFixedMarker )
+			drawMarkerSymbol( cr, pGrid, mkrLabels[mkrNo],
+					mkrNo == pChannel->activeMarker ? eACTIVE_MKR : eNONACTIVE_MKR,
+					pChannel->chFlags.bMkrsDelta && mkrNo == pChannel->deltaMarker,
+					X, Y);
+			else
 				drawMarkerSymbol( cr, pGrid, "", eFIXED_MKR, FALSE, X, Y);
-		    }
+			// Show marker details on screen
+			if( bActiveShown )
+				mkrTextPosn = nMkrsShown;
+			else if ( mkrNo == pChannel->activeMarker )
+				mkrTextPosn = 0;
+			else
+				mkrTextPosn = nMkrsShown + 1;
+			if( pGlobal->flags.bDeltaMarkerZero
+					&& pChannel->chFlags.bMkrsDelta
+					&& mkrNo == pChannel->deltaMarker ) {
+				drawMarkerText( cr, pGlobal, pGrid, channel, mkrNo,
+						mkrNo == pChannel->activeMarker,
+						mkrTextPosn, 0.0, 0.0, 0.0);
+			} else {
+				drawMarkerText( cr, pGlobal, pGrid, channel, mkrNo,
+						mkrNo == pChannel->activeMarker,
+						mkrTextPosn, prtStimulus, prtValueR, prtValueI);
+			}
+
+			if ( mkrNo == pChannel->activeMarker )
+				bActiveShown = TRUE;
+			nMkrsShown++;
+
 		}
 	}
 

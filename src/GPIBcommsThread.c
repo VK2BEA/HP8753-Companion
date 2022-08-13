@@ -139,6 +139,8 @@ GPIB_checkQueue( GAsyncQueue *asyncQueue )
 	}
 }
 
+#define THIRTY_MS 0.030
+#define FIVE_SECONDS 5.0
 /*!     \brief  Write data from the GPIB device asynchronously
  *
  * Read data from the GPIB device asynchronously while checking for exceptions
@@ -156,8 +158,7 @@ tGPIBReadWriteStatus
 GPIBasyncWriteBinary( gint GPIBdescriptor, const void *sData, gint length, gint *pGPIBstatus, gdouble timeoutSecs )
 {
 	gint currentTimeout;
-	glong accumulatedCount = 0;
-#define QUANTUM 50
+	gdouble waitTime = 0.0;
 	tGPIBReadWriteStatus rtn = eRDWT_CONTINUE;
 
 	if( GPIBfailed( *pGPIBstatus ) ) {
@@ -166,42 +167,53 @@ GPIBasyncWriteBinary( gint GPIBdescriptor, const void *sData, gint length, gint 
 
 	ibask(GPIBdescriptor, IbaTMO, &currentTimeout);
 	ibtmo( GPIBdescriptor, TNONE );
+
 	*pGPIBstatus = ibwrta( GPIBdescriptor, sData, length );
 
 	if( GPIBfailed( *pGPIBstatus ) )
 		return eRDWT_ERROR;
+	//todo - remove when linux GPIB driver fixed
+	// a bug in the drive means that the timout used for the ibrda command is not accessed immediatly
+	// we delay, so that the timeout used is TNONE bedore changing to T30ms
+	usleep( 20 * 1000 );
 
+	// set the timout for the ibwait to 30ms
+	ibtmo( GPIBdescriptor, T30ms );
 	do {
-		*pGPIBstatus = ibwait(GPIBdescriptor, 0);
-		// GPIBstatus = ibwait(GPIBdescriptor, TIMO | CMPL | END);
-		if((*pGPIBstatus & ERR) == ERR )
-			rtn= eRDWT_ERROR;
-		else if((*pGPIBstatus & CMPL) == CMPL )
-			rtn = eRDWT_OK;
-		else if( GPIB_checkQueue( NULL ) )
-			rtn = eRDWT_ABORT;
-		else if((*pGPIBstatus & TIMO) == TIMO)
-			rtn = eRDWT_ERROR;
-		if( rtn == eRDWT_CONTINUE )
-			usleep(QUANTUM * 1000);
-		if( ++accumulatedCount > (5000 / QUANTUM)
-				&& accumulatedCount % (1000 / QUANTUM) == 0 ) {
-			gchar *sMessage =  g_strdup_printf( "Waiting for HP8753: %ds",
-					(gint)((gdouble)accumulatedCount / (1000.0 / (gdouble)QUANTUM)) );
-			postInfo( sMessage );
-			g_free( sMessage );
+		// Wait for read completion or timeout
+		*pGPIBstatus = ibwait(GPIBdescriptor, TIMO | CMPL | END);
+		if( (*pGPIBstatus & TIMO) == TIMO ){
+			// Timeout
+			rtn = eRDWT_CONTINUE;
+			waitTime += THIRTY_MS;
+			if( waitTime > FIVE_SECONDS && fmod( waitTime, 1.0 ) < THIRTY_MS ) {
+				gchar *sMessage =  g_strdup_printf( "Waiting for HP8753: %ds", (gint)(waitTime) );
+				postInfo( sMessage );
+				g_free( sMessage );
+			}
+		} else {
+			// did we have a read error
+			if((*pGPIBstatus & ERR) == ERR )
+				rtn= eRDWT_ERROR;
+			// or did we complete the read
+			else if( (*pGPIBstatus & CMPL) == CMPL ||  (*pGPIBstatus & END) == END )
+				rtn = eRDWT_OK;
 		}
-	} while( rtn == eRDWT_CONTINUE && (timeoutSecs -= ((gdouble)QUANTUM / 1000.0)) > 0.0 );
+		// If we get a message on the queue, it is assumed to be an abort
+		if( GPIB_checkQueue( NULL ) )
+			rtn = eRDWT_ABORT;
+	} while( rtn == eRDWT_CONTINUE && (waitTime < timeoutSecs)  );
 
-	if( rtn == eRDWT_OK )
-		*pGPIBstatus = ibwait(GPIBdescriptor, CMPL);
-	else
-		*pGPIBstatus = ibstop( GPIBdescriptor ) | ERR;
+
+	if( rtn != eRDWT_OK )
+		ibstop( GPIBdescriptor );;
+
+	*pGPIBstatus = AsyncIbsta();
 
 	DBG( eDEBUG_EXTENSIVE, "🖊 HP8753: %d / %d bytes", AsyncIbcnt(), length );
 
 	if( (*pGPIBstatus & CMPL) != CMPL )
-		LOG( G_LOG_LEVEL_INFO, "GPIB async read status/error: %04X/%d", ibsta, iberr );
+		LOG( G_LOG_LEVEL_INFO, "GPIB async write status/error: %04X/%d", AsyncIbsta(), AsyncIberr() );
 
 	ibtmo( GPIBdescriptor, currentTimeout);
 	return ( rtn == eRDWT_CONTINUE ? eRDWT_TIMEOUT : rtn );
@@ -240,8 +252,7 @@ tGPIBReadWriteStatus
 GPIBasyncRead( gint GPIBdescriptor, void *readBuffer, long maxBytes, gint *pGPIBstatus, gdouble timeoutSecs )
 {
 	gint currentTimeout;
-	glong accumulatedCount = 0;
-#define QUANTUM 50
+	gdouble waitTime = 0.0;
 	tGPIBReadWriteStatus rtn = eRDWT_CONTINUE;
 
 	if( GPIBfailed( *pGPIBstatus ) ) {
@@ -249,43 +260,54 @@ GPIBasyncRead( gint GPIBdescriptor, void *readBuffer, long maxBytes, gint *pGPIB
 	}
 
 	ibask(GPIBdescriptor, IbaTMO, &currentTimeout);
+	// for the read itself we have no timeout .. we loop using ibwait with short timeout
 	ibtmo( GPIBdescriptor, TNONE );
 	*pGPIBstatus = ibrda( GPIBdescriptor, readBuffer, maxBytes );
 
 	if( GPIBfailed( *pGPIBstatus ) )
 		return eRDWT_ERROR;
 
-	do {
-		*pGPIBstatus = ibwait(GPIBdescriptor, 0);
-		// GPIBstatus = ibwait(GPIBdescriptor, TIMO | CMPL | END);
-		if((*pGPIBstatus & ERR) == ERR )
-			rtn= eRDWT_ERROR;
-		else if((*pGPIBstatus & CMPL) == CMPL )
-			rtn = eRDWT_OK;
-		else if( GPIB_checkQueue( NULL ) )
-			rtn = eRDWT_ABORT;
-		else if((*pGPIBstatus & TIMO) == TIMO)
-			rtn = eRDWT_ERROR;
-		if( rtn == eRDWT_CONTINUE )
-			usleep(QUANTUM * 1000);
-		if( ++accumulatedCount > (5000 / QUANTUM)
-				&& accumulatedCount % (1000 / QUANTUM) == 0 ) {
-			gchar *sMessage =  g_strdup_printf( "Waiting for HP8753: %ds",
-					(gint)((gdouble)accumulatedCount / (1000.0 / (gdouble)QUANTUM)) );
-			postInfo( sMessage );
-			g_free( sMessage );
-		}
-	} while( rtn == eRDWT_CONTINUE && (timeoutSecs -= ((gdouble)QUANTUM / 1000.0)) > 0.0 );
+	//todo - remove when linux GPIB driver fixed
+	// a bug in the drive means that the timout used for the ibrda command is not accessed immediatly
+	// we delay, so that the timeout used is TNONE bedore changing to T30ms
+	usleep( 20 * 1000 );
 
-	if( rtn == eRDWT_OK )
-		*pGPIBstatus = ibwait(GPIBdescriptor, CMPL);
-	else
-		*pGPIBstatus = ibstop( GPIBdescriptor ) | ERR;
+	// set the timout for the ibwait to 30ms
+	ibtmo( GPIBdescriptor, T30ms );
+	do {
+		// Wait for read completion or timeout
+		*pGPIBstatus = ibwait(GPIBdescriptor, TIMO | CMPL | END);
+		if( (*pGPIBstatus & TIMO) == TIMO ){
+			// Timeout
+			rtn = eRDWT_CONTINUE;
+			waitTime += THIRTY_MS;
+			if( waitTime > FIVE_SECONDS && fmod( waitTime, 1.0 ) < THIRTY_MS ) {
+				gchar *sMessage =  g_strdup_printf( "Waiting for HP8753: %ds", (gint)(waitTime) );
+				postInfo( sMessage );
+				g_free( sMessage );
+			}
+		} else {
+			// did we have a read error
+			if((*pGPIBstatus & ERR) == ERR )
+				rtn= eRDWT_ERROR;
+			// or did we complete the read
+			else if( (*pGPIBstatus & CMPL) == CMPL ||  (*pGPIBstatus & END) == END )
+				rtn = eRDWT_OK;
+		}
+		// If we get a message on the queue, it is assumed to be an abort
+		if( GPIB_checkQueue( NULL ) )
+			rtn = eRDWT_ABORT;
+	} while( rtn == eRDWT_CONTINUE && (waitTime < timeoutSecs)  );
+
+	if( rtn != eRDWT_OK )
+		ibstop( GPIBdescriptor );;
+
+	*pGPIBstatus = AsyncIbsta();
 
 	DBG( eDEBUG_EXTENSIVE, "👓 HP8753: %d bytes (%d max)", AsyncIbcnt(), maxBytes );
 
 	if( (*pGPIBstatus & CMPL) != CMPL )
-		LOG( G_LOG_LEVEL_INFO, "GPIB async read status/error: %04X/%d", ibsta, iberr );
+		LOG( G_LOG_LEVEL_INFO, "GPIB async read status/error: %04X/%d", AsyncIbsta(), AsyncIberr() );
 
 	ibtmo( GPIBdescriptor, currentTimeout);
 	return ( rtn == eRDWT_CONTINUE ? eRDWT_TIMEOUT : rtn );
