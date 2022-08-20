@@ -433,7 +433,7 @@ findGPIBdescriptors( tGlobal *pGlobal, gint *pDescGPIBcontroller, gint *pDescGPI
 
 	if( *pDescGPIBcontroller == ERROR ) {
 		string = g_strdup_printf("Cannot find GPIB controller (index %d)", pGlobal->GPIBcontrollerIndex);
-		postMessageToMainLoop(TM_ERROR, string);
+		postError( string );
 		g_free(string);
 		return ERROR;
 	} else {
@@ -442,7 +442,7 @@ findGPIBdescriptors( tGlobal *pGlobal, gint *pDescGPIBcontroller, gint *pDescGPI
 			if ( *pDescGPIBcontroller >= FIRST_ALLOCATED_CONTROLLER_DESCRIPTOR )
 				ibonl(*pDescGPIBcontroller, 0);
 			*pDescGPIBcontroller = INVALID;
-			postMessageToMainLoop(TM_ERROR, "Cannot find GPIB controller");
+			postError("Cannot find GPIB controller");
 			return ERROR;
 		}
 	}
@@ -457,12 +457,12 @@ findGPIBdescriptors( tGlobal *pGlobal, gint *pDescGPIBcontroller, gint *pDescGPI
 	}
 
 	if (*pDescGPIB_HP8753 == ERROR ) {
-		postMessageToMainLoop(TM_ERROR, "Cannot find HP8753C");
+		postError( "Cannot find HP8753C" );
 		return ERROR;
 	}
 
 	if( ! pingGPIBdevice( *pDescGPIBcontroller, *pDescGPIB_HP8753, &GPIBstatus) ) {
-		postMessageToMainLoop(TM_ERROR, "Cannot contact HP8753C");
+		postError( "Cannot contact HP8753C" );
 		return ERROR;
 	} else {
 		postInfo( "Contact with HP8753 established");
@@ -544,6 +544,8 @@ threadGPIB(gpointer _pGlobal) {
 		} else {
 			GPIBstatus = ibask(descGPIB_HP8753, IbaTMO, &timeoutHP8753C); /* Remember old timeout */
 			ibtmo(descGPIB_HP8753, T30s);
+			// send a clear command to HP8753 ..
+			GPIBstatus = ibclr( descGPIB_HP8753 );
 
 			if( ! pGlobal->HP8753.firmwareVersion ) {
 				if( (pGlobal->HP8753.firmwareVersion
@@ -630,7 +632,6 @@ threadGPIB(gpointer _pGlobal) {
 
 				if( GPIBfailed( GPIBstatus ) ) {
 					postError( "Error (ask channel conf.)");
-					LOG( G_LOG_LEVEL_CRITICAL, "retrieve channel configuration" );
 					break;
 				}
 

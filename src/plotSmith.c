@@ -344,7 +344,7 @@ showSmithCursorInfo(
 	returnLoss = -20.0 * log10( gammaMag );
 	VSWR = (1+gammaMag)/(1-gammaMag);
 
-	gammaAngle = 180.0 * atan2( gammaImag, gammaMag) / G_PI;
+	gammaAngle = 180.0 * atan2( gammaImag, gammaReal) / G_PI;
 
 	r = (1.0 - SQU( gammaReal ) - SQU( gammaImag )) / (SQU( 1.0 - gammaReal ) + SQU( gammaImag ));
 	x = (2.0 * gammaImag ) / (SQU( 1 - gammaReal ) + SQU( gammaImag ));

@@ -66,6 +66,6 @@ void postDataToMainLoop (enum _threadmessage Command, void *data);
 void postDataToGPIBThread (enum _threadmessage Command, void *data);
 
 #define postInfo(x)		postMessageToMainLoop( TM_INFO, (x) )
-#define postError(x)	postMessageToMainLoop( TM_ERROR, (x) )
+#define postError(x)	{ postMessageToMainLoop( TM_ERROR, (x) ); LOG( G_LOG_LEVEL_CRITICAL, (x) ); }
 
 #endif /*MESSAGEEVENT_H_*/
