@@ -190,7 +190,7 @@ showPolarCursorInfo(
 	gchar sValue[ BUFFER_SIZE_100 ], *sPrefix="";
 
 	mag = sqrt( SQU( real ) + SQU( imag ) );
-	angle = 180.0 * atan2( imag, mag) / G_PI;
+	angle = 180.0 * atan2( imag, real) / G_PI;
 
 	// We use this font because it has the relevant Unicode glyphs for gamma and degrees
 	cairo_select_font_face(cr, CURSOR_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
