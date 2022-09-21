@@ -146,9 +146,9 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 		for( i=0; i < NVGRIDS+1; i++ ) {
 			double yTicValue = min + (i * perDiv);
 			// This avoids odd runding error isses (0 showing as extremely small number)
-			if( fabs( yTicValue ) < perDiv / 10.0 )
+			if( refVal != 0.0 && fabs( yTicValue ) < perDiv / 1.0e6 )
 				yTicValue = 0.0;
-			sYlabels[i] = engNotation( min + (i * perDiv), 2, eENG_NORMAL, NULL);
+			sYlabels[i] = engNotation( yTicValue, 2, eENG_NORMAL, NULL);
 			cairo_text_extents (cr, sYlabels[i], &YlabelExtents[i]);
 			if( YlabelExtents[i].width + YlabelExtents[i].x_bearing > maxWidth )
 				maxWidth = YlabelExtents[i].width + YlabelExtents[i].x_bearing;
