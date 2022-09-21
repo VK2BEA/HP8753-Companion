@@ -144,6 +144,10 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 		// determine the widest label to properly place the ch2 labels
 		// on the right of the grid (for a dual single plot)
 		for( i=0; i < NVGRIDS+1; i++ ) {
+			double yTicValue = min + (i * perDiv);
+			// This avoids odd runding error isses (0 showing as extremely small number)
+			if( fabs( yTicValue ) < perDiv / 10.0 )
+				yTicValue = 0.0;
 			sYlabels[i] = engNotation( min + (i * perDiv), 2, eENG_NORMAL, NULL);
 			cairo_text_extents (cr, sYlabels[i], &YlabelExtents[i]);
 			if( YlabelExtents[i].width + YlabelExtents[i].x_bearing > maxWidth )

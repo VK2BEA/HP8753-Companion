@@ -59,9 +59,9 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 			clearTimerID = g_timeout_add ( 10000, clearNotification, wLabel );
 
 			if( message->command == TM_INFO )
-				sMarkup = g_markup_printf_escaped("<i>َ%s</i>", message->sMessage);
+				sMarkup = g_markup_printf_escaped("<i>%s</i>", message->sMessage);
 			else
-				sMarkup = g_markup_printf_escaped("<span color='darkgreen'>َ<i>َ%s</i></span>", message->sMessage);
+				sMarkup = g_markup_printf_escaped("<span color='darkgreen'><i>َ%s</i></span>", message->sMessage);
 			gtk_label_set_markup(wLabel, sMarkup);
 			g_free(sMarkup);
 //    		gtk_label_set_text( wLabel, message->sMessage);
@@ -72,10 +72,8 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 				g_source_remove( clearTimerID );
 			clearTimerID = g_timeout_add ( 15000, clearNotification, wLabel );
 
-			gtk_label_set_text(wLabel, message->sMessage);
-
 			sMarkup = g_markup_printf_escaped(
-					"<span color='darkred'>َ%s</span>", message->sMessage);
+					"<span color=\"darkred\">%s</span>", message->sMessage);
 			gtk_label_set_markup(wLabel, sMarkup);
 			g_free(sMarkup);
 
