@@ -571,7 +571,7 @@ showStatusInformation (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tG
 		multiLineText( cr, sInfo, 2, lineSpacing, pGrid->leftMargin + xOffset, pGrid->areaHeight, eTopLeft );
 		g_free( tStr );
 		tStr = engNotation( perDiv, 2,  eENG_NORMAL, NULL );
-		g_snprintf( sInfo, INFO_LEN, "%s%s/div", perDiv ? "10" : tStr, formatSymbols[eFormat]);
+		g_snprintf( sInfo, INFO_LEN, "%s%s/div", perDiv == 0 ? "10" : tStr, formatSymbols[eFormat]);
 		if(	!(eFormat == eFMT_POLAR || eFormat == eFMT_SMITH) )
 			multiLineText( cr, sInfo, 2, lineSpacing,
 					pGrid->leftMargin + xOffset + 1.5 * (pGrid->gridWidth / NHGRIDS), pGrid->areaHeight, eTopLeft );
