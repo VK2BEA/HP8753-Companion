@@ -130,17 +130,17 @@ static gchar    **argsRemainder = NULL;
 
 static const GOptionEntry optionEntries[] =
 {
-  { "debug",           'd', 0, G_OPTION_ARG_INT,
+  { "debug",           'b', 0, G_OPTION_ARG_INT,
           &optDebug, "Print diagnostic messages in journal (0-7)", NULL },
   { "quiet",           'q', 0, G_OPTION_ARG_NONE,
           &bOptQuiet, "No GUI sounds", NULL },
   { "GPIBdeviceID",      'd', 0, G_OPTION_ARG_INT,
           &optDeviceID, "GPIB device ID for HP8753C", NULL },
-  { "GPIBdeviceName",    'n', 0, G_OPTION_ARG_STRING,
+  { "GPIBdeviceName",    'D', 0, G_OPTION_ARG_STRING,
 		          &sOptDeviceName, "GPIB device name for HP8753C (in /etc/gpib.conf)", NULL },
   { "GPIBcontrollerIndex",  'c', 0, G_OPTION_ARG_INT,
           &optControllerIndex, "GPIB controller board index", NULL },
-  { "GPIBcontrollerName",  'c', 0, G_OPTION_ARG_INT,
+  { "GPIBcontrollerName",  'C', 0, G_OPTION_ARG_INT,
 		          &sOptControllerName, "GPIB controller name (in /etc/gpib.conf)", NULL },
   { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &argsRemainder, "", NULL },
   { NULL }

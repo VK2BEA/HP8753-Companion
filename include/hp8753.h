@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.13-1"
+   #define VERSION "1.15-1"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -522,6 +522,7 @@ void logVersion(void);
 #define STIMULUS_LEGEND_FONT "Nimbus Sans"
 
 #define TIMEOUT_SWEEP	200		// if 10Hz RBW and 1601 points, it may take a long time to sweep
+#define LOCAL_DELAYms   50		// Delay after going to local from remote
 
 #if !GLIB_CHECK_VERSION(2, 67, 3)
 static inline gpointer

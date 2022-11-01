@@ -132,7 +132,7 @@ static const SECTION union { const guint8 data[51169]; const double alignment; v
   "\145\162\164\171\040\156\141\155\145\075\042\154\141\142\145\154"
   "\042\040\164\162\141\156\163\154\141\164\141\142\154\145\075\042"
   "\171\145\163\042\076\126\145\162\163\151\157\156\040\061\056\061"
-  "\063\040\055\040\117\143\164\157\142\145\162\040\062\060\062\062"
+  "\064\040\055\040\117\143\164\157\142\145\162\040\062\060\062\062"
   "\074\057\160\162\157\160\145\162\164\171\076\074\160\162\157\160"
   "\145\162\164\171\040\156\141\155\145\075\042\152\165\163\164\151"
   "\146\171\042\076\143\145\156\164\145\162\074\057\160\162\157\160"
@@ -3217,6 +3217,8 @@ GResource *resource_get_resource (void)
 }
 /* GLIB - Library of useful routines for C programming
  * Copyright (C) 1995-1997  Peter Mattis, Spencer Kimball and Josh MacDonald
+ *
+ * SPDX-License-Identifier: LGPL-2.1-or-later
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

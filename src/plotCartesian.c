@@ -61,6 +61,40 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
     {
 		setCairoFontSize(cr, pGrid->fontSize); // initially 10 pixels
 
+		// where in the grid the reference line is (0 to 10)
+		refPos = pChannel->scaleRefPos;
+		// dB per division
+		perDiv = pChannel->scaleVal;
+		// dB at reference line
+		refVal = pChannel->scaleRefVal;
+
+		if( !pChannel->chFlags.bValidData ) {
+			perDiv = 10.0;
+			refPos = 5.0;
+		}
+
+		min = -refPos * perDiv + refVal;
+		max = min + (NVGRIDS * perDiv);
+		// We create and measure the size of tha labels so that we can
+		// determine the widest label to properly place the ch2 labels
+		// on the right of the grid (for a dual single plot)
+		for( i=0; i < NVGRIDS+1; i++ ) {
+			double yTicValue = min + (i * perDiv);
+			// This avoids odd runding error isses (0 showing as extremely small number)
+			if( refVal != 0.0 && fabs( yTicValue ) < perDiv / 1.0e6 )
+				yTicValue = 0.0;
+			sYlabels[i] = engNotation( yTicValue, 2, eENG_NORMAL, NULL);
+			cairo_text_extents (cr, sYlabels[i], &YlabelExtents[i]);
+			if( YlabelExtents[i].width + YlabelExtents[i].x_bearing > maxWidth )
+				maxWidth = YlabelExtents[i].width + YlabelExtents[i].x_bearing;
+		}
+		// If we have a larger than usual response (Y) label, then make room by expanding the margin
+		if( maxWidth > pGrid->leftMargin ) {
+			pGrid->leftMargin = maxWidth + pGrid->textMargin;
+			if( pGrid->overlay.bCartesian  )
+				pGrid->rightMargin = maxWidth + pGrid->textMargin;
+		}
+
 		// Draw grid pattern
 
 		// Don't redraw if we have already drawn it (when overlaying)
@@ -119,40 +153,12 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 		if( pGrid->overlay.bAny && channel == eCH_TWO )
 			showStimulusInformation (cr, pGrid, channel, pGlobal);
 
-		// where in the grid the reference line is (0 to 10)
-		refPos = pChannel->scaleRefPos;
-		// dB per division
-		perDiv = pChannel->scaleVal;
-		// dB at reference line
-		refVal = pChannel->scaleRefVal;
-
-		if( !pChannel->chFlags.bValidData ) {
-			perDiv = 10.0;
-			refPos = 5.0;
-		}
-
-		min = -refPos * perDiv + refVal;
-		max = min + (NVGRIDS * perDiv);
-
 		setTraceColor( cr, pGrid->overlay.bAny, channel );
 
 		// y-axis labels
 		// put bottom left of the grid at 0.0
 		cairo_translate( cr, pGrid->leftMargin, pGrid->bottomMargin);
 
-		// We create and measure the size of tha labels so that we can
-		// determine the widest label to properly place the ch2 labels
-		// on the right of the grid (for a dual single plot)
-		for( i=0; i < NVGRIDS+1; i++ ) {
-			double yTicValue = min + (i * perDiv);
-			// This avoids odd runding error isses (0 showing as extremely small number)
-			if( refVal != 0.0 && fabs( yTicValue ) < perDiv / 1.0e6 )
-				yTicValue = 0.0;
-			sYlabels[i] = engNotation( yTicValue, 2, eENG_NORMAL, NULL);
-			cairo_text_extents (cr, sYlabels[i], &YlabelExtents[i]);
-			if( YlabelExtents[i].width + YlabelExtents[i].x_bearing > maxWidth )
-				maxWidth = YlabelExtents[i].width + YlabelExtents[i].x_bearing;
-		}
 		for( i=0; i < NVGRIDS+1; i++ ) {
 			if( !pGrid->overlay.bCartesian || channel == eCH_ONE ) {
 				cairo_move_to(cr, - (YlabelExtents[i].width + YlabelExtents[i].x_bearing) - pGrid->textMargin,

@@ -132,7 +132,7 @@ GPIB_checkQueue( GAsyncQueue *asyncQueue )
 	if( asyncQueue )
 		queueToCheck = asyncQueue;
 
-	if( !asyncQueue ) {
+	if( !asyncQueue && queueToCheck ) {
 		return g_async_queue_length( queueToCheck );
 	} else {
 		return 0;
@@ -245,7 +245,6 @@ GPIBasyncWrite( gint GPIBdescriptor, const void *sData, gint *pGPIBstatus, gdoub
  * \param maxBytes       maxium number of bytes to read
  * \param pGPIBstatus    pointer to GPIB status
  * \param timeout        the maximum time to wait before abandoning
- * \param queue          message queue from main thread
  * \return               read status result
  */
 tGPIBReadWriteStatus
@@ -466,12 +465,58 @@ findGPIBdescriptors( tGlobal *pGlobal, gint *pDescGPIBcontroller, gint *pDescGPI
 		return ERROR;
 	} else {
 		postInfo( "Contact with HP8753 established");
-        usleep( 20000 );
 		ibloc( *pDescGPIB_HP8753 );
+		usleep( LOCAL_DELAYms * 1000 );
 	}
 	return 0;
 }
 
+/*!     \brief  close the GPIB devices
+ *
+ * Close the controller if it was opened and close the device
+ *
+ * \param pDescGPIBcontroller pointer to GPIB controller descriptor
+ * \param pDescGPIB_HP8753    pointer to GPIB device descriptor
+ */
+gint
+GPIBclose( gint *pDescGPIBcontroller, gint *pDescGPIB_HP8753 ) {
+	gint GPIBstatusController = 0;
+	gint GPIBstatusDevice = 0;
+
+	// The board index can be used as a device descriptor; however,
+	// if a device desripter was returned from the ibfind, it mist be freed
+	// with ibnol().
+	// The board index corresponds to the minor number /dev/
+	// $ ls -l /dev/gpib0
+	// crw-rw----+ 1 root root 160, 0 May 12 09:24 /dev/gpib0
+	// raise(SIGSEGV);
+
+	if( *pDescGPIBcontroller != INVALID
+			&& *pDescGPIBcontroller >= FIRST_ALLOCATED_CONTROLLER_DESCRIPTOR ) {
+		GPIBstatusController = ibonl(*pDescGPIBcontroller, 0);
+		*pDescGPIBcontroller = INVALID;
+	}
+
+	if( *pDescGPIB_HP8753 != INVALID ) {
+		GPIBstatusDevice = ibonl(*pDescGPIB_HP8753, 0);
+		*pDescGPIB_HP8753 = INVALID;
+	}
+
+	return GPIBstatusController | GPIBstatusDevice;
+}
+
+/*!     \brief  Get real time in ms
+ *
+ * Get the time in milliseconds
+ *
+ * \return       the current time in milliseconds
+ */
+gulong
+now_milliSeconds() {
+	struct timespec now;
+	clock_gettime(CLOCK_REALTIME, &now);
+	return now.tv_sec * 1.0e3 + now.tv_nsec / 1.0e6;
+}
 
 /*!     \brief  Thread to communicate with GPIB
  *
@@ -492,6 +537,7 @@ threadGPIB(gpointer _pGlobal) {
 	messageEventData *message;
 	gboolean bRunning = TRUE;
 	gboolean bHoldThisChannel = FALSE, bHoldOtherChannel = FALSE;
+	gulong datum = 0;
 
 	ibvers(&sGPIBversion);
 
@@ -527,6 +573,7 @@ threadGPIB(gpointer _pGlobal) {
 			findGPIBdescriptors( pGlobal, &descGPIBcontroller, &descGPIB_HP8753 );
 			continue;
 		case TG_END:
+			GPIBclose( &descGPIBcontroller, &descGPIB_HP8753 );
 			bRunning = FALSE;
 			continue;
 		default:
@@ -535,7 +582,7 @@ threadGPIB(gpointer _pGlobal) {
 			}
 			break;
 		}
-
+#define IBLOC(x, y, z) { z = ibloc( x ); y = now_milliSeconds(); usleep( ms( LOCAL_DELAYms ) ); }
 		// Most but not all commands require the GBIB
 		if (descGPIB_HP8753 == INVALID ) {
 			postError( "Cannot obtain GPIB controller or HP8753 descriptors");
@@ -545,7 +592,8 @@ threadGPIB(gpointer _pGlobal) {
 			GPIBstatus = ibask(descGPIB_HP8753, IbaTMO, &timeoutHP8753C); /* Remember old timeout */
 			ibtmo(descGPIB_HP8753, T30s);
 			// send a clear command to HP8753 ..
-			GPIBstatus = ibclr( descGPIB_HP8753 );
+			if( now_milliSeconds() - datum > 2000 )
+			    GPIBstatus = ibclr( descGPIB_HP8753 );
 
 			if( ! pGlobal->HP8753.firmwareVersion ) {
 				if( (pGlobal->HP8753.firmwareVersion
@@ -587,9 +635,7 @@ threadGPIB(gpointer _pGlobal) {
 					GPIBstatus = ibclr( descGPIB_HP8753 );
 				}
 				// local
-				ibloc( descGPIB_HP8753 );
-
-				usleep( ms(250) );
+				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
 
 				break;
 			case TG_SEND_SETUPandCAL_to_HP8753:
@@ -614,8 +660,7 @@ threadGPIB(gpointer _pGlobal) {
 					GPIBstatus = ibclr( descGPIB_HP8753 );
 				}
 				ibtmo(descGPIB_HP8753, timeoutHP8753C);
-				ibloc( descGPIB_HP8753 );
-				usleep( ms(250));
+				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
 				break;
 
 			case TG_RETRIEVE_TRACE_from_HP8753:
@@ -679,8 +724,9 @@ threadGPIB(gpointer _pGlobal) {
 				if( pGlobal->HP8753.flags.bDualChannel &&  pGlobal->HP8753.flags.bSplitChannels )
 					postDataToMainLoop( TM_REFRESH_TRACE, (void *)eCH_TWO );
 
-				if( !bHoldThisChannel )
+				if( !bHoldThisChannel ) {
 					GPIBwrite( descGPIB_HP8753, "CONT;", &GPIBstatus );
+				}
 
 				if( pGlobal->HP8753.flags.bDualChannel ) {
 					// if we are uncoupled, then we need to restart that trace separately
@@ -690,11 +736,10 @@ threadGPIB(gpointer _pGlobal) {
 						setHP8753channel( descGPIB_HP8753, pGlobal->HP8753.activeChannel, &GPIBstatus );
 					}
 				}
-				GPIBwrite( descGPIB_HP8753, "MENUOFF;", &GPIBstatus );
+
 				// beep
-				GPIBwrite( descGPIB_HP8753, "EMIB;", &GPIBstatus );
-				GPIBstatus = ibloc( descGPIB_HP8753 );
-				usleep( 1000 * 500 );
+				GPIBwrite( descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus );
+				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
 				break;
 
 			case TG_MEASURE_and_RETRIEVe_S2P_from_HP8753:
@@ -716,8 +761,7 @@ threadGPIB(gpointer _pGlobal) {
 					GPIBstatus = ibclr( descGPIB_HP8753 );
 				}
 				// local
-				GPIBstatus = ibloc( descGPIB_HP8753 );
-				usleep( ms(250) );
+				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
 				break;
 			case TG_ANALYZE_LEARN_STRING:
 				postInfo( "Discovering Learn String indexes" );
@@ -728,7 +772,7 @@ threadGPIB(gpointer _pGlobal) {
 					postError( "Cannot analyze Learn String" );
 				}
 				GPIBwrite( descGPIB_HP8753, "EMIB;", &GPIBstatus );
-				GPIBstatus = ibloc( descGPIB_HP8753 );
+				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
 				break;
 			case TG_UTILITY:
 				{
@@ -752,7 +796,7 @@ threadGPIB(gpointer _pGlobal) {
 					postError( "Cal kit transfer error" );
 				}
 				GPIBwrite( descGPIB_HP8753, "EMIB;", &GPIBstatus );
-				GPIBstatus = ibloc( descGPIB_HP8753 );
+				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
 				break;
 			case TG_ABORT:
 				postError( "Communication Aborted" );
