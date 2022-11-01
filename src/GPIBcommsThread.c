@@ -571,6 +571,7 @@ threadGPIB(gpointer _pGlobal) {
 		switch (message->command) {
 		case TG_SETUP_GPIB:
 			findGPIBdescriptors( pGlobal, &descGPIBcontroller, &descGPIB_HP8753 );
+			datum = now_milliSeconds();
 			continue;
 		case TG_END:
 			GPIBclose( &descGPIBcontroller, &descGPIB_HP8753 );
@@ -579,6 +580,7 @@ threadGPIB(gpointer _pGlobal) {
 		default:
 			if (descGPIBcontroller == INVALID || descGPIB_HP8753 == INVALID) {
 				findGPIBdescriptors( pGlobal, &descGPIBcontroller, &descGPIB_HP8753 );
+				datum = now_milliSeconds();
 			}
 			break;
 		}
