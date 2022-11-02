@@ -51,7 +51,7 @@
                   <object class="GtkLabel" id="WID_LblVersion">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">Version 1.13 - October 2022</property>
+                    <property name="label" translatable="yes">Version 1.15 - November 2022</property>
                     <property name="justify">center</property>
                     <attributes>
                       <attribute name="style" value="oblique"/>
