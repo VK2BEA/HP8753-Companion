@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.15-1"
+   #define VERSION "1.16-1"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -548,4 +548,5 @@ g_memdup2(gconstpointer mem, gsize byte_size) {
 		LOG( G_LOG_LEVEL_DEBUG, message, ## __VA_ARGS__)
 
 #undef DELTA_MARKER_ZERO
+#undef USE_PRECAUTIONARY_DEVICE_IBCLR
 #endif /* HP8753COMMS_H_ */

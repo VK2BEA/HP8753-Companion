@@ -366,6 +366,7 @@ gboolean pingGPIBdevice(gint descGPIBboard, gint descGPIBdevice, gint *pGPIBstat
 	// set new timeout (for ping purpose only)
 	if( (*pGPIBstatus = ibtmo(descGPIBboard, T1s)) & ERR )
 		goto err;
+
 	// Get the device PID
 	if( (*pGPIBstatus = ibask(descGPIBdevice, IbaPAD, &PID)) & ERR )
 			goto err;
@@ -537,7 +538,7 @@ threadGPIB(gpointer _pGlobal) {
 	messageEventData *message;
 	gboolean bRunning = TRUE;
 	gboolean bHoldThisChannel = FALSE, bHoldOtherChannel = FALSE;
-	gulong datum = 0;
+	gulong __attribute__((unused)) datum = 0;
 
 	ibvers(&sGPIBversion);
 
@@ -593,16 +594,18 @@ threadGPIB(gpointer _pGlobal) {
 		} else {
 			GPIBstatus = ibask(descGPIB_HP8753, IbaTMO, &timeoutHP8753C); /* Remember old timeout */
 			ibtmo(descGPIB_HP8753, T30s);
+#ifdef USE_PRECAUTIONARY_DEVICE_IBCLR
 			// send a clear command to HP8753 ..
 			if( now_milliSeconds() - datum > 2000 )
 			    GPIBstatus = ibclr( descGPIB_HP8753 );
-
+#endif
 			if( ! pGlobal->HP8753.firmwareVersion ) {
 				if( (pGlobal->HP8753.firmwareVersion
 						= get8753firmwareVersion( descGPIB_HP8753,
 								&pGlobal->HP8753.sProduct, &GPIBstatus )) == INVALID ) {
 					postError( "Cannot query identity - cannot proceed");
 					postMessageToMainLoop(TM_COMPLETE_GPIB, NULL);
+					ibtmo(descGPIB_HP8753, timeoutHP8753C);
 					continue;
 				}
 				selectLearningStringIndexes( pGlobal );
@@ -612,6 +615,7 @@ threadGPIB(gpointer _pGlobal) {
 				postError( "Not an HP8753 - cannot proceed");
 				postMessageToMainLoop(TM_COMPLETE_GPIB, NULL);
 				pGlobal->HP8753.firmwareVersion = 0;
+				ibtmo(descGPIB_HP8753, timeoutHP8753C);
 				continue;
 			}
 
@@ -629,12 +633,15 @@ threadGPIB(gpointer _pGlobal) {
 					postError( "Could not get setup/cal from HP8753" );
 				}
 
-				// restore timeout
-				ibtmo(descGPIB_HP8753, timeoutHP8753C);
+				ibtmo(descGPIB_HP8753, T1s);
 				// clear errors
 				if( GPIBfailed( GPIBstatus ) ) {
 					usleep( ms(250) );
 					GPIBstatus = ibclr( descGPIB_HP8753 );
+					usleep( ms(250) );
+				} else {
+					// beep
+					GPIBwrite( descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus );
 				}
 				// local
 				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
@@ -656,13 +663,19 @@ threadGPIB(gpointer _pGlobal) {
 				} else {
 					postError ( "Setup and Calibration failed" );
 				}
+				ibtmo(descGPIB_HP8753, T1s);
 				// clear errors
 				if( GPIBfailed( GPIBstatus ) ) {
 					usleep( ms(250) );
 					GPIBstatus = ibclr( descGPIB_HP8753 );
+					usleep( ms(250) );
+				} else {
+					// beep
+					GPIBwrite( descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus );
 				}
-				ibtmo(descGPIB_HP8753, timeoutHP8753C);
+				// local
 				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
+
 				break;
 
 			case TG_RETRIEVE_TRACE_from_HP8753:
@@ -739,8 +752,17 @@ threadGPIB(gpointer _pGlobal) {
 					}
 				}
 
-				// beep
-				GPIBwrite( descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus );
+				ibtmo(descGPIB_HP8753, T1s);
+				// clear errors
+				if( GPIBfailed( GPIBstatus ) ) {
+					usleep( ms(250) );
+					GPIBstatus = ibclr( descGPIB_HP8753 );
+					usleep( ms(250) );
+				} else {
+					// beep
+					GPIBwrite( descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus );
+				}
+				// local
 				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
 				break;
 
@@ -755,12 +777,16 @@ threadGPIB(gpointer _pGlobal) {
 					postDataToMainLoop (TM_SAVE_S2P, message->data );
 					message->data = NULL;
 				}
-				// restore timeout
-				GPIBstatus = ibtmo(descGPIB_HP8753, timeoutHP8753C);
+
+				ibtmo(descGPIB_HP8753, T1s);
 				// clear errors
 				if( GPIBfailed( GPIBstatus ) ) {
 					usleep( ms(250) );
 					GPIBstatus = ibclr( descGPIB_HP8753 );
+					usleep( ms(250) );
+				} else {
+					// beep
+					GPIBwrite( descGPIB_HP8753, "EMIB;", &GPIBstatus );
 				}
 				// local
 				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
@@ -773,7 +799,18 @@ threadGPIB(gpointer _pGlobal) {
 				} else {
 					postError( "Cannot analyze Learn String" );
 				}
-				GPIBwrite( descGPIB_HP8753, "EMIB;", &GPIBstatus );
+
+				ibtmo(descGPIB_HP8753, T1s);
+				// clear errors
+				if( GPIBfailed( GPIBstatus ) ) {
+					usleep( ms(250) );
+					GPIBstatus = ibclr( descGPIB_HP8753 );
+					usleep( ms(250) );
+				} else {
+					// beep
+					GPIBwrite( descGPIB_HP8753, "EMIB;", &GPIBstatus );
+				}
+				// local
 				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
 				break;
 			case TG_UTILITY:
@@ -797,6 +834,17 @@ threadGPIB(gpointer _pGlobal) {
 				} else {
 					postError( "Cal kit transfer error" );
 				}
+
+				// clear errors
+				if( GPIBfailed( GPIBstatus ) ) {
+					usleep( ms(250) );
+					GPIBstatus = ibtmo(descGPIB_HP8753, T1s);
+					GPIBstatus = ibclr( descGPIB_HP8753 );
+					usleep( ms(250) );
+				} else {
+					GPIBstatus = ibtmo(descGPIB_HP8753, T1s);
+				}
+
 				GPIBwrite( descGPIB_HP8753, "EMIB;", &GPIBstatus );
 				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
 				break;
@@ -807,6 +855,9 @@ threadGPIB(gpointer _pGlobal) {
 				break;
 			}
 		}
+
+		// restore timeout
+		ibtmo(descGPIB_HP8753, timeoutHP8753C);
 
 		if( GPIBfailed(GPIBstatus) )
 			postError("GPIB error or timeout");
