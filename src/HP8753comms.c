@@ -520,12 +520,12 @@ getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIB
 			break;
 	}
 
+	GPIBwrite(descGPIB_HP8753, "ENTO", pGPIBstatus);
+
 	// return to active channel if we switched
 	if( activeChannelNow != pGlobal->HP8753.activeChannel ) {
 		setHP8753channel( descGPIB_HP8753, pGlobal->HP8753.activeChannel, pGPIBstatus );
 	}
-
-	GPIBwrite(descGPIB_HP8753, "ENTO", pGPIBstatus);
 
 	return (GPIBfailed(*pGPIBstatus));
 }
