@@ -125,7 +125,7 @@ static gboolean bOptQuiet = 0;
 static gint     optDeviceID = INVALID;
 static gchar    *sOptDeviceName = NULL;
 static gint     optControllerIndex = INVALID;
-static gchar    *sOptControllerName = NULL;
+
 static gchar    **argsRemainder = NULL;
 
 static const GOptionEntry optionEntries[] =
@@ -140,8 +140,6 @@ static const GOptionEntry optionEntries[] =
 		          &sOptDeviceName, "GPIB device name for HP8753C (in /etc/gpib.conf)", NULL },
   { "GPIBcontrollerIndex",  'c', 0, G_OPTION_ARG_INT,
           &optControllerIndex, "GPIB controller board index", NULL },
-  { "GPIBcontrollerName",  'C', 0, G_OPTION_ARG_INT,
-		          &sOptControllerName, "GPIB controller name (in /etc/gpib.conf)", NULL },
   { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &argsRemainder, "", NULL },
   { NULL }
 };
@@ -292,7 +290,6 @@ on_activate (GApplication *app, gpointer udata)
 				TRUE);
 	}
 
-	gtk_entry_set_text( GTK_ENTRY(g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer) "WID_Entry_GPIBcontroller" )), globalData.sGPIBcontrollerName );
 	gtk_entry_set_text( GTK_ENTRY(g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer) "WID_Entry_GPIB_HP8753" )), globalData.sGPIBdeviceName );
 
 	GtkWidget *wRadioBtnCalibration = g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer)"WID_RadioCal");
@@ -367,8 +364,6 @@ on_startup (GApplication *app, gpointer udata)
 	logVersion();
 
 	pGlobal->sGPIBdeviceName     = g_strdup( DEFAULT_GPIB_HP8753C_DEVICE_NAME );
-	pGlobal->sGPIBcontrollerName = g_strdup( DEFAULT_GPIB_CONTROLLER_NAME );
-
 
 	pGlobal->flags.bGPIB_UseCardNoAndPID = FALSE;
 
@@ -376,13 +371,8 @@ on_startup (GApplication *app, gpointer udata)
 		pGlobal->sGPIBdeviceName = sOptDeviceName;
 	}
 
-	if( sOptControllerName )  {
-		pGlobal->sGPIBcontrollerName = sOptControllerName;
-	}
-
 	if( optControllerIndex != INVALID ) {
 		pGlobal->GPIBcontrollerIndex = optControllerIndex;
-		pGlobal->sGPIBcontrollerName = NULL;
 	}
 
 	if( optDeviceID != INVALID ) {

@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.17-1"
+   #define VERSION "1.17-2"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -336,7 +336,7 @@ typedef struct {
 	GHashTable *widgetHashTable;
 
 	gint	 GPIBcontrollerIndex,  GPIBdevicePID;
-	gchar 	*sGPIBcontrollerName, *sGPIBdeviceName;
+	gchar 	*sGPIBdeviceName;
 	GtkPrintSettings *printSettings;
 	GtkPageSetup 	 *pageSetup;
 	gchar			 *sLastDirectory;
@@ -410,11 +410,8 @@ typedef struct {
 } tGridParameters;
 
 #define DEFAULT_GPIB_DEVICE_ID		16
-#define DEFAULT_GPIB_CONTROLLER_NAME "hp82357b"
 #define DEFAULT_GPIB_HP8753C_DEVICE_NAME "hp8753c"
 
-#define D_HP8553C				0
-#define D_HP33401A_MULTIMETER	1
 #define A4882( pad, sad )	( (pad & 0xFF) | ((sad & 0xFF) << 8) )
 
 extern GPIBdevice devices[];

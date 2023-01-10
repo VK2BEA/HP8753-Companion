@@ -596,7 +596,6 @@ threadGPIB(gpointer _pGlobal) {
 				ibtmo(descGPIB_HP8753, T1s);
 				// clear errors
 				if( GPIBfailed( GPIBstatus ) ) {
-					usleep( ms(250) );
 					GPIBstatus = ibclr( descGPIB_HP8753 );
 					usleep( ms(250) );
 				} else {
@@ -626,7 +625,6 @@ threadGPIB(gpointer _pGlobal) {
 				ibtmo(descGPIB_HP8753, T1s);
 				// clear errors
 				if( GPIBfailed( GPIBstatus ) ) {
-					usleep( ms(250) );
 					GPIBstatus = ibclr( descGPIB_HP8753 );
 					usleep( ms(250) );
 				} else {
@@ -715,7 +713,6 @@ threadGPIB(gpointer _pGlobal) {
 				ibtmo(descGPIB_HP8753, T1s);
 				// clear errors
 				if( GPIBfailed( GPIBstatus ) ) {
-					usleep( ms(250) );
 					GPIBstatus = ibclr( descGPIB_HP8753 );
 					usleep( ms(250) );
 				} else {
@@ -741,7 +738,6 @@ threadGPIB(gpointer _pGlobal) {
 				ibtmo(descGPIB_HP8753, T1s);
 				// clear errors
 				if( GPIBfailed( GPIBstatus ) ) {
-					usleep( ms(250) );
 					GPIBstatus = ibclr( descGPIB_HP8753 );
 					usleep( ms(250) );
 				} else {
@@ -763,7 +759,6 @@ threadGPIB(gpointer _pGlobal) {
 				ibtmo(descGPIB_HP8753, T1s);
 				// clear errors
 				if( GPIBfailed( GPIBstatus ) ) {
-					usleep( ms(250) );
 					GPIBstatus = ibclr( descGPIB_HP8753 );
 					usleep( ms(250) );
 				} else {
@@ -797,7 +792,6 @@ threadGPIB(gpointer _pGlobal) {
 
 				// clear errors
 				if( GPIBfailed( GPIBstatus ) ) {
-					usleep( ms(250) );
 					GPIBstatus = ibtmo(descGPIB_HP8753, T1s);
 					GPIBstatus = ibclr( descGPIB_HP8753 );
 					usleep( ms(250) );

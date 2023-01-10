@@ -129,7 +129,6 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 					pGlobal->HP8753cal.perChannelCal[ channel ].settings.bbInterplativeCalibration = eInterplativeCalibration;
 					postInfo( "Retrieve the interpolated calibration arrays");
 				} else {
-					ibclr( descGPIB_HP8753 );
 					pGlobal->HP8753cal.perChannelCal[ channel ].settings.bbInterplativeCalibration = eNoInterplativeCalibration;
 					// Get measured calibration arrays if there are no interpolated arrays
 					GPIBwrite(descGPIB_HP8753, "OUTPCALC01;", pGPIBstatus);
