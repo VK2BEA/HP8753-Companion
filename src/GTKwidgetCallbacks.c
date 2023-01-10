@@ -1014,14 +1014,6 @@ CB_Toggle_UseGPIB_SlotAndID (GtkToggleButton* wToggle, tGlobal *pGlobal) {
 }
 
 void
-CP_Entry_GPIBname_Controller (GtkEditable* wEditable, tGlobal *pGlobal)
-{
-	g_free( pGlobal->sGPIBcontrollerName );
-	pGlobal->sGPIBcontrollerName = g_strdup( gtk_editable_get_chars( wEditable, 0, -1 ) );
-	postDataToGPIBThread (TG_SETUP_GPIB, NULL);
-}
-
-void
 CP_Entry_GPIBname_HP8753 (GtkEditable* wEditable, tGlobal *pGlobal)
 {
 	g_free( pGlobal->sGPIBdeviceName );

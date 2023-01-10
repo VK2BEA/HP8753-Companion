@@ -355,11 +355,20 @@ const gint numOfCalArrays[] =
  * \return               TRUE if device responds or FALSE if not
  */
 static
-gboolean pingGPIBdevice(gint descGPIBboard, gint descGPIBdevice, gint *pGPIBstatus) {
+gboolean pingGPIBdevice(gint descGPIBdevice, gint *pGPIBstatus) {
 	gint PID = INVALID;
 	gint timeout;
+	gint descGPIBboard = INVALID;
 
 	gshort bFound = FALSE;
+
+	// Get the device PID
+	if( (*pGPIBstatus = ibask(descGPIBdevice, IbaPAD, &PID)) & ERR )
+			goto err;
+	// Get the board number
+	if( (*pGPIBstatus = ibask(descGPIBdevice, IbaBNA, &descGPIBboard)) & ERR )
+			goto err;
+
 	// save old timeout
 	if( (*pGPIBstatus = ibask(descGPIBboard, IbaTMO, &timeout)) & ERR )
 		goto err;
@@ -367,9 +376,6 @@ gboolean pingGPIBdevice(gint descGPIBboard, gint descGPIBdevice, gint *pGPIBstat
 	if( (*pGPIBstatus = ibtmo(descGPIBboard, T1s)) & ERR )
 		goto err;
 
-	// Get the device PID
-	if( (*pGPIBstatus = ibask(descGPIBdevice, IbaPAD, &PID)) & ERR )
-			goto err;
 	// Actually do the ping
 	if ((*pGPIBstatus = ibln(descGPIBboard, PID,  NO_SAD, &bFound)) & ERR)
 		goto err;
@@ -395,8 +401,7 @@ err:
  * \return                    0 on sucess or ERROR on failure
  */
 gint
-findGPIBdescriptors( tGlobal *pGlobal, gint *pDescGPIBcontroller, gint *pDescGPIB_HP8753 ) {
-	gshort lineStatus;
+findGPIBdescriptors( tGlobal *pGlobal, gint *pDescGPIB_HP8753 ) {
 	gint GPIBstatus = 0;
 
 	// The board index can be used as a device descriptor; however,
@@ -408,49 +413,20 @@ findGPIBdescriptors( tGlobal *pGlobal, gint *pDescGPIBcontroller, gint *pDescGPI
 #define FIRST_ALLOCATED_CONTROLLER_DESCRIPTOR 16
 	// raise(SIGSEGV);
 
-	if( *pDescGPIBcontroller != INVALID
-			&& *pDescGPIBcontroller >= FIRST_ALLOCATED_CONTROLLER_DESCRIPTOR )
-		ibonl(*pDescGPIBcontroller, 0);
-
 	if( *pDescGPIB_HP8753 != INVALID ) {
 		ibonl(*pDescGPIB_HP8753, 0);
 	}
 
-	*pDescGPIBcontroller = INVALID;
 	*pDescGPIB_HP8753 = INVALID;
 
-	gchar *string;
-
+	// Look for the HP8753
 	if( pGlobal->flags.bGPIB_UseCardNoAndPID ) {
-			if( pGlobal->GPIBcontrollerIndex >= 0 &&
-			    pGlobal->GPIBcontrollerIndex < GPIB_MAX_NUM_BOARDS ) {
-				*pDescGPIBcontroller = pGlobal->GPIBcontrollerIndex;
-				ibtmo( *pDescGPIBcontroller, T30s );
-			}
-	} else {
-		*pDescGPIBcontroller = ibfind(pGlobal->sGPIBcontrollerName);
-	}
-
-	if( *pDescGPIBcontroller == ERROR ) {
-		string = g_strdup_printf("Cannot find GPIB controller (index %d)", pGlobal->GPIBcontrollerIndex);
-		postError( string );
-		g_free(string);
-		return ERROR;
-	} else {
-		// check if it's really there
-		if ( GPIBfailed( iblines(*pDescGPIBcontroller, &lineStatus) )) {
-			if ( *pDescGPIBcontroller >= FIRST_ALLOCATED_CONTROLLER_DESCRIPTOR )
-				ibonl(*pDescGPIBcontroller, 0);
-			*pDescGPIBcontroller = INVALID;
-			postError("Cannot find GPIB controller");
+		if ( pGlobal->GPIBcontrollerIndex >= 0 && pGlobal->GPIBdevicePID >= 0 )
+			*pDescGPIB_HP8753 = ibdev(pGlobal->GPIBcontrollerIndex, pGlobal->GPIBdevicePID, 0, T3s, GPIB_EOI, GPIB_EOS_NONE);
+		else {
+			postError( "Bad GPIB controller or device number" );
 			return ERROR;
 		}
-	}
-
-	// Now look for the HP8753
-	if( pGlobal->flags.bGPIB_UseCardNoAndPID ) {
-		if ( pGlobal->GPIBdevicePID >= 0 )
-			*pDescGPIB_HP8753 = ibdev(pGlobal->GPIBcontrollerIndex, pGlobal->GPIBdevicePID, 0, T3s, GPIB_EOI, GPIB_EOS_NONE);
 	} else {
 		*pDescGPIB_HP8753 = ibfind(pGlobal->sGPIBdeviceName);
 		ibeot(*pDescGPIB_HP8753, GPIB_EOI);
@@ -461,7 +437,7 @@ findGPIBdescriptors( tGlobal *pGlobal, gint *pDescGPIBcontroller, gint *pDescGPI
 		return ERROR;
 	}
 
-	if( ! pingGPIBdevice( *pDescGPIBcontroller, *pDescGPIB_HP8753, &GPIBstatus) ) {
+	if( ! pingGPIBdevice( *pDescGPIB_HP8753, &GPIBstatus) ) {
 		postError( "Cannot contact HP8753C" );
 		return ERROR;
 	} else {
@@ -480,30 +456,15 @@ findGPIBdescriptors( tGlobal *pGlobal, gint *pDescGPIBcontroller, gint *pDescGPI
  * \param pDescGPIB_HP8753    pointer to GPIB device descriptor
  */
 gint
-GPIBclose( gint *pDescGPIBcontroller, gint *pDescGPIB_HP8753 ) {
-	gint GPIBstatusController = 0;
+GPIBclose( gint *pDescGPIB_HP8753 ) {
 	gint GPIBstatusDevice = 0;
-
-	// The board index can be used as a device descriptor; however,
-	// if a device desripter was returned from the ibfind, it mist be freed
-	// with ibnol().
-	// The board index corresponds to the minor number /dev/
-	// $ ls -l /dev/gpib0
-	// crw-rw----+ 1 root root 160, 0 May 12 09:24 /dev/gpib0
-	// raise(SIGSEGV);
-
-	if( *pDescGPIBcontroller != INVALID
-			&& *pDescGPIBcontroller >= FIRST_ALLOCATED_CONTROLLER_DESCRIPTOR ) {
-		GPIBstatusController = ibonl(*pDescGPIBcontroller, 0);
-		*pDescGPIBcontroller = INVALID;
-	}
 
 	if( *pDescGPIB_HP8753 != INVALID ) {
 		GPIBstatusDevice = ibonl(*pDescGPIB_HP8753, 0);
 		*pDescGPIB_HP8753 = INVALID;
 	}
 
-	return GPIBstatusController | GPIBstatusDevice;
+	return GPIBstatusDevice;
 }
 
 /*!     \brief  Get real time in ms
@@ -534,7 +495,7 @@ threadGPIB(gpointer _pGlobal) {
 	gint GPIBstatus;
 	gint timeoutHP8753C;   				// previous timeout
 
-	gint descGPIBcontroller = ERROR, descGPIB_HP8753 = ERROR;
+	gint descGPIB_HP8753 = ERROR;
 	messageEventData *message;
 	gboolean bRunning = TRUE;
 	gboolean bHoldThisChannel = FALSE, bHoldOtherChannel = FALSE;
@@ -571,16 +532,16 @@ threadGPIB(gpointer _pGlobal) {
 
 		switch (message->command) {
 		case TG_SETUP_GPIB:
-			findGPIBdescriptors( pGlobal, &descGPIBcontroller, &descGPIB_HP8753 );
+			findGPIBdescriptors( pGlobal, &descGPIB_HP8753 );
 			datum = now_milliSeconds();
 			continue;
 		case TG_END:
-			GPIBclose( &descGPIBcontroller, &descGPIB_HP8753 );
+			GPIBclose( &descGPIB_HP8753 );
 			bRunning = FALSE;
 			continue;
 		default:
-			if (descGPIBcontroller == INVALID || descGPIB_HP8753 == INVALID) {
-				findGPIBdescriptors( pGlobal, &descGPIBcontroller, &descGPIB_HP8753 );
+			if (descGPIB_HP8753 == INVALID) {
+				findGPIBdescriptors( pGlobal, &descGPIB_HP8753 );
 				datum = now_milliSeconds();
 			}
 			break;
@@ -589,7 +550,7 @@ threadGPIB(gpointer _pGlobal) {
 		// Most but not all commands require the GBIB
 		if (descGPIB_HP8753 == INVALID ) {
 			postError( "Cannot obtain GPIB controller or HP8753 descriptors");
-		} else if( ! pingGPIBdevice( descGPIBcontroller, descGPIB_HP8753, &GPIBstatus) ) {
+		} else if( ! pingGPIBdevice( descGPIB_HP8753, &GPIBstatus) ) {
 			postError( "HP8753C is not responding" );
 		} else {
 			GPIBstatus = ibask(descGPIB_HP8753, IbaTMO, &timeoutHP8753C); /* Remember old timeout */
@@ -623,7 +584,6 @@ threadGPIB(gpointer _pGlobal) {
 				// Get learn string and calibration arrays
 				// If the channels are uncoupled, there are two sets of calibration arrays
 			case TG_RETRIEVE_SETUPandCAL_from_HP8753:
-				GPIBstatus = ibcmd(descGPIBcontroller, "_?", 2);
 				if( get8753setupAndCal( descGPIB_HP8753, pGlobal, &GPIBstatus ) == OK
 					&& GPIBsucceeded(GPIBstatus) ) {
 					postInfo ( "Saving HP8753C setup to database" );

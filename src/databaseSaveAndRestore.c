@@ -1010,12 +1010,14 @@ saveProgramOptions(tGlobal *pGlobal) {
 	memcpy( &options, &pGlobal->flags, sizeof( gushort ));
 	if (sqlite3_bind_int(stmt, ++queryIndex, options) != SQLITE_OK)
 		goto err;
-	if( pGlobal->sGPIBcontrollerName )
-		if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->sGPIBcontrollerName, strlen( pGlobal->sGPIBcontrollerName ), SQLITE_STATIC) != SQLITE_OK)
-			goto err;
-	if( pGlobal->sGPIBdeviceName )
+	// No longer using sGPIBcontrollerName
+	++queryIndex;
+	if( pGlobal->sGPIBdeviceName ) {
 		if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->sGPIBdeviceName, strlen(pGlobal->sGPIBdeviceName), SQLITE_STATIC) != SQLITE_OK)
 			goto err;
+	} else {
+		++queryIndex;
+	}
 	if (sqlite3_bind_int(stmt, ++queryIndex, pGlobal->GPIBcontrollerIndex) != SQLITE_OK)
 		goto err;
 	if (sqlite3_bind_int(stmt, ++queryIndex, pGlobal->GPIBdevicePID) != SQLITE_OK)
@@ -1161,9 +1163,8 @@ recoverProgramOptions(tGlobal *pGlobal) {
 			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_DeltaMarkerAbsolute" )), !pGlobal->flags.bDeltaMarkerZero);
 			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_UserCalKit" )), pGlobal->flags.bSaveUserKit);
 
-			g_free( pGlobal->sGPIBcontrollerName );
-			pGlobal->sGPIBcontrollerName = g_strdup( (gchar *)sqlite3_column_text(stmt, queryIndex++) );
-			gtk_entry_set_text( GTK_ENTRY(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Entry_GPIBcontroller" )), pGlobal->sGPIBcontrollerName);
+			// No longer using sGPIBcontrollerName
+			queryIndex++;
 
 			g_free( pGlobal->sGPIBdeviceName );
 			pGlobal->sGPIBdeviceName = g_strdup(  (gchar *)sqlite3_column_text(stmt, queryIndex++) );
