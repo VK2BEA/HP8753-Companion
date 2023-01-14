@@ -39,8 +39,7 @@ getSparam( gint descGPIB_HP8753, tGlobal *pGlobal, tComplex *Sparam[], gint *nPo
 		guint32 bytes;
 	} rBits, iBits;
 
-	GPIBwrite(descGPIB_HP8753, "FORM2;", pGPIBstatus);
-	GPIBwrite(descGPIB_HP8753, "OUTPFORM;", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "FORM2;OUTPFORM;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	// first read header and size of data
 	GPIBasyncRead(descGPIB_HP8753, headerAndSize, HEADER_SIZE, pGPIBstatus, 20 * TIMEOUT_READ_1SEC);
 	sizeF2 = GUINT16_FROM_BE(headerAndSize[1]);
@@ -75,11 +74,11 @@ getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 		return ERROR;
 	}
 	// Request Learn string
-	GPIBwrite(descGPIB_HP8753, "FORM1;", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "FORM1;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	if ( get8753learnString( descGPIB_HP8753, &learnString, pGPIBstatus ))
 		goto err;
 
-	GPIBwrite(descGPIB_HP8753, "HOLD;", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "HOLD;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	setHP8753channel( descGPIB_HP8753, eCH_ONE, pGPIBstatus );
 
 	if( getStartStopOrCenterSpanFrom8753learnString( learnString, pGlobal, eCH_ONE ) ) {
@@ -94,10 +93,11 @@ getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	}
 
 	postInfo("Set for S11 + S21");
-	GPIBwrite(descGPIB_HP8753, "S11;SMIC;LINFREQ;", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "S11;SMIC;LINFREQ;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	// Sweep
 	setHP8753channel( descGPIB_HP8753, eCH_TWO, pGPIBstatus );
-	GPIBwrite(descGPIB_HP8753, "S21;SMIC;SING;OPC?;WAIT;", pGPIBstatus);
+	// Depending upon the settings, a sweep may take a long time
+	GPIBasyncWrite(descGPIB_HP8753, "S21;SMIC;SING;OPC?;WAIT;", pGPIBstatus, 5 * TIMEOUT_READ_1MIN);
 	// read "1" for complete
 	if( GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 600.0 ) != eRDWT_OK ) {
 		*pGPIBstatus = ERR;
@@ -113,7 +113,7 @@ getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 		pGlobal->HP8753.S2P.freq[i] = sweepStart + (sweepStop - sweepStart) * ((gdouble) i / (gdouble)pGlobal->HP8753.S2P.nPoints);
 	}
 	// Next sweep on channel 2 will be S12
-	GPIBwrite(descGPIB_HP8753, "S12;SMIC;", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "S12;SMIC;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 
 	// ... but first get S11 from channel 1
 	setHP8753channel( descGPIB_HP8753, eCH_ONE, pGPIBstatus );
@@ -122,7 +122,8 @@ getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 
 	// Set channel 1 to measure S22 and sweep
 	postInfo("Set for S12 + S22");
-	GPIBwrite( descGPIB_HP8753, "S22;SMIC;SING;OPC?;WAIT;", pGPIBstatus);
+	// Depending upon the settings, a sweep may take a long time
+	GPIBasyncWrite( descGPIB_HP8753, "S22;SMIC;SING;OPC?;WAIT;", pGPIBstatus, 5 * TIMEOUT_READ_1MIN);
 	// read "1" for complete
 	if( GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 600.0 ) != eRDWT_OK ) {
 		*pGPIBstatus = ERR;
@@ -139,13 +140,13 @@ getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 
 	postInfo("Restore setup");
 	// Return the analyzer to the previous configuration by sending back the learn string
-	GPIBwrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus);
+	GPIBasyncWrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC );
 	// Includes the 4 byte header with size in bytes (big endian)
-	GPIBwriteBinary( descGPIB_HP8753,
+	GPIBasyncWriteBinary( descGPIB_HP8753,
 			learnString,
-			GUINT16_FROM_BE(*(guint16 *)(learnString+2)) + 4, pGPIBstatus );
-	GPIBwrite( descGPIB_HP8753, "OPC?;WAIT;", pGPIBstatus);
-	GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 10 * TIMEOUT_READ_1MIN);
+			GUINT16_FROM_BE(*(guint16 *)(learnString+2)) + 4, pGPIBstatus, 10 * TIMEOUT_READ_1SEC );
+	GPIBasyncWrite( descGPIB_HP8753, "OPC?;WAIT;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
+	GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 6 * TIMEOUT_READ_1MIN);
 	g_free( learnString );
 
 	return( GPIBfailed( *pGPIBstatus )  );

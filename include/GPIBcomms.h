@@ -17,16 +17,17 @@
 #ifndef GPIBCOMMS_H_
 #define GPIBCOMMS_H_
 
-gint GPIBwriteBinary( gint GPIBdescriptor, const void *sRequest, gint length, gint *pGPIBstatus );
-gint GPIBread( gint GPIBdescriptor, void *sResult, gint length, gint *pGPIBstatus );
-gint GPIBwrite( gint GPIBdescriptor, const void *sRequest, gint *GPIBstatus );
-gint GPIBwriteOneOfN( gint GPIBdescriptor, const void *sRequest, gint number, gint *GPIBstatus );
-
 typedef enum { eRDWT_OK=0, eRDWT_ERROR, eRDWT_TIMEOUT, eRDWT_ABORT, eRDWT_CONTINUE, eRDWT_PREVIOUS_ERROR } tGPIBReadWriteStatus;
 
+gint GPIBwriteBinary( gint GPIBdescriptor, const void *sData, gint length, gint *pGPIBstatus );
+gint GPIBread( gint GPIBdescriptor, void *sData, gint length, gint *pGPIBstatus );
+gint GPIBwrite( gint GPIBdescriptor, const void *sData, gint *GPIBstatus );
+gint GPIBwriteOneOfN( gint GPIBdescriptor, const void *sData, gint number, gint *GPIBstatus );
+tGPIBReadWriteStatus GPIBasyncWriteOneOfN( gint GPIBdescriptor, const void *sData, gint number, gint *GPIBstatus, gdouble timeoutSecs );
 tGPIBReadWriteStatus GPIBasyncRead( gint GPIBdescriptor, void *readBuffer, glong maxBytes, gint *pGPIBstatus,
 		gdouble timeout );
 tGPIBReadWriteStatus GPIBasyncWrite( gint GPIBdescriptor, const void *sData, gint *GPIBstatus, gdouble timeoutSecs );
+tGPIBReadWriteStatus GPIBasyncWriteBinary( gint GPIBdescriptor, const void *sData, gint length, gint *GPIBstatus, gdouble timeoutSecs );
 
 #define GPIBfailed(x) (((x) & ERR) == ERR)
 #define GPIBsucceeded(x) (((x) & ERR) != ERR)

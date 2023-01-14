@@ -111,8 +111,9 @@ gint
 GPIBwriteOneOfN( gint GPIBdescriptor, const void *sData, gint number, gint *GPIBstatus ) {
 	gchar *sCmd = g_strdup_printf( sData, number );
 	DBG( eDEBUG_EXTENSIVE, "👉 HP8753: %s", sCmd );
-	return GPIBwrite( GPIBdescriptor, sCmd, GPIBstatus );
+	gint rtn = GPIBwrite( GPIBdescriptor, sCmd, GPIBstatus );
 	g_free ( sCmd );
+	return rtn;
 }
 
 /*!     \brief  See if there are messages on the asynchronous queue
@@ -212,9 +213,12 @@ GPIBasyncWriteBinary( gint GPIBdescriptor, const void *sData, gint length, gint 
 
 	DBG( eDEBUG_EXTENSIVE, "🖊 HP8753: %d / %d bytes", AsyncIbcnt(), length );
 
-	if( (*pGPIBstatus & CMPL) != CMPL )
-		LOG( G_LOG_LEVEL_INFO, "GPIB async write status/error: %04X/%d", AsyncIbsta(), AsyncIberr() );
-
+	if( (*pGPIBstatus & CMPL) != CMPL ) {
+		if( waitTime >= timeoutSecs )
+			LOG( G_LOG_LEVEL_CRITICAL, "GPIB async write timeout after %.2f sec. status %04X", timeoutSecs, *pGPIBstatus);
+		else
+			LOG( G_LOG_LEVEL_CRITICAL, "GPIB async write status/error: %04X/%d", *pGPIBstatus, AsyncIberr() );
+	}
 	ibtmo( GPIBdescriptor, currentTimeout);
 	return ( rtn == eRDWT_CONTINUE ? eRDWT_TIMEOUT : rtn );
 }
@@ -234,6 +238,25 @@ GPIBasyncWrite( gint GPIBdescriptor, const void *sData, gint *pGPIBstatus, gdoub
 	return GPIBasyncWriteBinary( GPIBdescriptor, sData, strlen( (gchar *)sData ), pGPIBstatus, timeoutSecs );
 }
 
+/*!     \brief  Write string with a numeric value to the GPIB device
+ *
+ * Send NULL terminated string with numeric paramater to the GPIB device
+ *
+ * \param GPIBdescriptor GPIB device descriptor
+ * \param sData          data to send
+ * \param number         number to embed in string (%d)
+ * \param pGPIBstatus    pointer to GPIB status
+ * \param timeout        seconds to timeout
+ * \return               count or ERROR (from GPIBasyncWriteBinary)
+ */
+tGPIBReadWriteStatus
+GPIBasyncWriteOneOfN( gint GPIBdescriptor, const void *sData, gint number, gint *GPIBstatus, double timeout ) {
+	gchar *sCmd = g_strdup_printf( sData, number );
+	DBG( eDEBUG_EXTENSIVE, "👉 HP8753: %s", sCmd );
+	tGPIBReadWriteStatus rtnStatus = GPIBasyncWrite( GPIBdescriptor, sCmd, GPIBstatus, timeout );
+	g_free ( sCmd );
+	return rtnStatus;
+}
 
 /*!     \brief  Read data from the GPIB device asynchronously
  *
@@ -305,9 +328,12 @@ GPIBasyncRead( gint GPIBdescriptor, void *readBuffer, long maxBytes, gint *pGPIB
 
 	DBG( eDEBUG_EXTENSIVE, "👓 HP8753: %d bytes (%d max)", AsyncIbcnt(), maxBytes );
 
-	if( (*pGPIBstatus & CMPL) != CMPL )
-		LOG( G_LOG_LEVEL_INFO, "GPIB async read status/error: %04X/%d", AsyncIbsta(), AsyncIberr() );
-
+	if( (*pGPIBstatus & CMPL) != CMPL ) {
+		if( waitTime >= timeoutSecs )
+			LOG( G_LOG_LEVEL_CRITICAL, "GPIB async read timeout after %.2f sec. status %04X", timeoutSecs, *pGPIBstatus);
+		else
+			LOG( G_LOG_LEVEL_CRITICAL, "GPIB async read status/error: %04X/%d", *pGPIBstatus, AsyncIberr() );
+	}
 	ibtmo( GPIBdescriptor, currentTimeout);
 	return ( rtn == eRDWT_CONTINUE ? eRDWT_TIMEOUT : rtn );
 }
@@ -549,7 +575,7 @@ threadGPIB(gpointer _pGlobal) {
 #define IBLOC(x, y, z) { z = ibloc( x ); y = now_milliSeconds(); usleep( ms( LOCAL_DELAYms ) ); }
 		// Most but not all commands require the GBIB
 		if (descGPIB_HP8753 == INVALID ) {
-			postError( "Cannot obtain GPIB controller or HP8753 descriptors");
+			postError( "Cannot obtain HP8753 descriptor");
 		} else if( ! pingGPIBdevice( descGPIB_HP8753, &GPIBstatus) ) {
 			postError( "HP8753C is not responding" );
 		} else {
@@ -600,7 +626,7 @@ threadGPIB(gpointer _pGlobal) {
 					usleep( ms(250) );
 				} else {
 					// beep
-					GPIBwrite( descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus );
+					GPIBasyncWrite( descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus, 5 * TIMEOUT_READ_1SEC );
 				}
 				// local
 				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
@@ -629,7 +655,7 @@ threadGPIB(gpointer _pGlobal) {
 					usleep( ms(250) );
 				} else {
 					// beep
-					GPIBwrite( descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus );
+					GPIBasyncWrite( descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus, 5 * TIMEOUT_READ_1SEC );
 				}
 				// local
 				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
@@ -664,7 +690,7 @@ threadGPIB(gpointer _pGlobal) {
 				// If the source is coupled, then a single hold works for both channels, if not, we
 				// must hold when we change to the other channel
 				bHoldThisChannel = getHP8753switchOnOrOff( descGPIB_HP8753, "HOLD", &GPIBstatus );
-				GPIBwrite( descGPIB_HP8753, "HOLD;", &GPIBstatus );
+				GPIBasyncWrite( descGPIB_HP8753, "HOLD;", &GPIBstatus, 1.0 );
 
 				postInfo( "Get trace data channel");
 				// if dual channel, then get both channels
@@ -679,7 +705,7 @@ threadGPIB(gpointer _pGlobal) {
 						if( !pGlobal->HP8753.flags.bSourceCoupled && i==0 ) {
 							// if uncoupled, we need to hold the other channel also
 							bHoldOtherChannel = getHP8753switchOnOrOff( descGPIB_HP8753, "HOLD", &GPIBstatus );
-							GPIBwrite( descGPIB_HP8753, "HOLD;", &GPIBstatus );
+							GPIBasyncWrite( descGPIB_HP8753, "HOLD;", &GPIBstatus, 1.0 );
 						}
 						getHP8753channelTrace( descGPIB_HP8753, pGlobal, channel, &GPIBstatus );
 					}
@@ -698,14 +724,14 @@ threadGPIB(gpointer _pGlobal) {
 					postDataToMainLoop( TM_REFRESH_TRACE, (void *)eCH_TWO );
 
 				if( !bHoldThisChannel ) {
-					GPIBwrite( descGPIB_HP8753, "CONT;", &GPIBstatus );
+					GPIBasyncWrite( descGPIB_HP8753, "CONT;", &GPIBstatus, 1.0 );
 				}
 
 				if( pGlobal->HP8753.flags.bDualChannel ) {
 					// if we are uncoupled, then we need to restart that trace separately
 					if( !pGlobal->HP8753.flags.bSourceCoupled && !bHoldOtherChannel ) {
 						setHP8753channel( descGPIB_HP8753, (pGlobal->HP8753.activeChannel+1) % eNUM_CH, &GPIBstatus );
-						GPIBwrite( descGPIB_HP8753, "CONT;", &GPIBstatus );
+						GPIBasyncWrite( descGPIB_HP8753, "CONT;", &GPIBstatus, 1.0 );
 						setHP8753channel( descGPIB_HP8753, pGlobal->HP8753.activeChannel, &GPIBstatus );
 					}
 				}
@@ -717,7 +743,7 @@ threadGPIB(gpointer _pGlobal) {
 					usleep( ms(250) );
 				} else {
 					// beep
-					GPIBwrite( descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus );
+					GPIBasyncWrite( descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus, 5 * TIMEOUT_READ_1SEC );
 				}
 				// local
 				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
@@ -742,7 +768,7 @@ threadGPIB(gpointer _pGlobal) {
 					usleep( ms(250) );
 				} else {
 					// beep
-					GPIBwrite( descGPIB_HP8753, "EMIB;", &GPIBstatus );
+					GPIBasyncWrite( descGPIB_HP8753, "EMIB;", &GPIBstatus, 1.0 );
 				}
 				// local
 				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
@@ -763,7 +789,7 @@ threadGPIB(gpointer _pGlobal) {
 					usleep( ms(250) );
 				} else {
 					// beep
-					GPIBwrite( descGPIB_HP8753, "EMIB;", &GPIBstatus );
+					GPIBasyncWrite( descGPIB_HP8753, "EMIB;", &GPIBstatus, 1.0 );
 				}
 				// local
 				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
@@ -790,6 +816,7 @@ threadGPIB(gpointer _pGlobal) {
 					postError( "Cal kit transfer error" );
 				}
 
+				ibtmo(descGPIB_HP8753, T1s);
 				// clear errors
 				if( GPIBfailed( GPIBstatus ) ) {
 					GPIBstatus = ibtmo(descGPIB_HP8753, T1s);
@@ -799,7 +826,7 @@ threadGPIB(gpointer _pGlobal) {
 					GPIBstatus = ibtmo(descGPIB_HP8753, T1s);
 				}
 
-				GPIBwrite( descGPIB_HP8753, "EMIB;", &GPIBstatus );
+				GPIBasyncWrite( descGPIB_HP8753, "EMIB;", &GPIBstatus, 1.0 );
 				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
 				break;
 			case TG_ABORT:

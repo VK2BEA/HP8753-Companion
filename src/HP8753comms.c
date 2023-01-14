@@ -228,7 +228,7 @@ setHP8753channel( gint descGPIB_HP8753, eChannel channel, gint *pGPIBstatus ) {
 	guchar complete;
 
 	g_snprintf( qString, QUERY_SIZE, "OPC?;CHAN%d", channel+1);
-	GPIBwrite( descGPIB_HP8753, qString, pGPIBstatus );
+	GPIBasyncWrite( descGPIB_HP8753, qString, pGPIBstatus, 5 * TIMEOUT_READ_1SEC );
 	GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 20 * TIMEOUT_READ_1SEC );
 	return ( GPIBfailed(*pGPIBstatus) ? ERROR : 0);
 }
@@ -245,7 +245,7 @@ setHP8753channel( gint descGPIB_HP8753, eChannel channel, gint *pGPIBstatus ) {
 gboolean
 askOption( gint descGPIB_HP8753, gchar *option, gint *pGPIBstatus ) {
 	gchar result = '0';
-	GPIBwrite(descGPIB_HP8753, option, pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, option, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	GPIBasyncRead(descGPIB_HP8753, &result, 1, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 
 	return (result == '1');
@@ -268,7 +268,7 @@ askHP8753C_dbl(gint descGPIB_HP8753, gchar *mnemonic, gdouble *pDblRresult, gint
 	gchar ASCIIanswer[DBL_ASCII_SIZE + 1] = { 0 };
 	gint sRtn = 0;
 
-	GPIBwrite(descGPIB_HP8753, queryString, pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, queryString, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	GPIBasyncRead(descGPIB_HP8753, &ASCIIanswer, DBL_ASCII_SIZE, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	if( GPIBsucceeded(*pGPIBstatus) )
 		sRtn = sscanf(ASCIIanswer, "%le", pDblRresult);
@@ -298,7 +298,7 @@ askHP8753C_int(gint descGPIB_HP8753, gchar *mnemonic, gint *pIntResult, gint *pG
 	gchar ASCIIanswer[DBL_ASCII_SIZE + 1] = { 0 };
 	gint sRtn = 0;
 
-	GPIBwrite(descGPIB_HP8753, queryString, pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, queryString, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	GPIBasyncRead(descGPIB_HP8753, &ASCIIanswer, DBL_ASCII_SIZE, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	if( GPIBsucceeded(*pGPIBstatus) )
 		sRtn = sscanf(ASCIIanswer, "%d", pIntResult);
@@ -329,7 +329,7 @@ get8753firmwareVersion(gint descGPIB_HP8753, gchar **psProduct, gint *pGPIBstatu
 	gchar sManufacturer[MAX_IDN_SIZE + 1] = {0};
 	gchar sProduct[MAX_IDN_SIZE + 1] = {0};
 
-	GPIBwrite(descGPIB_HP8753, "IDN?;", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "IDN?;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	GPIBasyncRead(descGPIB_HP8753, &ASCIIanswer, MAX_IDN_SIZE, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 
 	if( GPIBsucceeded( *pGPIBstatus ) ) {
@@ -402,7 +402,7 @@ getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIB
 				// Select marker (i.e. MARK1;) and then read values
 				g_snprintf( sQuery, QUERY_SIZE, "MARK%d;OUTPMARK;", mkrNo+1);
 				do {
-					GPIBwrite(descGPIB_HP8753, sQuery, pGPIBstatus);
+					GPIBasyncWrite(descGPIB_HP8753, sQuery, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 					GPIBasyncRead(descGPIB_HP8753, sAnswer, ANSWER_SIZE, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 				} while (FALSE);
 				n = sscanf( sAnswer, "%le, %le, %le", &re, &im, &sourceValue );
@@ -437,11 +437,11 @@ getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIB
 				pChannel->numberedMarkers[ deltaMarker ].sourceValue = sourceValue;
 			} else {
 				// Delta numbered marker
-				GPIBwrite(descGPIB_HP8753, "DELO;",pGPIBstatus);
+				GPIBasyncWrite(descGPIB_HP8753, "DELO;",pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 				// Select marker (i.e. MARK1;) and then read values
 				g_snprintf( sQuery, QUERY_SIZE, "MARK%d;", deltaMarker+1);
-				GPIBwrite(descGPIB_HP8753, sQuery,pGPIBstatus);
-				GPIBwrite(descGPIB_HP8753, "OUTPMARK;", pGPIBstatus);
+				GPIBasyncWrite(descGPIB_HP8753, sQuery,pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
+				GPIBasyncWrite(descGPIB_HP8753, "OUTPMARK;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 				GPIBasyncRead(descGPIB_HP8753, sAnswer, ANSWER_SIZE, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 				n = sscanf( sAnswer, "%le, %le, %le", &re, &im, &sourceValue );
 				if( n == 3 ) {
@@ -450,7 +450,7 @@ getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIB
 					pChannel->numberedMarkers[ deltaMarker ].sourceValue = sourceValue;
 				}
 				g_snprintf( sQuery, QUERY_SIZE, "DELR%d;", deltaMarker+1);
-				GPIBwrite(descGPIB_HP8753, sQuery, pGPIBstatus);
+				GPIBasyncWrite(descGPIB_HP8753, sQuery, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 				if( pChannel->activeMarker != deltaMarker )
 					bMarkerChanged = TRUE;
 			}
@@ -459,7 +459,7 @@ getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIB
 
 		if( bMarkerChanged ) {
 			g_snprintf( sQuery, QUERY_SIZE, "MARK%d;ENTO;", pChannel->activeMarker+1);
-			GPIBwrite(descGPIB_HP8753, sQuery, pGPIBstatus);
+			GPIBasyncWrite(descGPIB_HP8753, sQuery, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 		}
 
 		// find out the style of marker to display (smith and polar)
@@ -478,12 +478,12 @@ getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIB
 
 		// if we have markers, see if we have enabled bandwidth
 		if( pChannel->chFlags.bMkrs ) {
-			GPIBwrite(descGPIB_HP8753, "WIDT?;",pGPIBstatus);
+			GPIBasyncWrite(descGPIB_HP8753, "WIDT?;",pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 			GPIBasyncRead(descGPIB_HP8753, &complete, 1, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 			pChannel->chFlags.bBandwidth = (complete == '1');
 
 			if( pChannel->chFlags.bBandwidth ) {
-				GPIBwrite(descGPIB_HP8753, "OUTPMWID;", pGPIBstatus);
+				GPIBasyncWrite(descGPIB_HP8753, "OUTPMWID;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 				GPIBasyncRead(descGPIB_HP8753, sAnswer, ANSWER_SIZE, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 				n = sscanf( sAnswer, "%le, %le, %le",
 						&pChannel->bandwidth[BW_WIDTH],
@@ -520,7 +520,7 @@ getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIB
 			break;
 	}
 
-	GPIBwrite(descGPIB_HP8753, "ENTO", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "ENTO", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 
 	// return to active channel if we switched
 	if( activeChannelNow != pGlobal->HP8753.activeChannel ) {
@@ -545,7 +545,7 @@ getHP8753switchOnOrOff( gint descGPIB_HP8753, gchar *sRequest, gint *pGPIBstatus
 	gchar response;
 	gboolean bSuccess = TRUE;
 
-	if( GPIBwrite( descGPIB_HP8753, (guchar *)sInterrogationRequest, pGPIBstatus ) == ERROR ) {
+	if( GPIBasyncWrite( descGPIB_HP8753, (guchar *)sInterrogationRequest, pGPIBstatus, 5 * TIMEOUT_READ_1SEC ) == ERROR ) {
 		bSuccess = FALSE;
 	} else {
 		if( GPIBasyncRead( descGPIB_HP8753, (guchar *)&response, 1, pGPIBstatus, 5 * TIMEOUT_READ_1SEC ) == ERROR )
@@ -607,8 +607,8 @@ get8753learnString( gint descGPIB_HP8753, guchar **ppLearnString, gint *pGPIBsta
 	gint LSsize = 0;
 	guint16 LSheaderAndSize[2];
 
-	// GPIBwrite(descGPIB_HP8753, "FORM1;", pGPIBstatus);// Form 1 internal binary format (this is not necessary)
-	GPIBwrite(descGPIB_HP8753, "OUTPLEAS;", pGPIBstatus);
+	// GPIBasyncWrite(descGPIB_HP8753, "FORM1;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);// Form 1 internal binary format (this is not necessary)
+	GPIBasyncWrite(descGPIB_HP8753, "OUTPLEAS;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	// first read header and size of data
 
 	if( GPIBasyncRead(descGPIB_HP8753, &LSheaderAndSize, HEADER_SIZE, pGPIBstatus,
@@ -681,8 +681,7 @@ getHP8753channelTrace(gint descGPIB_HP8753, tGlobal *pGlobal, eChannel channel, 
 	pChannel->chFlags.bAveraging = askOption( descGPIB_HP8753, "AVERO?;", pGPIBstatus );
 	pChannel->measurementType = getHP8753measurementType( descGPIB_HP8753, pGPIBstatus);
 
-	GPIBwrite(descGPIB_HP8753, "FORM2;", pGPIBstatus);
-	GPIBwrite(descGPIB_HP8753, "OUTPFORM;", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "FORM2;OUTPFORM;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	// first read header and size of data
 	GPIBasyncRead(descGPIB_HP8753, headerAndSize, HEADER_SIZE, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	sizeF2 = GUINT16_FROM_BE(headerAndSize[1]);
@@ -855,7 +854,7 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 #define START_OF_LS_PAYLOAD		4
 #define LS_PAYLOAD_SIZE_INDEX	2
 	// We can restore the current state after examining changes
-	GPIBwrite( descGPIB_HP8753, "OPC?;WAIT;", pGPIBstatus);
+	GPIBasyncWrite( descGPIB_HP8753, "OPC?;WAIT;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 8 * TIMEOUT_READ_1MIN );
 
 	// If we have communication problems exit
@@ -866,14 +865,14 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 	if ( get8753learnString( descGPIB_HP8753, &currentStateLS, pGPIBstatus ) )
 		goto err;
 	// Preset state
-	GPIBwrite(descGPIB_HP8753, "PRES;", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "PRES;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	if ( get8753learnString( descGPIB_HP8753, &baselineLS, pGPIBstatus ) )
 		goto err;
 
 	postInfo("active channel");
 	LSsize = GUINT16_FROM_BE(*(guint16 *)(baselineLS+LS_PAYLOAD_SIZE_INDEX));
 // Active channel
-	GPIBwrite(descGPIB_HP8753, "PRES;S21;CHAN2;", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "PRES;S21;CHAN2;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	if ( get8753learnString( descGPIB_HP8753, &modifiedLS, pGPIBstatus ) )
 			goto err;
 #define LS_ACTIVE_CHAN1	0x01
@@ -886,7 +885,7 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 
 	postInfo("enabled markers");
 	// Markers and active marker
-	GPIBwrite(descGPIB_HP8753, "PRES;MARK1;MARK4;", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "PRES;MARK1;MARK4;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	if ( get8753learnString( descGPIB_HP8753, &modifiedLS, pGPIBstatus ) )
 		goto err;
 #define LS_NO_MARKERS		0x00
@@ -905,7 +904,7 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 
 	postInfo("enabled delta marker");
 	// Delta Marker
-	GPIBwrite(descGPIB_HP8753, "PRES;DELR4;", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "PRES;DELR4;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	if ( get8753learnString( descGPIB_HP8753, &modifiedLS, pGPIBstatus ) )
 		goto err;
 #define LS_NO_DELTA_MKR	0x40
@@ -920,8 +919,8 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 #define LS_START_STOP	0x01
 #define	LS_CENTER_SPAN	0x00
 	// Strt/Stop or Center
-	GPIBwrite(descGPIB_HP8753, "PRES;CENT1500.15E6;", pGPIBstatus);
-	GPIBwrite(descGPIB_HP8753, "CHAN2;CENT1500.15E6;CHAN1;", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "PRES;CENT1500.15E6;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
+	GPIBasyncWrite(descGPIB_HP8753, "CHAN2;CENT1500.15E6;CHAN1;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	if ( get8753learnString( descGPIB_HP8753, &modifiedLS, pGPIBstatus ) )
 			goto err;
 	for( i=START_OF_LS_PAYLOAD, channel=eCH_ONE; i < LSsize && channel <= eCH_TWO; i++ ) {
@@ -935,7 +934,7 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 #define LS_POLMKR_RI		0x40
 #define LS_SMIMKR_RI		0x04
 #define LS_SMIMKR_GB		0x08
-	GPIBwrite(descGPIB_HP8753, "PRES;POLMRI;SMIMGB;", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "PRES;POLMRI;SMIMGB;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	if ( get8753learnString( descGPIB_HP8753, &modifiedLS, pGPIBstatus ) )
 			goto err;
 	for( i=START_OF_LS_PAYLOAD, channel=eCH_ONE, channelFn2=eCH_ONE;
@@ -952,7 +951,7 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 #define LS_NO_SEGMENTS	0x00
 #define	LS_ONE_SEGMENT	0x03
 	// Number of list segments
-	GPIBwrite(descGPIB_HP8753, "PRES;EDITLIST;SADD;SADD;SADD;EDITDONE;", pGPIBstatus);
+	GPIBasyncWrite(descGPIB_HP8753, "PRES;EDITLIST;SADD;SADD;SADD;EDITDONE;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	if ( get8753learnString( descGPIB_HP8753, &modifiedLS, pGPIBstatus ) )
 			goto err;
 	for( i=START_OF_LS_PAYLOAD, channel=eCH_ONE; i < LSsize && channel <= eCH_TWO; i++ ) {
@@ -960,7 +959,7 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 			pLSindexes->iNumSegments[ channel++ ] = i;
 		}
 	}
-	GPIBwrite( descGPIB_HP8753, "OPC?;WAIT;", pGPIBstatus);
+	GPIBasyncWrite( descGPIB_HP8753, "OPC?;WAIT;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 8 * TIMEOUT_READ_1MIN);
 
 	// If we have communication problems exit
@@ -971,12 +970,15 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 	pLSindexes->version = get8753firmwareVersion(descGPIB_HP8753, NULL, pGPIBstatus);
 
 	postInfo("Returning state of HP8753");
-	GPIBwrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus);
+	GPIBasyncWrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	// Includes the 4 byte header with size in bytes (big endian)
-	GPIBwriteBinary( descGPIB_HP8753, currentStateLS,
-			GUINT16_FROM_BE(*(guint16 *)(currentStateLS+LS_PAYLOAD_SIZE_INDEX)) + 4, pGPIBstatus );
-	GPIBwrite( descGPIB_HP8753, "OPC?;WAIT;", pGPIBstatus);
-	GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 8 * TIMEOUT_READ_1MIN);
+	GPIBasyncWriteBinary( descGPIB_HP8753, currentStateLS,
+			GUINT16_FROM_BE(*(guint16 *)(currentStateLS+LS_PAYLOAD_SIZE_INDEX)) + 4, pGPIBstatus, 5 * TIMEOUT_READ_1SEC );
+	// If the calibration needs to be interpolated, the processing of the learn string can be over a minute
+	GPIBasyncWrite( descGPIB_HP8753, "OPC?;WAIT;", pGPIBstatus, 2 * TIMEOUT_READ_1MIN);
+	// A long sweep (narrow IFBW) can take 5 min for both channels
+	GPIBasyncRead( descGPIB_HP8753, &complete, 1, pGPIBstatus, 5 * TIMEOUT_READ_1MIN);
+
 	postInfo("");
 	if( GPIBsucceeded(*pGPIBstatus) )
 		bCompleteWithoutError = TRUE;
@@ -1012,7 +1014,7 @@ getHP8753channelListFreqSegments(gint descGPIB_HP8753, tGlobal *pGlobal, eChanne
 
 		for( int seg = 1; seg <= pChannel->nSegments; seg++ ) {
 			// Select the segment and determine the points
-			GPIBwriteOneOfN( descGPIB_HP8753, "SSEG%d;", seg, pGPIBstatus );
+			GPIBasyncWriteOneOfN( descGPIB_HP8753, "SSEG%d;", seg, pGPIBstatus, 5 * TIMEOUT_READ_1SEC );
 			askHP8753C_dbl(descGPIB_HP8753, "POIN", &nPoints, pGPIBstatus);
 			askHP8753C_dbl(descGPIB_HP8753, "STAR", &startFreq, pGPIBstatus);
 			askHP8753C_dbl(descGPIB_HP8753, "STOP", &stopFreq, pGPIBstatus);
@@ -1032,7 +1034,7 @@ getHP8753channelListFreqSegments(gint descGPIB_HP8753, tGlobal *pGlobal, eChanne
 			totalPoints += nPoints;
 		}
 		pChannel->chFlags.bValidSegments = TRUE;
-		GPIBwrite(descGPIB_HP8753, "ASEG;MENUON;MENUSTIM;MENUOFF;", pGPIBstatus);
+		GPIBasyncWrite(descGPIB_HP8753, "ASEG;MENUON;MENUSTIM;MENUOFF;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	} else {
 		pChannel->chFlags.bValidSegments = FALSE;
 	}
