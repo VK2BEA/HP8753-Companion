@@ -30,6 +30,7 @@
 #include <hp8753.h>
 #include <math.h>
 #include <sys/utsname.h>
+#include <errno.h>
 
 // This factor defines the "curviness". Play with it!
 #define CURVE_F 0.25

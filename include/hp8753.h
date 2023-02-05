@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.18-1"
+   #define VERSION "1.18-2"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -331,6 +331,7 @@ typedef struct {
 		unsigned short bSaveUserKit             : 1;
 		unsigned short bRunning         		: 1;
 		unsigned short bbDebug					: 3;
+		unsigned short bGPIBcommsActive			: 1;
 	} flags;
 
 	GHashTable *widgetHashTable;

@@ -89,6 +89,7 @@ sensitiseControlsInUse( tGlobal *pGlobal, gboolean bSensitive ) {
 	gtk_widget_set_sensitive ( wBtnAnalyzeLS, bSensitive );
 	gtk_widget_set_sensitive ( wBtnS2P, bSensitive );
 	gtk_widget_set_sensitive ( wBtnSendCalKit, g_list_length( pGlobal->pCalKitList ) > 0 ? bSensitive : FALSE );
+
 }
 
 void

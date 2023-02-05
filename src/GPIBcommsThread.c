@@ -25,6 +25,7 @@
 #include <hp8753.h>
 #include <GPIBcomms.h>
 #include <hp8753comms.h>
+#include <locale.h>
 
 #include "messageEvent.h"
 
@@ -527,6 +528,7 @@ threadGPIB(gpointer _pGlobal) {
 	gboolean bHoldThisChannel = FALSE, bHoldOtherChannel = FALSE;
 	gulong __attribute__((unused)) datum = 0;
 
+    setlocale(LC_ALL, "en_US");
 	ibvers(&sGPIBversion);
 
 	// g_print( "Linux GPIB version: %s\n", sGPIBversion );
@@ -578,7 +580,10 @@ threadGPIB(gpointer _pGlobal) {
 			postError( "Cannot obtain HP8753 descriptor");
 		} else if( ! pingGPIBdevice( descGPIB_HP8753, &GPIBstatus) ) {
 			postError( "HP8753C is not responding" );
+			GPIBstatus = ibclr( descGPIB_HP8753 );
+			usleep( ms(250) );
 		} else {
+			pGlobal->flags.bGPIBcommsActive = TRUE;
 			GPIBstatus = ibask(descGPIB_HP8753, IbaTMO, &timeoutHP8753C); /* Remember old timeout */
 			ibtmo(descGPIB_HP8753, T30s);
 #ifdef USE_PRECAUTIONARY_DEVICE_IBCLR
@@ -744,6 +749,7 @@ threadGPIB(gpointer _pGlobal) {
 				} else {
 					// beep
 					GPIBasyncWrite( descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus, 5 * TIMEOUT_READ_1SEC );
+					postInfo( "Trace(s) retrieved");
 				}
 				// local
 				IBLOC( descGPIB_HP8753, datum, GPIBstatus );
@@ -831,6 +837,7 @@ threadGPIB(gpointer _pGlobal) {
 				break;
 			case TG_ABORT:
 				postError( "Communication Aborted" );
+				GPIBstatus = ibclr( descGPIB_HP8753 );
 				break;
 			default:
 				break;
@@ -848,6 +855,7 @@ threadGPIB(gpointer _pGlobal) {
 		g_free(message->sMessage);
 		g_free(message->data);
 		g_free(message);
+		pGlobal->flags.bGPIBcommsActive = FALSE;
 	}
 
 	return NULL;
