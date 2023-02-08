@@ -528,7 +528,8 @@ threadGPIB(gpointer _pGlobal) {
 	gboolean bHoldThisChannel = FALSE, bHoldOtherChannel = FALSE;
 	gulong __attribute__((unused)) datum = 0;
 
-    setlocale(LC_ALL, "en_US");
+	// The HP8753 formats numbers like 3.141 not, the continental European way 3,14159
+    setlocale(LC_NUMERIC, "C");
 	ibvers(&sGPIBversion);
 
 	// g_print( "Linux GPIB version: %s\n", sGPIBversion );

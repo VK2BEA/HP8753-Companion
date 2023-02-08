@@ -467,7 +467,8 @@ main(int argc, char *argv[]) {
 
     GMainLoop __attribute__((unused)) *loop;
 
-    setlocale(LC_ALL, "en_US");
+    // The HP8753 formats numbers like 3.141 not, the continental European way 3,14159
+    setlocale(LC_NUMERIC, "C");
     g_log_set_writer_func (g_log_writer_journald, NULL, NULL);
 
     // ensure only one instance of program runs ..
