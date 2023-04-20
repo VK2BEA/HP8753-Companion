@@ -1,40 +1,44 @@
 HP8753 Companion
 ================
 
-Michael G. Katzmann (NV3Z/VK2BEA/G4NYV)  michaelk@IEEE.org
+Michael G. Katzmann (NV3Z/VK2BEA/G4NYV)
 ------------------------------------------------------------------
 
-This is a program to augment functionality of the HP 8753 Vector Nework Analyzer:
+This is a program to augment functionality of the HP 8753 Vector Nework Analyzer:  
+1. Save calibration and setup / Restore calibration & setup
+2. Transfer trace data from HP8753 and display on Linux computer
+       - also use the mouse to examine the trace (show source and response settings at corresponding mouse position)
+3. Save traces as an image files (PNG (bitmap) or PDF (vector))
+4. Save trace data in CSV or Touchstone S2P format
+5. Print traces to Linux CUPS printer
+6. Import .XKT calibration kit definitions and send them to the HP8753 (optionally saving as a user kit)
 
-1. Retrieve and save calibration and setup
-2. Retrieve trace(s) and display on GPIB connected computer
-       - Use mouse to examine the trace (see source and response settings at mouse position)
-3. Save traces as an image file (PNG) or PDF
-4. Print traces to connected printer
+Please see the YouTube description here:  
+[![HP8753 Companion video](https://user-images.githubusercontent.com/3782222/175981747-694a58f8-853c-42fa-a6b7-16cd8f814a27.png)](https://www.youtube.com/watch?v=ORWQE22tbRo)
 
-Install the following packages & tools:
----------------------------------------
-* Automake
-* Autoconf
-* Libtool
+To install on the Linux Fedora distribution:
+-------------------------------------------
+`sudo dnf -y copr enable vk2bea/GPIB`  
+`sudo dnf -y copr enable vk2bea/HP8753`  
+`sudo dnf -y install hp8753 linux-gpib-firmware`  
 
-On Fedora, install the gpib driver and user utilities and firmware by:
-`sudo dnf copr enable vk2bea/GPIB`
-`sudo dnf install dkms-linux-gpib linux-gpib linux-gpib-devel`
-`sudo dnf install linux-gpib-firmware`
+To build & install using Linux autotools, install the following required packages & tools:
+----------------------------------------------------------------------
+* `automake`, `autoconf` and `libtool`  
+* To build on Raspberri Pi / Debian: 	`libgs-dev libglib2.0-dev libgtk-3-dev libsqlite3-dev`  
+* To run on Raspberry Pi / Debian :	`libglib-2, libgtk-3, libgs, libsqlite3, libgpib, fonts-noto-color-emoji`
 
-* To run on Raspberry Pi :		`libglib-2, libgtk-3, libgs, libsqlite3, libgpib, fonts-noto-color-emoji`
-* To run on Fedora: 			`glib2, gtk3, libgs, sqlite-libs, libgpib, google-noto-emoji-color-fonts`
-* To build on Debian (RPi) : 	`libgs-dev, libglib2.0-dev, libgtk-3-dev, libsqlite3-dev, https://linux-gpib.sourceforge.io/, yelp-tools`
-* To build on Fedora/Redhat:	`gtk3-devel, glib2-devel, sqlite-devel, libgs-devel, libgipb-devel, yelp-tools`
+Install the GPIB driver: 
+See the `GPIB-Linux.driver/installGPIBdriver.on.RPI` file for a script that may work for you to download and install the Linux GPIB driver, otherwise, visit https://linux-gpib.sourceforge.io/ for installation instructions.
 
-To install:
+The National Instruments GPIB driver *may* also be used, but this has not been tested. The Linux GPIB API is compatable with the NI library.... quote: *"The API of the C library is intended to be compatible with National Instrument's GPIB library."*
+
+Once the prerequisites (as listed above) are installed, install the 'HP8753 Companion' with these commands:
 
         $ ./autogen.sh
         $ cd build/
         $ ../configure
-        $ make
-        $ sudo make check
+        $ make all
         $ sudo make install
 To run:
         
