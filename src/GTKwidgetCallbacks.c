@@ -317,11 +317,13 @@ CB_BtnRemove (GtkButton * button, tGlobal *pGlobal)
 			n = gtk_tree_model_iter_n_children(gtk_combo_box_get_model(GTK_COMBO_BOX(wCombo)), NULL);
 			if (n > 0) {
 				gtk_tree_model_get_iter_first(tm, &iter);
-				for (gint pos = 0; !bFound && pos < n; pos++, gtk_tree_model_iter_next(tm, &iter)) {
+				for (gint pos = 0; !bFound && pos < n; pos++) {
 					gtk_tree_model_get(tm, &iter, 0, &string, -1);
 					if (g_strcmp0(name, string) == 0) {
 						gtk_combo_box_text_remove(wCombo, pos);
 						bFound = TRUE;
+					} else {
+						gtk_tree_model_iter_next(tm, &iter);
 					}
 				}
 			}
