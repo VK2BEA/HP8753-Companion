@@ -2,8 +2,9 @@
 
 # Michael G. Katzmann - 29 Dec 2020
 
-VERSION=1.11
+VERSION=1.12
 
+# 1.11 - 2022-Sep-06 - update linux-gpib version
 # 1.11 - 2022-Jun-06 - update 
 
 
@@ -14,7 +15,7 @@ VERSION=1.11
 ## of the steps needed 
 ##
 
-GPIB_VER=4.3.4
+GPIB_VER=4.3.6
 
 GRN="\e[32m"
 BLU="\e[34m"
