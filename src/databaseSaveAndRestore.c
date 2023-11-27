@@ -1060,10 +1060,17 @@ saveCalibrationAndSetup(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 		freeCalListItem( calPreviewElement->data );
 		pGlobal->pCalList = g_list_remove( pGlobal->pCalList, calPreviewElement->data );
 	}
+	// Mark all other Calibration profiles as unselected
+    for( GList *l = pGlobal->pCalList; l != NULL; l = l->next ){
+            tProjectAndName *pProjectAndName = &(((tHP8753cal *)l->data)->projectAndName);
+            pProjectAndName->bSelected = FALSE;
+    }
+
 	tHP8753cal *pCal = g_new0(tHP8753cal, 1);
 
-	pCal->projectAndName.sName = g_strdup( sProject );
+	pCal->projectAndName.sProject = g_strdup( sProject );
 	pCal->projectAndName.sName = g_strdup( sName );
+	pCal->projectAndName.bSelected = TRUE;
 	pCal->sNote = g_strdup( pGlobal->HP8753cal.sNote );
 	for( eChannel channel = eCH_ONE; channel < eNUM_CH; channel++ ) {
 		pCal->perChannelCal[ channel ].sweepStart = pGlobal->HP8753cal.perChannelCal[ channel ].sweepStart;
