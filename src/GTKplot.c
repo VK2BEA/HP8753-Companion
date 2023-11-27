@@ -309,12 +309,15 @@ setCairoColor( cairo_t *cr, eColor color ) {
 		gdk_rgba_parse (&colors[ eColorGreen      ],         "green");
 		gdk_rgba_parse (&colors[ eColorDarkGreen  ],     "darkgreen");
 		gdk_rgba_parse (&colors[ eColorRed        ],           "red");
+		gdk_rgba_parse (&colors[ eColorDarkRed    ],       "darkred");
 		gdk_rgba_parse (&colors[ eColorGray       ],          "gray");
 		gdk_rgba_parse (&colors[ eColorLightBlue  ],       "#A0A0E0");
-		gdk_rgba_parse (&colors[ eColorLightPuple ],       "#E6D3FD");
+		gdk_rgba_parse (&colors[ eColorPurple ],            "purple");
+		gdk_rgba_parse (&colors[ eColorLightPurple ],      "#E6D3FD");
 		gdk_rgba_parse (&colors[ eColorLightPeach ],       "#FFA664");
-		gdk_rgba_parse (&colors[ eColorDarkBlue   ],       "#202080");
+		gdk_rgba_parse (&colors[ eColorDarkBlue   ],      "darkblue");
 		gdk_rgba_parse (&colors[ eColorBrown      ],       "#BD9A7A");
+		gdk_rgba_parse (&colors[ eColorDarkBrown  ],       "#654321");
     bInitial = FALSE;
     }
 
@@ -449,8 +452,8 @@ void
 determineGridPosition( cairo_t *cr, tGlobal *pGlobal, eChannel channel, tGridParameters *pGrid ){
 	tGrid gtOne, gtTwo;
 
-	gtOne = gridType[ pGlobal->HP8753.channels[eCH_ONE].format ];
-	gtTwo = gridType[ pGlobal->HP8753.channels[eCH_TWO].format ];
+	gtOne = gridType[ pGlobal->HP8753.channels[eCH_ONE].format != INVALID ? pGlobal->HP8753.channels[eCH_ONE].format : eFMT_LOGM ];
+	gtTwo = gridType[ pGlobal->HP8753.channels[eCH_TWO].format != INVALID ? pGlobal->HP8753.channels[eCH_TWO].format : eFMT_LOGM ];
 
 	if( pGlobal->HP8753.flags.bDualChannel
 			&& !pGlobal->HP8753.flags.bSplitChannels ) {
@@ -880,7 +883,8 @@ calculateSegmentLinearlyInterpolatedResponse( gint nStart, gint nEnd, tChannel *
 gboolean plotA (guint areaWidth, guint areaHeight, cairo_t *cr, tGlobal *pGlobal)
 {
     // If we have dual display and it is not split, we show both traces on this DrawingArea
-    gboolean bOverlay = pGlobal->HP8753.flags.bDualChannel && !pGlobal->HP8753.flags.bSplitChannels;
+    gboolean bOverlay = !(pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid) &&
+    		( pGlobal->HP8753.flags.bDualChannel && !pGlobal->HP8753.flags.bSplitChannels );
 
     tGridParameters grid = {.areaWidth = areaWidth, .areaHeight = areaHeight, 0};
 
@@ -891,38 +895,22 @@ gboolean plotA (guint areaWidth, guint areaHeight, cairo_t *cr, tGlobal *pGlobal
 
 	flipVertical( cr, &grid );
 
-    determineGridPosition( cr, pGlobal, eCH_ONE, &grid );
+	if( pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid ) {
+		// Screenshot from HPGL
+		plotScreen ( cr, areaHeight, areaWidth, pGlobal);
+	} else {
+		// Plot derived from data
+		determineGridPosition( cr, pGlobal, eCH_ONE, &grid );
 
-	if( !pGlobal->HP8753.channels[0].chFlags.bValidData ) {
-		// cairo_move_to( cr, stGrid.areaWidth * 0.2, stGrid.areaHeight * .50 );
-		drawHPlogo ( cr, pGlobal->HP8753.sProduct, grid.areaWidth / 2.0, grid.areaHeight * .20, grid.fontSize / 18.0 );
-		return TRUE;
-	}
+		if( !pGlobal->HP8753.channels[ eCH_ONE ].chFlags.bValidData ) {
+			// cairo_move_to( cr, stGrid.areaWidth * 0.2, stGrid.areaHeight * .50 );
+			drawHPlogo ( cr, pGlobal->HP8753.sProduct, grid.areaWidth / 2.0, grid.areaHeight * .20, grid.fontSize / 18.0 );
+			return TRUE;
+		}
 
-    showStatusInformation (cr, &grid, eCH_ONE, pGlobal);
+		showStatusInformation (cr, &grid, eCH_ONE, pGlobal);
 
-    switch ( pGlobal->HP8753.channels[ 0 ].format ) {
-	case eFMT_LOGM:
-	case eFMT_PHASE:
-	case eFMT_DELAY:
-	case eFMT_LINM:
-	case eFMT_REAL:
-	case eFMT_IMAG:
-	case eFMT_SWR:
-		plotCartesianGrid(cr, &grid, eCH_ONE, pGlobal);
-		break;
-	case eFMT_SMITH:
-		plotSmithGrid( cr, TRUE, &grid, eCH_ONE, pGlobal);
- 		break;
-	case eFMT_POLAR:
-		plotPolarGrid (cr, TRUE, &grid, eCH_ONE, pGlobal);
- 		break;
-	}
-
-	if ( bOverlay ) {
-	    showStatusInformation (cr, &grid, eCH_TWO, pGlobal);
-
-	    switch ( pGlobal->HP8753.channels[ eCH_TWO ].format ) {
+		switch ( pGlobal->HP8753.channels[ 0 ].format ) {
 		case eFMT_LOGM:
 		case eFMT_PHASE:
 		case eFMT_DELAY:
@@ -930,35 +918,39 @@ gboolean plotA (guint areaWidth, guint areaHeight, cairo_t *cr, tGlobal *pGlobal
 		case eFMT_REAL:
 		case eFMT_IMAG:
 		case eFMT_SWR:
-			plotCartesianGrid(cr, &grid, eCH_TWO, pGlobal);
+			plotCartesianGrid(cr, &grid, eCH_ONE, pGlobal);
 			break;
 		case eFMT_SMITH:
-			plotSmithGrid(cr, TRUE, &grid, eCH_TWO, pGlobal);
+			plotSmithGrid( cr, TRUE, &grid, eCH_ONE, pGlobal);
 			break;
 		case eFMT_POLAR:
-			plotPolarGrid(cr, TRUE, &grid, 1, pGlobal);
+			plotPolarGrid (cr, TRUE, &grid, eCH_ONE, pGlobal);
 			break;
 		}
-	}
 
-    switch ( pGlobal->HP8753.channels[ eCH_ONE ].format ) {
-	case eFMT_LOGM:
-	case eFMT_PHASE:
-	case eFMT_DELAY:
-	case eFMT_LINM:
-	case eFMT_REAL:
-	case eFMT_IMAG:
-	case eFMT_SWR:
-		plotCartesianTrace (cr, &grid, eCH_ONE, pGlobal);
-		break;
-	case eFMT_SMITH:
-	case eFMT_POLAR:
-		plotSmithAndPolarTrace (cr, &grid, eCH_ONE, pGlobal);
- 		break;
-	}
+		if ( bOverlay ) {
+			showStatusInformation (cr, &grid, eCH_TWO, pGlobal);
 
-	if ( bOverlay ) {
-	    switch ( pGlobal->HP8753.channels[ eCH_TWO ].format ) {
+			switch ( pGlobal->HP8753.channels[ eCH_TWO ].format ) {
+			case eFMT_LOGM:
+			case eFMT_PHASE:
+			case eFMT_DELAY:
+			case eFMT_LINM:
+			case eFMT_REAL:
+			case eFMT_IMAG:
+			case eFMT_SWR:
+				plotCartesianGrid(cr, &grid, eCH_TWO, pGlobal);
+				break;
+			case eFMT_SMITH:
+				plotSmithGrid(cr, TRUE, &grid, eCH_TWO, pGlobal);
+				break;
+			case eFMT_POLAR:
+				plotPolarGrid(cr, TRUE, &grid, 1, pGlobal);
+				break;
+			}
+		}
+
+		switch ( pGlobal->HP8753.channels[ eCH_ONE ].format ) {
 		case eFMT_LOGM:
 		case eFMT_PHASE:
 		case eFMT_DELAY:
@@ -966,15 +958,32 @@ gboolean plotA (guint areaWidth, guint areaHeight, cairo_t *cr, tGlobal *pGlobal
 		case eFMT_REAL:
 		case eFMT_IMAG:
 		case eFMT_SWR:
-			plotCartesianTrace (cr, &grid, eCH_TWO, pGlobal);
+			plotCartesianTrace (cr, &grid, eCH_ONE, pGlobal);
 			break;
 		case eFMT_SMITH:
 		case eFMT_POLAR:
-			plotSmithAndPolarTrace (cr, &grid, eCH_TWO, pGlobal);
+			plotSmithAndPolarTrace (cr, &grid, eCH_ONE, pGlobal);
 			break;
 		}
-	}
 
+		if ( bOverlay ) {
+			switch ( pGlobal->HP8753.channels[ eCH_TWO ].format ) {
+			case eFMT_LOGM:
+			case eFMT_PHASE:
+			case eFMT_DELAY:
+			case eFMT_LINM:
+			case eFMT_REAL:
+			case eFMT_IMAG:
+			case eFMT_SWR:
+				plotCartesianTrace (cr, &grid, eCH_TWO, pGlobal);
+				break;
+			case eFMT_SMITH:
+			case eFMT_POLAR:
+				plotSmithAndPolarTrace (cr, &grid, eCH_TWO, pGlobal);
+				break;
+			}
+		}
+	}
     return FALSE;
 }
 
@@ -995,7 +1004,8 @@ gboolean CB_DrawingArea_A_Draw (GtkWidget *widget, cairo_t *cr, tGlobal *pGlobal
 
 //  gtk_render_background ( gtk_widget_get_style_context (widget), cr, 0, 0, areaWidth, areaHeight );
 
-    if( pGlobal->HP8753.channels[0].chFlags.bValidData ) {
+    if( pGlobal->HP8753.channels[ eCH_ONE ].chFlags.bValidData ||
+    		(pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid)) {
 		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0 );
 		cairo_paint( cr );
     }
@@ -1017,6 +1027,9 @@ gboolean CB_DrawingArea_A_Draw (GtkWidget *widget, cairo_t *cr, tGlobal *pGlobal
 gboolean plotB (guint areaWidth, guint areaHeight, cairo_t *cr, tGlobal *pGlobal)
 {
 	tGridParameters grid = {.areaWidth = areaWidth, .areaHeight = areaHeight, 0};
+
+	if( !pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bValidData )
+		return FALSE;
 
 	flipVertical( cr, &grid );
 

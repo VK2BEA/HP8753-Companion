@@ -57,4 +57,30 @@
   		<em>real and imaginary</em> values, and saved to the file.</p></item> 
   </steps>
   </section>
+
+      <section id="renameTrace" style="2column">
+        <title>Renaming Saved Traces</title>
+        <p>The saved trace profile name may be changed by using the pop-up dialog box appearing after pressing the <key>F2</key> key.</p>
+        <media its:translate="no" type="image" mime="image/png" src="media/rename.png" /> 
+        <steps>
+            <item><p>Select the existing trace profile you wish to rename using the <em>Traces</em> combo box</p></item>
+            <item><p>Press the <key>F2</key> to show the <em>Rename/Move/Copy</em> dialog</p></item>
+            <item><p>Select the <em>Rename</em> button in the radio box (if it is not already active)</p></item>
+            <item><p>Type in the new profile name in the lower entry box. Trace profile names must be unique. Should you enter the name of a profile that already exists in the current project, the <key>OK</key> button will become insensitive and you will be unable to proceed.</p></item>
+            <item><p>Press the <key>OK</key> to initiate the renaming of saved trace profile</p></item>
+        </steps>
+      </section>
+
+      <section id="moveTrace" style="2column">
+        <title>Moving or Copying the Saved Trace Profile to Another Project</title>
+        <p>The saved trace profile may be moved or copied to another project using the pop-up dialog box appearing after pressing the <key>F2</key> key.</p>
+        <steps>
+            <item><p>Select the existing calibration and setup profile you wish to move or copy using the <em>Traces</em> combo box</p></item>
+            <item><p>Press the <key>F2</key> to show the <em>Rename/Move/Copy</em> dialog</p></item>
+            <item><p>Select the <em>Move</em> or <em>Copy</em> button in the radio box (if it is not already active)</p></item>
+            <item><p>Select the project into which you wish to move or copy the profile into. Trace profile names must be unique. Should you enter the name of a profile that already exists in the current project, the <key>OK</key> button will become insensitive and you will be unable to proceed.</p>
+            <p>You may enter a project name into the entry box if you wish to create a new project in which to move or copy the trace profile.</p></item>
+            <item><p>Press the <key>OK</key> to initiate the move or copy</p></item>
+        </steps>
+      </section>
 </page>

@@ -29,7 +29,19 @@
   <title>Establishing a GPIB connection to HP8753</title>
   <steps>
     <item><p>Select the GPIB page</p></item>
-    <item><p>Check the <em>'Use Card Index &amp; ID'</em> box to select the controller card and GPIB PID directly, or leave unchecked to refer to the GPIB controller and device by the names defined in the <code>/etc/gpib.conf</code> file. </p></item>
+    <item><p>Check the <em>'Use Card Index &amp; ID'</em> box to select the controller card index and GPIB PID directly, or leave unchecked to refer to the device and controller by the name defined in the <code>/etc/gpib.conf</code> file. </p>
+    <code mime="application/xml"><![CDATA[device {
+        minor    = 0            /* minor number for interface board this device is connected to */
+        name     = "hp8753c"    /* device mnemonic          */
+        pad      = 16           /* The Primary Address      */
+        sad      = 0            /* Secondary Address        */
+
+        eos      = 0xa          /* EOS Byte                 */
+        set-reos = no           /* Terminate read if EOS    */
+        set-bin  = no           /* Compare EOS 8-bit        */
+        timeout  = T30s         /* timeout for commands     */
+    }]]></code>
+    </item>
     <item><p>Set the controller and HP8753 names used in the GPIB configuration file (<code>/etc/gpib.conf</code> or <code>/usr/local/etc/gpib.conf</code>), or set the card index and GPIB PID</p></item>
     <item><p>Observe the status line to ensure that communications has been established</p></item>
   </steps>

@@ -133,11 +133,13 @@ showCalInfo( tHP8753cal *pChannelCal, tGlobal *pGlobal ) {
  * \param wCalComboBox pointer calkibration combobox
  */
 void
-updateCalCombobox( gpointer cal, gpointer wCalComboBox ) {
+updateCalComboBox( gpointer cal, gpointer wCalComboBox ) {
 	tHP8753cal *pCal = (tHP8753cal *)cal;
 	GtkComboBoxText *wComboSetup = (GTK_COMBO_BOX_TEXT( wCalComboBox ));
+	tGlobal *pGlobal = &globalData;
 
-	gtk_combo_box_text_append_text( wComboSetup, pCal->sName );
+	if( g_strcmp0( pGlobal->sProject, pCal->projectAndName.sProject ) == 0  )
+		gtk_combo_box_text_append_text( wComboSetup, pCal->projectAndName.sName );
 }
 
 /*!     \brief  Add a string to the combobox only if not there

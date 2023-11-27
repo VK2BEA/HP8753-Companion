@@ -23,6 +23,7 @@ gint askHP8753C_dbl(gint descGPIB_HP8753, gchar *mnemonic, gdouble *dresult, gin
 
 gint getHP8753channelListFreqSegments(gint descGPIB_HP8753, tGlobal *pGlobal, eChannel channel, gint *pGPIBstatus );
 gint getHP8753channelTrace(gint descGPIB_HP8753, tGlobal *pGlobal, eChannel channel, gint *pGPIBstatus );
+gint acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );
 gint get8753firmwareVersion(gint descGPIB_HP8753, gchar **psProduct, gint *pGPIBstatus);
 
 gint getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );
@@ -39,7 +40,7 @@ gint getHP8753calType( gint descGPIB_HP8753, gint *pGPIBstatus );
 
 gint get8753learnString( gint descGPIB_HP8753, guchar **ppLearnString, gint *pGPIBstatus );
 gboolean analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindex, gint *pGPIBstatus );
-gint process8753learnString( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );
+gint process8753learnString( gint descGPIB_HP8753, guchar *, tGlobal *pGlobal, gint *pGPIBstatus );
 gboolean getStartStopOrCenterSpanFrom8753learnString( guchar *pLearn, tGlobal *pGlobal, eChannel channel );
 eChannel getActiveChannelFrom8753learnString( guchar *pLearn, tGlobal *pGlobal );
 

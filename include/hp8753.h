@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.19-1"
+   #define VERSION "1.20-1"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -61,16 +61,9 @@ enum _debug
 #define MAX_SECONDARY_DEVICES		10
 
 #define ADDR_HP8753C				16
-#define ADDR_HP33401A_MULTIMETER	22
 
 #define MAX_CAL_ARRAYS	12
 #define HEADER_SIZE		4
-
-typedef struct {
-	struct {
-		unsigned short bSmithSpline     : 1;
-	} flags;
-} _global;
 
 typedef struct {
 	Addr4882_t GPIBaddress;
@@ -123,14 +116,17 @@ typedef enum {
 	eColorYellow,
 	eColorLightBlue,
 	eColorLightPeach,
-	eColorLightPuple,
+	eColorPurple,
+	eColorLightPurple,
 	eColorBlue,
 	eColorDarkBlue,
 	eColorGreen,
 	eColorDarkGreen,
 	eColorRed,
+	eColorDarkRed,
 	eColorGray,
 	eColorBrown,
+	eColorDarkBrown,
 	eColorLast
 } eColor;
 
@@ -239,12 +235,14 @@ typedef struct {
 } tChannel;
 
 typedef enum { eCH_ONE = 0, eCH_SINGLE = 0, eCH_TWO = 1, eNUM_CH = 2, eCH_BOTH = 2 } eChannel;
+typedef enum { eProjectName = 0, eCalibrationName = 1, eTraceName = 2 } tRMCtarget;
+typedef enum { eRename = 0, eMove = 1, eCopy = 2 } tRMCpurpose;
 
 #define CH_ONE_COLOR				eColorDarkGreen
 #define CH_TWO_COLOR				eColorDarkBlue
 #define CH_ALL_COLOR				eColorBlack
 #define COLOR_GRID					eColorLightBlue
-#define COLOR_GRID_OVERLAY	eColorLightPeach
+#define COLOR_GRID_OVERLAY			eColorLightPeach
 
 enum { eNoInterplativeCalibration = 0, eInterplativeCalibration = 1, eInterplativeCalibrationButNotEnabled = 2 };
 typedef struct {
@@ -256,6 +254,8 @@ typedef struct {
 		unsigned short bMarkersCoupled			: 1;
 		unsigned short bLearnStringParsed       : 1;
 		unsigned short bLearnedStringIndexes	: 1;	// if locally obtained
+		unsigned short bHPGLdataValid			: 1;
+		unsigned short bShowHPGLplot            : 1;	// display HPGL plot instead of enhanced plots
 	} flags;
 
 	struct {
@@ -267,6 +267,9 @@ typedef struct {
 	} calSettings;
 
 	tChannel channels[ eNUM_CH ];
+	// compiled HPGL plot data
+	// initial integer is the length of the malloced data
+	void *plotHPGL;
 	tS2P S2P;
 
 	tLearnStringIndexes analyzedLSindexes;
@@ -276,12 +279,17 @@ typedef struct {
 	gchar *sNote;
 	gchar *dateTime;
 
-	guchar *pHP8753C_learn;
 	gint 	activeChannel;
 	gint    firmwareVersion;
 	gchar	*sProduct;
 
 } tHP8753;
+
+typedef struct {
+	gchar *sProject;
+	gchar *sName;
+	gboolean bSelected;
+} tProjectAndName;
 
 typedef struct {
 
@@ -307,14 +315,20 @@ typedef struct {
 		} settings;
 	} perChannelCal[ eNUM_CH ];
 
-	gchar *dateTime;
+	gchar *sDateTime;
 	gchar *sNote;
-	gchar *sName;
+	tProjectAndName projectAndName;
 
 	guchar *pHP8753C_learn;
 	gint    firmwareVersion;
 } tHP8753cal;
 
+typedef struct {
+	gchar *sTitle;
+	gchar *sNote;
+	gchar *sDateTime;
+	tProjectAndName projectAndName;
+} tHP8753traceAbstract;
 
 typedef struct {
 	tHP8753 HP8753;
@@ -332,7 +346,13 @@ typedef struct {
 		unsigned short bRunning         		: 1;
 		unsigned short bbDebug					: 3;
 		unsigned short bGPIBcommsActive			: 1;
+		unsigned short bProject                 : 1;
+		unsigned short bNoGPIBtimeout			: 1;
+		unsigned short bDoNotRetrieveHPGLdata   : 1;
 	} flags;
+
+	tRMCtarget RMCdialogTarget;
+	tRMCpurpose RMCdialogPurpose;
 
 	GHashTable *widgetHashTable;
 
@@ -341,16 +361,20 @@ typedef struct {
 	GtkPrintSettings *printSettings;
 	GtkPageSetup 	 *pageSetup;
 	gchar			 *sLastDirectory;
-	gchar			 *sCalProfile;
-	gchar			 *sTraceProfile;
+
+	// names of the currently selected objects
+	tHP8753traceAbstract    *pTraceAbstract;
+	tHP8753cal              *pCalibrationAbstract;
+	gchar			 *sProject;
 	gchar			 *sCalKit;
 
 	GSource *		messageEventSource;
 	GAsyncQueue *	messageQueueToMain;
 	GAsyncQueue *	messageQueueToGPIB;
 
-	GList *pCalList;
-	GList *pTraceList;
+	GList *pProjectList;
+	GList *pCalList;		// list containing tHP8753cal objects
+	GList *pTraceList;		// list containing tHP8753traceAbstract objects
 	GList *pCalKitList;
 
 	GThread * pGThread;
@@ -422,24 +446,39 @@ extern GHashTable *widgetHashTable;
 #define OK      ( 0)
 #define CLEAR	( 0)
 
+#define NPAGE_CALIBRATION	0
+#define NPAGE_TRACE			1
+#define NPAGE_DATA			2
+#define NPAGE_OPTIONS		3
+#define NPAGE_GPIB			4
+#define NPAGE_CALKITS		5
+
 gpointer	threadGPIB (gpointer);
 
 int openOrCreateDB();
 void closeDB(void);
 
-gint recoverCalibrationAndSetup( tGlobal *, gchar * );
-gint recoverTraceData( tGlobal *, gchar * );
-gint saveCalibrationAndSetup( tGlobal *, gchar * );
+gint recoverCalibrationAndSetup( tGlobal *, gchar *, gchar * );
+gint recoverTraceData( tGlobal *, gchar *, gchar * );
+gint saveCalibrationAndSetup( tGlobal *, gchar *, gchar * );
 gint saveLearnStringAnalysis( tGlobal *, tLearnStringIndexes * );
-gint saveTraceData( tGlobal *, gchar * );
+gint saveTraceData( tGlobal *, gchar *, gchar * );
 gint inventorySavedSetupsAndCal(tGlobal *);
-gint compareCalItem( gpointer , gpointer );
+void freeCalListItem( gpointer pCalItem );
+void freeTraceListItem( gpointer pTraceItem );
+
+gint compareCalItemsForFind( gpointer , gpointer );
+gint compareCalItemsForSort( gpointer , gpointer );
+gint compareTraceItemsForFind( gpointer , gpointer );
+gint compareTraceItemsForSort( gpointer , gpointer );
+
 guint inventorySavedTraceNames( tGlobal * );
 gint inventorySavedCalibrationKits( tGlobal * );
+gint inventoryProjects( tGlobal * );
 gint compareCalKitIdentifierItem( gpointer pCalKitIdentfierItem, gpointer sLabel );
 gint recoverCalibrationKit(tGlobal *pGlobal, gchar *sLabel);
 gint saveCalKit(tGlobal *pGlobal);
-guint deleteDBentry( tGlobal *, gchar *, tDBtable );
+guint deleteDBentry( tGlobal *, gchar *, gchar *, tDBtable );
 void hide_Frame_Plot_B (tGlobal *);
 
 void FORM1toDouble( guint8 *, gdouble *, gdouble * );
@@ -461,7 +500,6 @@ void clearHP8753traces( tHP8753 * );
 gint saveProgramOptions( tGlobal * );
 gint recoverProgramOptions( tGlobal * ) ;
 gboolean setGtkComboBox( GtkComboBox *, gchar * );
-gint compareCalItemForSort( gpointer pCalItem1, gpointer pCalItem2 );
 void setUseGPIBcardNoAndPID( tGlobal *, gboolean );
 gint sendHP8753calibrationKit(gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );
 
@@ -492,11 +530,26 @@ gint splineInterpolate( gint, tComplex [], double, tComplex * );
 void CB_Radio_Calibration ( GtkRadioButton *, tGlobal * );
 void showCalInfo( tHP8753cal *, tGlobal * );
 gboolean addToComboBox( GtkComboBox *, gchar * );
-void updateCalCombobox( gpointer , gpointer  );
-void sensitiseControlsInUse( tGlobal *pGlobal, gboolean bSensitive );
+void updateCalComboBox( gpointer , gpointer  );
+int PopulateCalComboBoxWidget( tGlobal * );
+int PopulateTraceComboBoxWidget( tGlobal * );
+int PopulateProjectComboBoxWidget( tGlobal * );
+void sensitiseControlsInUse( tGlobal *, gboolean  );
+void CB_EditableProjectName( GtkEditable *, tGlobal * );
+void CB_EditableCalibrationProfileName( GtkEditable *, tGlobal * );
+void CB_EditableTraceProfileName( GtkEditable *, tGlobal * );
 GList *createIconList( void );
 gint getTimeStamp( gchar ** );
 void logVersion(void);
+void ShowRenameMoveCopyDialog( tGlobal * );
+gint RenameMoveCopyDBitems(tGlobal *, tRMCtarget, tRMCpurpose, gchar *, gchar *, gchar *);
+tHP8753cal *selectFirstCalibrationProfileInProject( tGlobal * );
+tHP8753traceAbstract *selectFirstTraceProfileInProject( tGlobal * );
+tHP8753cal *selectCalibrationProfile( tGlobal *, gchar *, gchar * );
+tHP8753traceAbstract *selectTraceProfile( tGlobal *, gchar *, gchar * );
+tHP8753cal *cloneCalibrationProfile( tHP8753cal *, gchar * );
+tHP8753traceAbstract *cloneTraceProfileAbstract( tHP8753traceAbstract *, gchar * );
+
 #define DATETIME_SIZE  64
 
 #define NHGRIDS   10
@@ -518,6 +571,7 @@ void logVersion(void);
 #define MARKER_SYMBOL_FONT	"Nimbus Sans"
 #define HP_LOGO_FONT "Nimbus Sans"
 #define STIMULUS_LEGEND_FONT "Nimbus Sans"
+#define HPGL_FONT "Noto Sans Mono ExtraLight"
 
 #define TIMEOUT_SWEEP	200		// if 10Hz RBW and 1601 points, it may take a long time to sweep
 #define LOCAL_DELAYms   50		// Delay after going to local from remote
@@ -544,6 +598,11 @@ g_memdup2(gconstpointer mem, gsize byte_size) {
 #define DBG( level, message, ... ) \
 	if( globalData.flags.bbDebug >= level ) \
 		LOG( G_LOG_LEVEL_DEBUG, message, ## __VA_ARGS__)
+
+#define CURRENT_DB_SCHEMA	1
+// This character separates project name from item name in database
+// ... its more complicated to ensure compatability with older database schemas
+#define ETX 0x03
 
 #undef DELTA_MARKER_ZERO
 #undef USE_PRECAUTIONARY_DEVICE_IBCLR

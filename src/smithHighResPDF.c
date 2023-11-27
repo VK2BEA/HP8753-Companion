@@ -216,7 +216,7 @@ drawSmithHRmarkerText( void *minst,
 	if( pChannel->mkrType == eMkrLog ) {
 		sValue1 = engNotation(value1, 3, eENG_SEPARATE, &sPrefix1);
 	} else {
-		sValue1 = g_strdup_printf( "%.2f", value1);
+		sValue1 = g_strdup_printf( "%.3f", value1);
 		sPrefix1 = "";
 	}
 

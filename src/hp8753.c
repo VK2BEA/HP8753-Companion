@@ -37,10 +37,23 @@ tGlobal globalData = {
 		.flags ={0},
 		0 };
 
+/*!     \brief  Filter key presses (looking for Function Buttons)
+ *
+ * Filter key presses (looking for Function Buttons). We either capture
+ * the button presses or let them through to the widgets.
+ *
+ * \ingroup GUI
+ *
+ * \param widget    pointer to widget
+ * \param event     pointer to keyboard event
+ * \param user_data not used
+ * \return          TRUE to stop other handlers from being invoked for the event. FALSE to propagate the event further.
+ */
 gboolean
 keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
 	GdkModifierType modmask;
 	guint modifier = 0;
+	tGlobal *pGlobal = (tGlobal *)user_data;
 
     modmask = gtk_accelerator_get_default_mod_mask ();
     modifier = event->state & modmask;
@@ -51,18 +64,37 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
       switch( event->keyval ) {
       case GDK_KEY_F1:
 #if GTK_CHECK_VERSION(3,22,0)
-            // g_app_info_launch_default_for_uri( "http://engineering.nlsbph.org/Gutenberg/index.html", NULL, NULL);
     	  if( modifier == 0 )
             gtk_show_uri_on_window( NULL, "help:hp8753", gtk_get_current_event_time (), NULL );
 #endif
             break;
+      case GDK_KEY_F2:
+          ShowRenameMoveCopyDialog( pGlobal );
+          break;
+      case GDK_KEY_F12:
+    	  if( modifier == GDK_SHIFT_MASK ) {
+    		  pGlobal->flags.bNoGPIBtimeout = TRUE;
+    		  postInfo( "No GPIB timeouts" );
+    	  } else {
+    		  pGlobal->flags.bNoGPIBtimeout = FALSE;
+    		  postInfo( "Normal GPIB timeouts" );
+    	  }
+    	  break;
+      case GDK_KEY_F11:
+          if( modifier == GDK_SHIFT_MASK )
+              postDataToGPIBThread( TG_UTILITY, NULL );
+    	  break;
       default:
+          return FALSE;     // pass tyhe event on to the underlying widgets
     	  break;
       }
    } else if( event->keyval == GDK_KEY_Escape &&  modifier == 0 ) {
 	   postDataToGPIBThread (TG_ABORT, NULL);
+   } else {
+       // not a Fn or Esc key .. do with it what you will
+       return FALSE;     // pass tyhe event on to the underlying widgets
    }
-   return FALSE;
+   return TRUE; // nothing more to see here
 }
 
 /*!     \brief  Periodic timeout callback
@@ -122,9 +154,7 @@ splashDestroy (gpointer *pGlobal)
 
 static gint     optDebug = 0;
 static gboolean bOptQuiet = 0;
-static gint     optDeviceID = INVALID;
-static gchar    *sOptDeviceName = NULL;
-static gint     optControllerIndex = INVALID;
+static gboolean bOptNoGPIBtimeout = 0;
 
 static gchar    **argsRemainder = NULL;
 
@@ -134,12 +164,8 @@ static const GOptionEntry optionEntries[] =
           &optDebug, "Print diagnostic messages in journal (0-7)", NULL },
   { "quiet",           'q', 0, G_OPTION_ARG_NONE,
           &bOptQuiet, "No GUI sounds", NULL },
-  { "GPIBdeviceID",      'd', 0, G_OPTION_ARG_INT,
-          &optDeviceID, "GPIB device ID for HP8753C", NULL },
-  { "GPIBdeviceName",    'D', 0, G_OPTION_ARG_STRING,
-		          &sOptDeviceName, "GPIB device name for HP8753C (in /etc/gpib.conf)", NULL },
-  { "GPIBcontrollerIndex",  'c', 0, G_OPTION_ARG_INT,
-          &optControllerIndex, "GPIB controller board index", NULL },
+  { "noGPIBtimeout",   't', 0, G_OPTION_ARG_NONE,
+		          &bOptNoGPIBtimeout, "no GPIB timeout (for debug with HP59401A)", NULL },
   { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &argsRemainder, "", NULL },
   { NULL }
 };
@@ -171,16 +197,16 @@ on_activate (GApplication *app, gpointer udata)
 	GSList *widgetList;
 
 
-    if ( globalData.flags.bRunning ) {
+    if ( pGlobal->flags.bRunning ) {
         // gtk_window_set_screen( GTK_WINDOW( MainWindow ),
         //                       unique_message_data_get_screen( message ) );
-        gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(g_hash_table_lookup ( globalData.widgetHashTable,
+        gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable,
 				(gconstpointer)"WID_hp8753c_main"))));
-        gtk_window_present_with_time( GTK_WINDOW( g_hash_table_lookup ( globalData.widgetHashTable,
+        gtk_window_present_with_time( GTK_WINDOW( g_hash_table_lookup ( pGlobal->widgetHashTable,
 				(gconstpointer)"WID_hp8753c_main")), GDK_CURRENT_TIME /*time_*/ );
         return;
     } else {
-    	globalData.flags.bRunning = TRUE;
+    	pGlobal->flags.bRunning = TRUE;
     }
 
 	globalData.widgetHashTable = g_hash_table_new( g_str_hash, g_str_equal );
@@ -227,7 +253,7 @@ on_activate (GApplication *app, gpointer udata)
     gtk_window_set_icon_list( GTK_WINDOW(wApplicationWindow), iconList );
     g_list_free_full ( iconList, g_object_unref );
 
-    g_signal_connect(G_OBJECT(wApplicationWindow), "key-press-event", G_CALLBACK(keyHandler), NULL);
+    g_signal_connect(G_OBJECT(wApplicationWindow), "key-press-event", G_CALLBACK(keyHandler), pGlobal);
     gtk_window_set_position(GTK_WINDOW(wApplicationWindow), GTK_WIN_POS_CENTER_ALWAYS);
 	gtk_widget_show(wApplicationWindow);
 	gtk_application_add_window( GTK_APPLICATION(app), GTK_WINDOW(wApplicationWindow) );
@@ -241,7 +267,11 @@ on_activate (GApplication *app, gpointer udata)
 
 	pGlobal->flags.bSmithSpline = TRUE;
 	pGlobal->flags.bShowDateTime = TRUE;
-	recoverProgramOptions(pGlobal);
+
+	if( recoverProgramOptions(pGlobal) != TRUE ){
+		// We might need to do something if there are no retrieved options
+		// ... but I don't know what that might be!
+	}
 
 	// debug level
 	pGlobal->flags.bbDebug = optDebug < 8 ? optDebug : 7;
@@ -254,50 +284,51 @@ on_activate (GApplication *app, gpointer udata)
 
 
 	// Get cal and trace profiles from sqlite3 database
+	inventoryProjects( pGlobal );
 	inventorySavedSetupsAndCal( pGlobal );
 	inventorySavedTraceNames( pGlobal );
 	inventorySavedCalibrationKits( pGlobal );
+
 	// fill the combo box with the setup/cal names
-	GtkComboBoxText *wComboBoxCal = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_CalibrationProfile") );
-	GtkComboBoxText *wComboBoxTrace = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer)"WID_Combo_TraceProfile") );
-	GtkComboBoxText *wComboBoxCalKit = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer)"WID_Combo_CalKit") );
+	GtkComboBoxText *wComboBoxProject = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_Project") );
+	GtkComboBoxText *wComboBoxCalKit = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_CalKit") );
 
-	g_list_foreach ( pGlobal->pCalList, updateCalCombobox, wComboBoxCal );
-
-	// Fill in combobox with the available trace names recovered from the sqlite3 database
-	for( GList *l = pGlobal->pTraceList; l != NULL; l = l->next ){
-		gtk_combo_box_text_append_text( wComboBoxTrace, l->data );
-	}
+	PopulateProjectComboBoxWidget( pGlobal );
+	PopulateCalComboBoxWidget( pGlobal );
+	PopulateTraceComboBoxWidget( pGlobal );
+    // pGlobal->pCalibrationAbstract is initialized by inventorySavedSetupsAndCal()
+	// and pGlobal->pGlobalTraceAbstract by inventorySavedTraceNames()
+	// As  a side-effect this will also choose the selected calibration and trace profiles
+	// by triggering the "change" signal
+	if( !setGtkComboBox( GTK_COMBO_BOX(wComboBoxProject), pGlobal->sProject ) )
+		gtk_combo_box_set_active (GTK_COMBO_BOX(wComboBoxProject), 0);
 
 	// Fill in combobox with the available calibration kits recovered from the sqlite3 database
 	for( GList *l = pGlobal->pCalKitList; l != NULL; l = l->next ){
 		gtk_combo_box_text_append_text( wComboBoxCalKit, ((tCalibrationKitIdentifier *)l->data)->sLabel );
 	}
 
-	// choose the entry in the combo box
-	// it also has the side effect of switching the radio button
-	// hense it matters in which order we do this
+	// set the calibration / trace radio button
 	if( pGlobal->flags.bCalibrationOrTrace ) {
-		setGtkComboBox( GTK_COMBO_BOX(wComboBoxTrace), pGlobal->sTraceProfile );
-		setGtkComboBox( GTK_COMBO_BOX(wComboBoxCal), pGlobal->sCalProfile );
+		gtk_button_clicked( GTK_BUTTON( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_RadioCal")) );
 	} else {
-		setGtkComboBox( GTK_COMBO_BOX(wComboBoxCal), pGlobal->sCalProfile );
-		setGtkComboBox( GTK_COMBO_BOX(wComboBoxTrace), pGlobal->sTraceProfile );
+		gtk_button_clicked( GTK_BUTTON( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_RadioTraces")) );
 	}
+
 	if( g_list_length( pGlobal->pCalKitList ) > 0 ) {
 		gtk_combo_box_set_active ( GTK_COMBO_BOX(wComboBoxCalKit), 0 );
-		gtk_widget_set_sensitive( GTK_WIDGET( g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer)"WID_Btn_CalKitDelete") ),
+		gtk_widget_set_sensitive( GTK_WIDGET( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Btn_CalKitDelete") ),
 				TRUE);
 	}
 
-	gtk_entry_set_text( GTK_ENTRY(g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer) "WID_Entry_GPIB_HP8753" )), globalData.sGPIBdeviceName );
+	gtk_entry_set_text( GTK_ENTRY(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer) "WID_Entry_GPIB_HP8753" )), globalData.sGPIBdeviceName );
 
-	GtkWidget *wRadioBtnCalibration = g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer)"WID_RadioCal");
+	GtkWidget *wRadioBtnCalibration = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_RadioCal");
 
-	CB_Radio_Calibration ( GTK_RADIO_BUTTON( wRadioBtnCalibration ), &globalData );
+	CB_Radio_Calibration ( GTK_RADIO_BUTTON( wRadioBtnCalibration ), pGlobal );
 
 	// Start the GPIB communication thread
-	pGlobal->pGThread = g_thread_new( "GPIBthread", threadGPIB, (gpointer)&globalData );
+	pGlobal->pGThread = g_thread_new( "GPIBthread", threadGPIB, (gpointer)pGlobal );
 }
 
 /*!     \brief  Clear traces
@@ -363,22 +394,10 @@ on_startup (GApplication *app, gpointer udata)
 	setenv("IB_NO_ERROR", "1", 0);	// no noise
 	logVersion();
 
-	pGlobal->sGPIBdeviceName     = g_strdup( DEFAULT_GPIB_HP8753C_DEVICE_NAME );
+	pGlobal->sGPIBdeviceName = g_strdup( DEFAULT_GPIB_HP8753C_DEVICE_NAME );
 
 	pGlobal->flags.bGPIB_UseCardNoAndPID = FALSE;
-
-	if( sOptDeviceName )  {
-		pGlobal->sGPIBdeviceName = sOptDeviceName;
-	}
-
-	if( optControllerIndex != INVALID ) {
-		pGlobal->GPIBcontrollerIndex = optControllerIndex;
-	}
-
-	if( optDeviceID != INVALID ) {
-		pGlobal->GPIBdevicePID = optDeviceID;
-		pGlobal->sGPIBdeviceName = NULL;
-	}
+	pGlobal->flags.bNoGPIBtimeout = bOptNoGPIBtimeout;
 
     /*! We use a loop source to send data back from the
      *  GPIB threads to indicate status
@@ -424,11 +443,13 @@ on_shutdown (GApplication *app, gpointer userData)
 
     closeDB();
 
-    g_free( pGlobal->HP8753.pHP8753C_learn );
+    g_list_free_full ( g_steal_pointer (&pGlobal->pProjectList), (GDestroyNotify)g_free );
+    g_list_free_full ( g_steal_pointer (&pGlobal->pTraceList), (GDestroyNotify)freeTraceListItem );
+    g_list_free_full ( g_steal_pointer (&pGlobal->pCalList), (GDestroyNotify)freeCalListItem );
+
     g_free( pGlobal->HP8753cal.pHP8753C_learn );
 	g_free( pGlobal->sLastDirectory );
-	g_free( pGlobal->sCalProfile );
-	g_free( pGlobal->sTraceProfile );
+	g_free( pGlobal->sProject );
 
     for( eChannel channel=0; channel < eNUM_CH; channel++ ) {
         for( i=0; i < MAX_CAL_ARRAYS; i++ )

@@ -49,7 +49,7 @@ gboolean
 plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlobal *pGlobal)
 {
 	gdouble perDiv, refPos, refVal, min,  __attribute__((unused)) max;
-	gdouble logStartFreq, logStopFreq, logSpan, startOffset, intLog, xGrid;
+	gdouble logStartFreq, logStopFreq, logSpan, startOffset, logStartFreqDecade, xGrid;
 	tChannel *pChannel = &pGlobal->HP8753.channels[channel];
 
 	gint i;
@@ -104,7 +104,7 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 				logStartFreq = log10( pChannel->sweepStart );
 				logStopFreq = log10( pChannel->sweepStop );
 				logSpan = logStopFreq - logStartFreq;
-				startOffset = modf( logStartFreq, &intLog );
+				startOffset = modf( logStartFreq, &logStartFreqDecade );
 				// find the start grid
 				for( i=1; i < sizeof(logGrids)/sizeof(double) && logGrids[ i ] < startOffset; i++ );
 				// i is now the index to logGrids of the next grid
@@ -115,7 +115,7 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 						++decades;
 					}
 					// break when we do all the grids
-					if( logGrids[ i ] - startOffset + decades > logStopFreq )
+					if( logGrids[ i ] + logStartFreqDecade + decades > logStopFreq )
 						break;
 					else {
 						xGrid = (logGrids[ i ] - startOffset + decades) / logSpan * pGrid->gridWidth;

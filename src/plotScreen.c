@@ -1,0 +1,378 @@
+/*
+ * HPGLplot.c
+ *
+ *  Created on: Nov 13, 2023
+ *      Author: michael
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <math.h>
+
+#include <glib-2.0/glib.h>
+#include <errno.h>
+#include <hp8753.h>
+
+#include "messageEvent.h"
+
+#include "HPGLplot.h"
+
+/*!     \brief  Parse an HPGL command
+ *
+ * Parse an HPGL command and prepare data for plotting.
+ * We create a compiled serial data set for plotting....
+ * NNNNNNNN - byte count (total count of bytes for the data)
+ * Line         - CHPGL_LINE2PT - identifier byte
+ *                NN          - 16 bit count of bytes in line (n)
+ *                NN          - 16 bit x1 position
+ *                NN          - 16 bit y1 position
+ *                x & y repeated for coordinate 2 to n (min of three points)
+ * 2 point Line - CHPGL_LINE2PT - identifier byte
+ *                NN          - 16 bit x1 position
+ *                NN          - 16 bit y1 position
+ *                NN          - 16 bit x2 position
+ *                NN          - 16 bit y2 position
+ * label        - CHPGL_LABEL or CHPGL_LABEL_REL - identifier byte
+ *                NN          - 16 bit x position
+ *                NN          - 16 bit y position
+ *                NN          - 16 bit byte count of string (including trailling null)
+ *                SSSSSSS.... - variable length string (including terminating by NULL)
+ * lable size   - HPGL_CHAR_SIZE_REL - identifier byte
+ *                NNNN        - float character size scaling in x (percentage of P2-P1 x)
+ *                NNNN        - float character size scaling in y (percentahge of P2-P1 y)
+ * pen select   - HPGL_SELECT_PEN - identifier byte
+ *                N           - 8 bits identifying the pen (colour)
+ * line type    - HPGL_LINE_TYPE - identifier byte
+ *                N           - 8 bits identifying the line type (AFAICT this does not change)
+ *
+ *
+ * \param  sHPGL	pointer to HPGL snippet
+ * \return 0 (OK) or -1 (ERROR)
+ */
+gint
+parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
+	static gboolean bPenDown = FALSE;
+	static tCoord posn = {0};
+	static gfloat charSizeX = 0.0, charSizeY = 0.0;
+	static gint colour = 0, lineType = 0;
+
+	// If a line is started .. we add to it
+	static tCoord *currentLine = 0;
+	static gint	nPointsInLine = 0;
+	static gboolean	bNewPosition = FALSE;
+
+	// number of bytes used in the malloced memory
+	guint HPGLserialCount;
+
+	// Initialize the serialized & compiled HPGL plot
+	if( sHPGL == NULL ) {
+		// free any previously malloced data
+		g_free( pGlobal->HP8753.plotHPGL );
+		pGlobal->HP8753.plotHPGL = NULL;
+
+		// abandon any open line
+		g_free( currentLine );
+		nPointsInLine = 0;
+		currentLine = NULL;
+
+		// assume the pen is up
+		bPenDown = FALSE;
+		return 0;
+	}
+
+	// all our HPGL commands are two ACSII caharcters
+	if( strlen(sHPGL) < 2 )
+		return 0;
+
+	if( pGlobal->HP8753.plotHPGL )
+		HPGLserialCount = *(guint *)(pGlobal->HP8753.plotHPGL);
+	else
+		HPGLserialCount = sizeof( guint );	// byte count at the beginning of malloced string
+
+	switch( ((guchar)sHPGL[0] << 8) + (guchar)sHPGL[1] ) {	// concatenate the two bytes
+	case HPGL_POSN_ABS:
+		// some PA lines also contain other commands so malloc memory
+		// to use in such a case to hold the second command
+		// e.g.: PA3084 ,2414 SR 1.472 , 2.279 ;
+		//       PA3444 ,736 SP1;
+		guchar *secondHPGLcmd = g_malloc0( strlen( sHPGL ) );
+		// so this will work to capture all of the trailing string.
+		// Normally %s will stop at a whitespace in sscanf so we use "not 0200" (everything)
+		int nArgs = sscanf(sHPGL+2, "%hd , %hd %[^\0200]", &posn.x, &posn.y, secondHPGLcmd);
+
+		if( bPenDown ) {
+			// make sure we have enough space .. quantized by 100 points
+			currentLine = g_realloc_n( currentLine, QUANTIZE(nPointsInLine + 1, 100) + sizeof(guint16), sizeof( tCoord ) );
+			currentLine[ nPointsInLine ] = posn;
+			nPointsInLine++;
+		}
+		// we have more than just x and y .. i.e another command on the same line
+		// I don't think this should occure with HPGL ... but there you have it
+		if( nArgs == 3 ) {
+			*(guint *)(pGlobal->HP8753.plotHPGL) = HPGLserialCount;
+			parseHPGL( (gchar *)secondHPGLcmd, pGlobal );
+			HPGLserialCount = *(guint *)(pGlobal->HP8753.plotHPGL);
+		}
+		g_free( secondHPGLcmd );
+		bNewPosition = TRUE;
+		break;
+	case HPGL_LABEL:
+		int strLength = strlen( sHPGL+2 );
+		if( strLength == 0 )
+			break;	// don't bother adding null labels ("LB;")
+		// some labels from the 8753C have 003 characters .. remove them
+		if( sHPGL[ 2 + strLength - 1 ] == '\003' )
+			sHPGL[ 2 + strLength - 1 ] = 0;
+		// allocate more space if needed
+		pGlobal->HP8753.plotHPGL = g_realloc( pGlobal->HP8753.plotHPGL,
+				QUANTIZE( HPGLserialCount + sizeof(eHPGL) + sizeof(tCoord) + sizeof( guchar ) + strLength, 1000 ) );
+		// insert the label identifier
+		*(eHPGL *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = bNewPosition ? CHPGL_LABEL:CHPGL_LABEL_REL;
+		HPGLserialCount += sizeof(eHPGL);
+		// insert the location
+		*(tCoord *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = posn;
+		HPGLserialCount += sizeof(tCoord);
+		// next the string length (max 255 characters)
+		*(guchar *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = (guchar) strLength;
+		HPGLserialCount += sizeof(guchar);
+		// copy the string (and the null)
+		memcpy( pGlobal->HP8753.plotHPGL + HPGLserialCount, sHPGL + 2, strLength+1);
+		HPGLserialCount += strLength+1;
+		bNewPosition = FALSE;
+		break;
+	case HPGL_PEN_UP:
+		if( bPenDown ) {
+			// End of a line ...
+			// this concludes the line..  Add the accumulated line points to the compiled HPGL serial store
+			// enlarge the buffer .. g_realloc will only do this if necessary
+			pGlobal->HP8753.plotHPGL = g_realloc( pGlobal->HP8753.plotHPGL,
+					QUANTIZE( HPGLserialCount + sizeof(eHPGL) + sizeof( guint16 ) + (nPointsInLine * sizeof(tCoord)), 1000 ) );
+			// insert the compiled HPGL command (either CHPGL_LINE2PT or CHPGL_LINE)
+			if( nPointsInLine == 2 ) {
+				// if it just a two point line, we don't save the number of points .. its implicit
+				*(eHPGL *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = CHPGL_LINE2PT;
+				HPGLserialCount += sizeof(eHPGL);
+			} else {
+				*(eHPGL *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = CHPGL_LINE;
+				HPGLserialCount +=sizeof(eHPGL);
+				// next save the number of points in the line
+				*(guint16 *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = nPointsInLine;
+				HPGLserialCount += sizeof( guint16 );
+			}
+			memcpy( pGlobal->HP8753.plotHPGL + HPGLserialCount, currentLine, nPointsInLine * sizeof(tCoord) );
+			HPGLserialCount += (nPointsInLine * sizeof(tCoord));
+		}
+
+		// We have completed the line, so dispose of the malloced memory
+		g_free( currentLine );
+		nPointsInLine = 0;
+		currentLine = NULL;
+		// Remember that the pen is up
+		bPenDown = FALSE;
+		break;
+	case HPGL_PEN_DOWN:
+		// assume we are starting a new line and save the start point
+		if( !bPenDown ) {
+			currentLine = g_realloc_n( currentLine, QUANTIZE(1, 100), sizeof( tCoord ) );
+			currentLine[0] = posn;
+			nPointsInLine = 1;
+			bPenDown = TRUE;
+		}
+		break;
+	case HPGL_CHAR_SIZE_REL:
+		sscanf(sHPGL+2, "%f , %f", &charSizeX, &charSizeY);
+		pGlobal->HP8753.plotHPGL = g_realloc( pGlobal->HP8753.plotHPGL,
+				QUANTIZE( HPGLserialCount + sizeof(eHPGL) + (2 * sizeof(gfloat)), 1000 ) );
+		// add the text size change to the compiled HPGL serialized string
+		*(eHPGL *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = CHPGL_TEXT_SIZE;
+		HPGLserialCount += sizeof(eHPGL);
+		*(gfloat *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = charSizeX;
+		HPGLserialCount += sizeof( gfloat );
+		*(gfloat *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = charSizeY;
+		HPGLserialCount += sizeof( gfloat );
+		break;
+	case HPGL_LINE_TYPE:
+		sscanf(sHPGL+2, "%d", &lineType);
+		pGlobal->HP8753.plotHPGL = g_realloc( pGlobal->HP8753.plotHPGL,
+				QUANTIZE( HPGLserialCount + sizeof(eHPGL) + sizeof(guchar), 1000 ) );
+		*(eHPGL *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = CHPGL_LINETYPE;
+		HPGLserialCount += sizeof(eHPGL);
+		*(guchar *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = (guchar)lineType;
+		HPGLserialCount += sizeof( gchar );
+		break;
+	case HPGL_SELECT_PEN:
+		sscanf(sHPGL+2, "%d", &colour);
+		pGlobal->HP8753.plotHPGL = g_realloc( pGlobal->HP8753.plotHPGL,
+				QUANTIZE( HPGLserialCount + sizeof(eHPGL) + sizeof(gchar), 1000 ) );
+		*(eHPGL *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = CHPGL_PEN;
+		HPGLserialCount += sizeof(eHPGL);
+		*(gchar *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = (gchar)colour;
+		HPGLserialCount += sizeof( gchar );
+		break;
+	case HPGL_VELOCITY:
+		break;
+	default:
+		break;
+	}
+
+	// update the count
+	if( pGlobal->HP8753.plotHPGL )
+		*(guint *)(pGlobal->HP8753.plotHPGL) = HPGLserialCount;
+
+	return 0;
+}
+
+/*!     \brief  Display the 8753 screen image
+ *
+ * If the plot is polar, draw the grid and legends.
+ * If there is an overlay of two polar grids of the same scale show both,
+ * otherwise actual grid is only drawn once.
+ *
+ * \ingroup drawing
+ *
+ * \param cr		pointer to cairo context
+ * \param pGrid		pointer to grid parameters
+ * \param pGlobal	pointer to global data
+ * \return			TRUE
+ *
+ */
+#define ASPECT_CORRECTION 1.070
+gboolean
+plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
+{
+
+	if( pGlobal->HP8753.plotHPGL ) {
+		guint HPGLserialCount = 0;
+		static gfloat charSizeX = 1.0, charSizeY = 1.0;
+		guint length = *((guint *)pGlobal->HP8753.plotHPGL);
+		gint HPGLpen = 0;
+		__attribute__((unused)) gint HPGLlineType = 0;
+
+		double scaleX, scaleY;
+		// There should not be a need for aspect correction but without it
+		// circles are ovoid 8-(
+		scaleX = (gdouble)areaWidth / (gdouble)HPGL_MAX_X * ASPECT_CORRECTION;
+		scaleY = (gdouble)areaHeight / (gdouble)HPGL_MAX_Y;
+
+		double LeftMargin = areaWidth / 22.0;
+
+		tCoord *pPoint;
+		gint i;
+		// This maps the pen number to a color
+		// todo: allow the user to select the mapping
+#define MAX_HPGL_PENS 16
+		eColor pens[ MAX_HPGL_PENS ] = {
+				eColorBlack, eColorDarkBlue, eColorDarkGreen, eColorGray,
+				eColorDarkRed, eColorPurple, eColorDarkBrown, eColorBlack,
+				eColorLightPeach, eColorLightPurple, eColorBlue, eColorGreen,
+				eColorBrown, eColorBlack, eColorBlack, eColorBlack };
+
+		// There is always a character count at the head of the data
+		HPGLserialCount += sizeof(guint);
+
+		// Use a font that is monospaced (like the HP vector plotter)
+
+
+	    cairo_save(cr);
+	    {
+			// Noto Sans Mono ExtraLight
+			cairo_select_font_face(cr, HPGL_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+
+			// If we don't set the color its black ... but the HP8753 does
+			setCairoColor ( cr, eColorBlack );
+			cairo_set_line_width (cr, areaWidth / 1000.0 * 0.5);
+
+			do {
+				// get compiled HPGL command byte
+				eHPGL cmd = *((guchar *)(pGlobal->HP8753.plotHPGL+HPGLserialCount)) ;
+				HPGLserialCount += sizeof( eHPGL );
+
+				switch ( cmd ) {
+				case CHPGL_LINE:
+					// the points in the line are preceded by the point count
+					gint ptsInLine = *((guint16 *)(pGlobal->HP8753.plotHPGL+HPGLserialCount));
+					HPGLserialCount += sizeof( guint16 );
+					pPoint = (tCoord *)(pGlobal->HP8753.plotHPGL+HPGLserialCount);
+					cairo_new_path( cr );
+					// move to first point
+					cairo_move_to(cr, LeftMargin + pPoint->x * scaleX, pPoint->y * scaleY );
+					// plot to each subsequent point
+					for( i=1, pPoint++; i < ptsInLine; pPoint++, i++ ) {
+						cairo_line_to(cr, LeftMargin + pPoint->x * scaleX, pPoint->y * scaleY );
+					}
+					cairo_stroke( cr );
+
+					HPGLserialCount += (ptsInLine * sizeof( tCoord ));
+					break;
+				case CHPGL_LINE2PT:
+					pPoint = (tCoord *)(pGlobal->HP8753.plotHPGL+HPGLserialCount);
+					cairo_new_path( cr );
+					// move to first point
+					cairo_move_to(cr, LeftMargin + pPoint->x * scaleX, pPoint->y * scaleY );
+					pPoint++;
+					cairo_line_to(cr, LeftMargin + pPoint->x * scaleX, pPoint->y * scaleY );
+					cairo_stroke( cr );
+
+					HPGLserialCount += (2 * sizeof( tCoord ));
+					break;
+				case CHPGL_PEN:
+					HPGLpen = *(guchar *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);
+					HPGLserialCount += sizeof( guchar );
+					setCairoColor ( cr, HPGLpen < MAX_HPGL_PENS ? pens[ HPGLpen ] : eColorBlack );
+					break;
+				case CHPGL_LINETYPE:
+					HPGLlineType = *(guchar *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);
+					HPGLserialCount += sizeof( guchar );
+					break;
+				case CHPGL_LABEL:
+				case CHPGL_LABEL_REL:
+					pPoint = (tCoord *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);
+					HPGLserialCount += sizeof( tCoord );
+					if( cmd == CHPGL_LABEL )
+						cairo_move_to(cr, LeftMargin + pPoint->x * scaleX, pPoint->y * scaleY );
+					guint labelLength = *(guchar *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);
+					HPGLserialCount += sizeof( guchar );
+					// label is null terminated
+					gchar *pLabel = (gchar *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);
+					gchar *ptr = strchr( pLabel, '\b' );
+					// If we have a backspace, then there is an underscore (number of marker)
+					if( !ptr) {
+						// no backspace so just print in one call
+						cairo_show_text (cr, pLabel);
+					} else {
+						// if there is a backspace, assume an underscore and print the substring
+						// up to the backspace, draw the underscore (as a line) and then the trailing substring
+						gdouble x, y;
+						gchar *front = g_strndup ( pLabel, ptr-pLabel);
+						cairo_show_text (cr, front);
+						cairo_get_current_point(cr, &x, &y);
+						cairo_rel_move_to(cr, -charSizeX  * HPGL_P1P2_X * scaleX / 2000,
+													-charSizeY * HPGL_P1P2_Y * scaleY / 500);
+						cairo_rel_line_to(cr, -charSizeX  * HPGL_P1P2_X * scaleX / 200, 0);
+						cairo_stroke(cr);
+						cairo_move_to( cr, x, y);
+						cairo_show_text (cr, ptr+2);
+					}
+					HPGLserialCount += labelLength+1;
+					// display the label
+
+					break;
+				case CHPGL_TEXT_SIZE:
+					cairo_matrix_t matrix = {0};
+					charSizeX = *(gfloat *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);
+					HPGLserialCount += sizeof( gfloat );
+					charSizeY = *(gfloat *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);
+					HPGLserialCount += sizeof( gfloat );
+					matrix.xx = charSizeX  * HPGL_P1P2_X * scaleX / 100.0;
+					matrix.yy = -charSizeY * HPGL_P1P2_Y * scaleY / 100.0;
+					cairo_set_font_matrix (cr, &matrix);
+					break;
+				default:
+					break;
+				}
+			} while (HPGLserialCount < length);
+		}
+	} cairo_restore( cr );
+	return TRUE;
+}

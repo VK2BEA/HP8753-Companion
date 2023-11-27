@@ -462,9 +462,9 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 		cairo_scale( cr, pGrid->scale, pGrid->scale );
 		centerX = 0.0;
 		centerY = 0.0;
-
+#define CLIP_MARGIN 1.1
 		// clip to the outer circle
-		cairo_arc(cr, centerX, centerY, UNIT_CIRCLE * gammaScale, 0, 2 * G_PI);
+		cairo_arc(cr, centerX, centerY, UNIT_CIRCLE * gammaScale * CLIP_MARGIN, 0, 2 * G_PI);
 		cairo_clip(cr);
 
 		gint npoints = pChannel->nPoints;
@@ -475,10 +475,6 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 
 			// Draw markers (if there are any)
 			drawMarkers( cr, pGlobal, pGrid, channel, 0.0, 1.0 );
-
-			// Draw the outer circle boundary ( usually gamma 1.0 but scaleVal may be set diffenently)
-			cairo_arc(cr, centerX, centerY, UNIT_CIRCLE * gammaScale, 0, 2 * G_PI);
-			cairo_clip( cr );
 
 			// Draw trace
 			// Use Bezier splines to give better interpolation

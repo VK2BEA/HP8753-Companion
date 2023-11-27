@@ -80,26 +80,18 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 			break;
 
 		case TM_SAVE_SETUPandCAL:
-			if( saveCalibrationAndSetup( pGlobal, (gchar *)message->data ) != ERROR ) {
-				GtkComboBoxText *wCalComboBox = GTK_COMBO_BOX_TEXT(
-						g_hash_table_lookup(pGlobal->widgetHashTable,
-								(gconstpointer )"WID_Combo_CalibrationProfile"));
-				gtk_combo_box_text_remove_all ( wCalComboBox );
-				g_list_foreach ( pGlobal->pCalList, updateCalCombobox, wCalComboBox );
-				// choose the entry
-				g_free( pGlobal->sCalProfile );
-				pGlobal->sCalProfile = g_strdup( (gchar *)message->data );
-				setGtkComboBox( GTK_COMBO_BOX(wCalComboBox), pGlobal->sCalProfile );
+			if( saveCalibrationAndSetup( pGlobal, pGlobal->sProject, (gchar *)message->data ) != ERROR ) {
+			    PopulateCalComboBoxWidget( pGlobal );
+	            showCalInfo( &(pGlobal->HP8753cal), pGlobal );
+	            gtk_widget_set_sensitive(
+	                    GTK_WIDGET( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Btn_Recall")),
+	                    TRUE );
+	            gtk_widget_set_sensitive(
+	                    GTK_WIDGET( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Btn_Delete")),
+	                    TRUE );
 			}
-			showCalInfo( &(pGlobal->HP8753cal), pGlobal );
-			gtk_notebook_set_current_page ( GTK_NOTEBOOK( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_Note")), 0 );
-
-			gtk_widget_set_sensitive(
-					GTK_WIDGET( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Btn_Recall")),
-					TRUE );
-			gtk_widget_set_sensitive(
-					GTK_WIDGET( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Btn_Delete")),
-					TRUE );
+			gtk_notebook_set_current_page ( GTK_NOTEBOOK( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_Note")),
+					NPAGE_CALIBRATION);
 			g_free( message->data );
 			break;
 		case TM_SAVE_LEARN_STRING_ANALYSIS:
@@ -141,20 +133,23 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 			sensitiseControlsInUse( pGlobal, TRUE );
 			break;
 		case TM_REFRESH_TRACE:
-			if (message->data == 0) {
+			if (message->data == 0 ) {
 				gtk_widget_queue_draw( GTK_WIDGET( g_hash_table_lookup(pGlobal->widgetHashTable,
 										(gconstpointer )"WID_DrawingArea_Plot_A")));
-				if (!globalData.HP8753.flags.bDualChannel || !globalData.HP8753.flags.bSplitChannels
-						|| !globalData.HP8753.channels[ eCH_TWO ].chFlags.bValidData ) {
-					hide_Frame_Plot_B( &globalData );
+				if ( !globalData.HP8753.flags.bDualChannel
+						|| !pGlobal->HP8753.flags.bSplitChannels
+						|| !pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bValidData
+						|| ( pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid ) ) {
+					hide_Frame_Plot_B( pGlobal );
 				}
 			} else {
-				if ( globalData.HP8753.channels[ eCH_TWO ].chFlags.bValidData ) {
+				if ( pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bValidData &&
+						! ( pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid ) ) {
 					gtk_widget_show( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer) "WID_Frame_Plot_B"));
 					gtk_widget_queue_draw( GTK_WIDGET( g_hash_table_lookup(pGlobal->widgetHashTable,
 											(gconstpointer )"WID_DrawingArea_Plot_B")));
 				} else {
-					hide_Frame_Plot_B( &globalData );
+					hide_Frame_Plot_B( pGlobal );
 				}
 			}
 			gtk_label_set_label ( GTK_LABEL( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_LblTraceTime")),
@@ -165,6 +160,10 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 				gtk_widget_set_sensitive(
 					GTK_WIDGET( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Btn_Save")),
 					TRUE );
+
+            GtkWidget *wBoxPlotType = g_hash_table_lookup(pGlobal->widgetHashTable,
+                                    (gconstpointer )"WID_BoxPlotType");
+            gtk_widget_set_sensitive (GTK_WIDGET( wBoxPlotType ), pGlobal->HP8753.flags.bHPGLdataValid );
 
 			break;
 		default:

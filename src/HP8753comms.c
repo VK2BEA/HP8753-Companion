@@ -22,9 +22,10 @@
 #include <glib-2.0/glib.h>
 #include <gpib/ib.h>
 #include <errno.h>
-#include <hp8753.h>
-#include <GPIBcomms.h>
-#include <hp8753comms.h>
+#include "hp8753.h"
+#include "GPIBcomms.h"
+#include "hp8753comms.h"
+#include "HPGLplot.h"
 
 #include "messageEvent.h"
 
@@ -616,7 +617,9 @@ get8753learnString( gint descGPIB_HP8753, guchar **ppLearnString, gint *pGPIBsta
 		goto err;
 	// Convert from big endian to local (Intel LE)
 	LSsize = GUINT16_FROM_BE(LSheaderAndSize[1]);
-	g_free( *ppLearnString );
+
+	g_free( *ppLearnString );   // if we had previously allocated memory .. free it now
+
 	*ppLearnString = g_malloc( LSsize + HEADER_SIZE);
 	// copy header to save as one chunk
 	memmove(*ppLearnString, LSheaderAndSize, HEADER_SIZE);
@@ -649,6 +652,8 @@ getHP8753channelTrace(gint descGPIB_HP8753, tGlobal *pGlobal, eChannel channel, 
 		float IEEE754;
 		guint32 bytes;
 	} rBits, iBits;
+
+	pChannel->chFlags.bValidData = FALSE;
 
 	pChannel->format = getHP8753format(descGPIB_HP8753, pGPIBstatus);
 	if (pChannel->format == ERROR)
@@ -726,11 +731,78 @@ getHP8753channelTrace(gint descGPIB_HP8753, tGlobal *pGlobal, eChannel channel, 
 		pChannel->stimulusPoints[i] = stimulusSample;
 	}
 
-	if (pChannel->nPoints != 0)
+	if (pChannel->nPoints != 0 && !GPIBfailed(*pGPIBstatus))
 		pChannel->chFlags.bValidData = TRUE;
 	g_free(pFORM2);
 
 	return (GPIBfailed(*pGPIBstatus));
+}
+
+/*!     \brief  Get  the configuration and trace data for a channel
+ *
+ * Get the configuration and trace data for the channel
+ *
+ * \param  descGPIB_HP8753	GPIB descriptor for HP8753 device
+ * \param  pGlobal	   pointer global data
+ * \param  pGPIBstatus pointer of GPIB status
+ * \return 0 (OK) or 1 (error)
+ */
+#define MAX_HPGL_PLOT_CHUNK	1000
+gint
+acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
+	gchar sHPGL[ MAX_HPGL_PLOT_CHUNK + 1 ];
+	gint nTokens = 0;
+
+	pGlobal->HP8753.flags.bHPGLdataValid = FALSE;
+
+	GPIBasyncWrite(descGPIB_HP8753, "PTEXT ON;OUTPPLOT;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
+	// read HPGL header (;;;;DF;IM;)(IP250,279,10250,7479;)(SC0 ,4095 ,0 ,4212 ;)(;PU;)
+	// This is always the same .. so we don't need to process it
+
+	for( gint i=0; i < 4; i++ ) {
+		GPIBasyncRead(descGPIB_HP8753, sHPGL, MAX_HPGL_PLOT_CHUNK, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
+	}
+	// This is the HPGL that is significant
+	// The number of characters is dependent on the number of points and number of traces (including memory traces)
+	// that are enabled. The GPIB END is asserted at completion and ibcnt will indicate the short count.
+	sHPGL[0] = 0;	// we start with no remainder from a previous call
+	parseHPGL( NULL, pGlobal );
+	do {
+		gint offset = strlen(sHPGL);
+		int n;
+		GPIBasyncRead(descGPIB_HP8753, sHPGL+offset, MAX_HPGL_PLOT_CHUNK-offset,
+				pGPIBstatus, 10 * TIMEOUT_READ_1SEC);
+		sHPGL[ AsyncIbcnt()+offset ] = 0;
+		if( GPIBsucceeded(*pGPIBstatus) ) {
+			gchar **tokens =  g_strsplit ( sHPGL, ";", -1 );
+			gint max=g_strv_length(tokens);
+			// the last string may be partial, so stuff it into
+			// the beginning of the next buffer
+			for( n=0 ; n < max-1; n++ ) {
+				parseHPGL( tokens[n], pGlobal );
+				nTokens++;
+			}
+			// copy remainder (possibly only a partial) to the buffer to be
+			// added to on the next read
+			strcpy( sHPGL, tokens[max-1] );
+			g_strfreev(tokens);
+		}
+#define MSG_SIZE    100
+        gchar sMsg[ MSG_SIZE ];
+        g_snprintf( sMsg, MSG_SIZE, "Received %d HPGL instructions", nTokens);
+        postInfo( sMsg );
+	} while ( (*pGPIBstatus & END) != END && GPIBsucceeded(*pGPIBstatus)  );
+	// the last command must be parsed
+	if( GPIBsucceeded(*pGPIBstatus) ) {
+		parseHPGL( sHPGL, pGlobal );
+		pGlobal->HP8753.flags.bHPGLdataValid = TRUE;
+	} else {
+		// Abandon partial HPGL
+		parseHPGL( NULL, pGlobal );
+		// make sure we do not attempt to show the HPGL plot
+		pGlobal->HP8753.flags.bHPGLdataValid = FALSE;
+	}
+	return ( GPIBfailed(*pGPIBstatus) );
 }
 
 /*!     \brief  Use the learn string to find the active channel
@@ -780,12 +852,12 @@ getStartStopOrCenterSpanFrom8753learnString( guchar *pLearn, tGlobal *pGlobal, e
  * \return OK on success or ERROR
  */
 gint
-process8753learnString( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
+process8753learnString( gint descGPIB_HP8753, guchar *pHP8753C_learn, tGlobal *pGlobal, gint *pGPIBstatus ) {
 	tLearnStringIndexes *pLSindexes = pGlobal->HP8753.pLSindexes;
 
 	// we should have the firmware version & learn string by this point
 	if( pGlobal->HP8753.firmwareVersion == INVALID
-			|| pGlobal->HP8753.pHP8753C_learn == NULL )
+			|| pHP8753C_learn == NULL )
 		return ERROR;
 
 	if( pLSindexes == (tLearnStringIndexes *)INVALID ) {
@@ -797,7 +869,7 @@ process8753learnString( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatu
 	}
 
 	pGlobal->HP8753.activeChannel
-		= pGlobal->HP8753.pHP8753C_learn[ pLSindexes->iActiveChannel ] == 0x01 ? 0 : 1;
+		= pHP8753C_learn[ pLSindexes->iActiveChannel ] == 0x01 ? 0 : 1;
 
 	for ( eChannel channel = eCH_ONE; channel < eNUM_CH; channel++) {
 		unsigned short mkrs = 0;
@@ -809,25 +881,25 @@ process8753learnString( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatu
 		for( mkrNo=0, testBit = 0x02, flagBit = 0x01; mkrNo < MAX_MKRS; mkrNo++, testBit <<= 1, flagBit <<= 1 ) {
 			// this doesn't apply to fixed marker
 			if( mkrNo < MAX_NUMBERED_MKRS
-					&& (pGlobal->HP8753.pHP8753C_learn[ pLSindexes->iMarkersOn[ channel ] ] & testBit) )
+					&& ( pHP8753C_learn[ pLSindexes->iMarkersOn[ channel ] ] & testBit) )
 				mkrs |= flagBit;
 			// max of one deta/delta fixed marker
-			if( pGlobal->HP8753.pHP8753C_learn[ pLSindexes->iMarkerDelta[ channel ] ] & testBit ) {
+			if( pHP8753C_learn[ pLSindexes->iMarkerDelta[ channel ] ] & testBit ) {
 				pGlobal->HP8753.channels[ channel ].deltaMarker = mkrNo;
 				pGlobal->HP8753.channels[ channel ].chFlags.bMkrsDelta = TRUE;
 			}
 			// max of one active marker
-			if( pGlobal->HP8753.pHP8753C_learn[ pLSindexes->iMarkerActive[ channel ] ] & testBit )
+			if( pHP8753C_learn[ pLSindexes->iMarkerActive[ channel ] ] & testBit )
 				pGlobal->HP8753.channels[ channel ].activeMarker = mkrNo;
 		}
 		pGlobal->HP8753.channels[ channel ].chFlags.bMkrs = mkrs;
 
-		if( pGlobal->HP8753.pHP8753C_learn[ pLSindexes->iStartStop[ channel ] ] & 0x01 )
+		if( pHP8753C_learn[ pLSindexes->iStartStop[ channel ] ] & 0x01 )
 			pGlobal->HP8753.channels[ channel ].chFlags.bCenterSpan = FALSE;
 		else
 			pGlobal->HP8753.channels[ channel ].chFlags.bCenterSpan = TRUE;
 
-		pGlobal->HP8753.channels[ channel ].nSegments = pGlobal->HP8753.pHP8753C_learn[ pLSindexes->iNumSegments[ channel ] ];
+		pGlobal->HP8753.channels[ channel ].nSegments = pHP8753C_learn[ pLSindexes->iNumSegments[ channel ] ];
 	}
 	return OK;
 }

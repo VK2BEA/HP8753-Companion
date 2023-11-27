@@ -310,3 +310,108 @@ logVersion(void) {
     return;
 }
 
+
+tHP8753traceAbstract *
+selectFirstTraceProfileInProject( tGlobal *pGlobal ) {
+    tHP8753traceAbstract *firstTraceProfile = NULL;
+    pGlobal->pTraceAbstract=NULL;
+    for( GList *l = pGlobal->pTraceList; l != NULL; l = l->next ){
+        tHP8753traceAbstract *pTraceAbstract = (tHP8753traceAbstract *)(l->data);
+        if( g_strcmp0( pTraceAbstract->projectAndName.sProject, pGlobal->sProject )  == 0 ) {
+            if( firstTraceProfile == NULL ) {
+                firstTraceProfile = pTraceAbstract;
+                pTraceAbstract->projectAndName.bSelected = TRUE;
+            } else {
+                pTraceAbstract->projectAndName.bSelected = FALSE;
+            }
+        }
+    }
+    return firstTraceProfile;
+}
+
+tHP8753cal *
+selectFirstCalibrationProfileInProject( tGlobal *pGlobal ) {
+    tHP8753cal *firstCalProfile = NULL;
+    pGlobal->pCalibrationAbstract=NULL;
+    for( GList *l = pGlobal->pCalList; l != NULL; l = l->next ){
+        tHP8753cal *pCalibration = (tHP8753cal *)(l->data);
+        if( g_strcmp0( pCalibration->projectAndName.sProject, pGlobal->sProject )  == 0 ) {
+            if( firstCalProfile == NULL ) {
+                firstCalProfile = pCalibration;
+                pCalibration->projectAndName.bSelected = TRUE;
+            } else {
+                pCalibration->projectAndName.bSelected = FALSE;
+            }
+        }
+    }
+    return firstCalProfile;
+}
+
+tHP8753cal *
+selectCalibrationProfile( tGlobal *pGlobal, gchar *sProject, gchar *sName ) {
+    // Find the calibration in the list
+    tHP8753cal *pSelectedCalibrationProfile = NULL;
+    tProjectAndName projectAndName = { sProject, sName };
+
+    for( GList *l = pGlobal->pCalList; l != NULL; l = l->next ) {
+        tHP8753cal *pCalibration = (tHP8753cal *)(l->data);
+        if( g_strcmp0( pCalibration->projectAndName.sProject, sProject )  == 0 )
+            pCalibration->projectAndName.bSelected = FALSE;
+    }
+
+    pSelectedCalibrationProfile =
+            g_list_find_custom( pGlobal->pCalList, &projectAndName, (GCompareFunc)compareCalItemsForFind )->data;
+
+    if( pSelectedCalibrationProfile != NULL )
+        pSelectedCalibrationProfile->projectAndName.bSelected = TRUE;
+    return pSelectedCalibrationProfile;
+}
+
+tHP8753traceAbstract *
+selectTraceProfile( tGlobal *pGlobal, gchar *sProject, gchar *sName ) {
+    // Find the trace in the list, mark it as selected and clear selection of others
+    tHP8753traceAbstract *pSelectedTraceProfile = NULL;
+    tProjectAndName projectAndName = { sProject, sName };
+
+    for( GList *l = pGlobal->pTraceList; l != NULL; l = l->next ) {
+        tHP8753traceAbstract *pTraceAbstract = (tHP8753traceAbstract *)(l->data);
+        if( g_strcmp0( pTraceAbstract->projectAndName.sProject, sProject )  == 0 )
+            pTraceAbstract->projectAndName.bSelected = FALSE;
+    }
+
+    pSelectedTraceProfile =
+            g_list_find_custom( pGlobal->pTraceList, &projectAndName, (GCompareFunc)compareTraceItemsForFind )->data;
+
+    if( pSelectedTraceProfile != NULL )
+        pSelectedTraceProfile->projectAndName.bSelected = TRUE;
+    return pSelectedTraceProfile;
+}
+
+tHP8753cal *
+cloneCalibrationProfile( tHP8753cal *pOrigCal, gchar *newProject ) {
+    tHP8753cal *pNewCal = g_new0(tHP8753cal, 1);
+    memcpy( pNewCal, pOrigCal, sizeof( tHP8753cal ));
+    for( int i=0; i < MAX_CAL_ARRAYS; i++ ) {
+        pNewCal->perChannelCal[ eCH_ONE ].pCalArrays[i] = NULL;
+        pNewCal->perChannelCal[ eCH_TWO ].pCalArrays[i] = NULL;
+    }
+    pNewCal->projectAndName.sProject = g_strdup( newProject ); // we don't free the other pointer because its still in use
+    pNewCal->projectAndName.sName = g_strdup( pOrigCal->projectAndName.sName );
+    pNewCal->sDateTime = g_strdup( pOrigCal->sDateTime );
+    pNewCal->sNote = g_strdup( pOrigCal->sNote );
+    pNewCal->pHP8753C_learn = NULL;
+    return pNewCal;
+}
+
+tHP8753traceAbstract *
+cloneTraceProfileAbstract( tHP8753traceAbstract *pOrigTraceAbstract, gchar *newProject ) {
+    tHP8753traceAbstract *pNewTraceAbstract = g_new0(tHP8753traceAbstract, 1);
+
+    pNewTraceAbstract->projectAndName.sProject = g_strdup(newProject);
+    pNewTraceAbstract->projectAndName.sName = g_strdup(pOrigTraceAbstract->projectAndName.sName);
+    pNewTraceAbstract->sDateTime = g_strdup(pOrigTraceAbstract->sDateTime);
+    pNewTraceAbstract->sTitle = g_strdup(pOrigTraceAbstract->sTitle);
+    pNewTraceAbstract->sNote = g_strdup(pOrigTraceAbstract->sNote);
+
+    return pNewTraceAbstract;
+}

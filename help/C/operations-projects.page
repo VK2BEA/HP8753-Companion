@@ -1,0 +1,42 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      xmlns:its="http://www.w3.org/2005/11/its"
+      type="topic" style="guide"
+      id="iprojects">
+
+  <info>
+    <link type="guide" xref="index#operations"/>
+    <revision pkgversion="7.10.1" date="2018-06-17" status="candidate" />
+
+    <credit type="author">
+      <name>Michael Katzmann</name>
+      <email its:translate="no">michaelk@IEEE.org</email>
+    </credit>
+
+    <include href="legal.xml" xmlns="http://www.w3.org/2001/XInclude"/>
+
+    <desc>Project folders for calibration/setup and trace data</desc>
+  </info>
+
+  <title>Projects</title>
+  <p>Calibration and setup profiles, and saved traces may be arranged into projects.
+  This logical grouping is adventageous when many configurations have similar but distinct characteristics, lessening ambiguity and limiting the size of the drop-down lists.</p>
+  <media its:translate="no" type="image" mime="image/png" src="media/project.png" />
+  <p>Choose a descriptive project name and type it into the <em>Project</em> combo box prior to saving either calibration profile or the trace. The title may include Unicode emoji characters.</p>
+  <p>A project is created when either a calibration/setup profile or a trace is saved with that name. Once created, additional calibration profiles or traces are added to the project so long as the project name is displayed in the <em>Projects</em> combo box when saving. 
+  The name of each calibration profile and trace must be unique within a project but may be the same as the profile or trace in another project. <em>(n.b. a calibration profile may have the same name as a trace within a project)</em> </p>
+  <p>Calibration profiles and traces may be moved or copied from one project to another.</p>
+  <p>Projects can be selected by using the <em>Projects</em> combo box selection (or by directly typing in the name into the entry box). The calibration profiles and traces available to preview or retrieve are only those within the project selected.</p>
+  
+  <section id="renameProject" style="2column">
+    <title>Renaming Projects</title>
+    <p>The project name may be changed by using the pop-up dialog box appearing after pressing the <key>F2</key> key.</p>
+    <media its:translate="no" type="image" mime="image/png" src="media/project-rename.png" /> 
+    <steps>
+        <item><p>Select the existing project you wish to rename using the <em>Project</em> combobox</p></item>
+        <item><p>Press the <key>F2</key> to show the <em>Rename/Move/Copy</em> dialog</p></item>
+        <item><p>Select the <em>Rename</em> button in the radio box (if it is not already active)</p></item>
+        <item><p>Type in the new project name in the lower entry box. Project names must be unique. Should you enter the name of a project that already exists, the <key>OK</key> button will become insensitive and you will be unable to proceed.</p></item>
+        <item><p>Press the <key>OK</key> to initiate the project rename</p></item>
+    </steps>
+  </section>
+</page>

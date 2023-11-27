@@ -25,6 +25,8 @@ gboolean plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel c
 
 gboolean plotSmithGrid (cairo_t *cr, gboolean bAnnotate, tGridParameters *pGrid, eChannel channel, tGlobal *pGlobal);
 
+gboolean plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal);
+
 gboolean showPolarCursorInfo( cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlobal *pGlobal,
                               gdouble real, gdouble imag, gdouble frequency );
 

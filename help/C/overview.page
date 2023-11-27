@@ -25,7 +25,9 @@
   <list>
   <item><p>Save the calibration correction and setup profile</p></item>
   <item><p>Restore previously saved calibration correction and setup profiles</p></item>
+  <item><p>Transfer user calibration kit (.xkt) to HP8753</p></item>
   <item><p>Display and save the traces shown on the HP8753</p></item>
+  <item><p>Display and save the HPGL plot of the screen</p></item>
   <item><p>Display previously saved traces</p></item>
   <item><p>Using the mouse, interrogate the displayed traces</p></item>
   <item><p>Save traces, or trace data in several formats:</p>
@@ -35,7 +37,7 @@
         <item><p>CSV file</p></item>
         <item><p>High resolution Smith chart PDF</p></item>
         <item><p>Touchstone S2P file</p></item>
-    </list>
+    </list>    
   </item>
 </list>
 

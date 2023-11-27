@@ -188,7 +188,6 @@ drawMarkerText( cairo_t *cr,
 			bPolarOrSmith = TRUE;
 
 			break;
-
 		case eFMT_LOGM:
 			bUseEngNotation = FALSE;
 	    __attribute__ ((fallthrough));

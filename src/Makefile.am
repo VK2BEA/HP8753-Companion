@@ -27,18 +27,26 @@ hp8753_LDFLAGS += @GLIB_LIBS@ @GTK3_LIBS@ @SQLITE3_LIBS@
 # Program name
 bin_PROGRAMS = hp8753
 
-hp8753_SOURCES = databaseSaveAndRestore.c GTKplotMarkers.c \
-                 hp8753.c HP8753setupAndCal.c HPlogo.c \
-                 smithHighResPDF.c GPIBcommsThread.c \
-                 GTKutility.c HP8753comms.c HP_FORM1toFORM3.c \
-                 messageEvent.c utility.c GTKplot.c \
-                 plotCartesian.c plotPolar.c plotSmith.c \
-                 GTKwidgetCallbacks.c HP8753_S2P.c HPicon.c \
-                 resource.c parseCalibrationKit.c
+hp8753_SOURCES = databaseSaveAndRestore.c  GTKplotMarkers.c \
+				 GTKwidgetCallbacks.c HP8753_S2P.c \
+                 HPicon.c noteCalKitWidgetCallbacks.c \
+                 noteOptionsWidgetCallbacks.c plotPolar.c \
+                 printWidgetCallbacks.c utility.c \
+                 GPIBcommsThread.c GTKrenameDialogWidgets.c \
+                 hp8753.c HP8753setupAndCal.c \
+                 HPlogo.c noteDataWidgets.c \
+                 parseCalibrationKit.c plotScreen.c \
+                 resource.c GTKplot.c \
+                 GTKutility.c HP8753comms.c \
+                 HP_FORM1toFORM3.c messageEvent.c \
+                 noteGPIBwidgetCallbacks.c plotCartesian.c \
+                 plotSmith.c smithHighResPDF.c
+
 hp8753_SOURCES += $(top_srcdir)/include/GPIBcomms.h \
 				  $(top_srcdir)/include/hp8753comms.h \
 				  $(top_srcdir)/include/hp8753.h \
 				  $(top_srcdir)/include/GTKplot.h \
+				  $(top_srcdir)/include/HPGLplot.h \
 				  $(top_srcdir)/include/messageEvent.h \
 				  $(top_srcdir)/include/smithChartPS.h \
 				  $(top_srcdir)/include/calibrationKit.h

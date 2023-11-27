@@ -2,6 +2,321 @@
 <!-- Generated with glade 3.40.0 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
+  <object class="GtkDialog" id="WID_Dlg_Rename">
+    <property name="can-focus">False</property>
+    <property name="title" translatable="yes">Rename / Move / Copy</property>
+    <property name="modal">True</property>
+    <property name="type-hint">dialog</property>
+    <signal name="activate-default" handler="CB_DR_RenameActivate" swapped="no"/>
+    <signal name="response" handler="CB_DR_RenameResponse" swapped="no"/>
+    <child internal-child="vbox">
+      <object class="GtkBox">
+        <property name="width-request">400</property>
+        <property name="can-focus">False</property>
+        <property name="valign">start</property>
+        <property name="margin-start">4</property>
+        <property name="margin-end">4</property>
+        <property name="margin-top">4</property>
+        <property name="margin-bottom">4</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox">
+            <property name="can-focus">False</property>
+            <property name="margin-end">6</property>
+            <property name="margin-top">4</property>
+            <property name="margin-bottom">6</property>
+            <property name="layout-style">end</property>
+            <child>
+              <object class="GtkButton" id="button2">
+                <property name="label">gtk-cancel</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="use-stock">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="WID_DR_BtnOK">
+                <property name="label">gtk-ok</property>
+                <property name="name">WID_DR_BtnOK</property>
+                <property name="visible">True</property>
+                <property name="sensitive">False</property>
+                <property name="can-focus">True</property>
+                <property name="can-default">True</property>
+                <property name="has-default">True</property>
+                <property name="receives-default">True</property>
+                <property name="use-stock">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkBox">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="margin-top">4</property>
+                <property name="margin-bottom">4</property>
+                <property name="homogeneous">True</property>
+                <child>
+                  <object class="GtkRadioButton" id="WID_DR_RadioRename">
+                    <property name="label" translatable="yes">Rename</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="active">True</property>
+                    <property name="draw-indicator">True</property>
+                    <signal name="toggled" handler="CB_DR_RadioPurpose" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkRadioButton" id="WID_DR_RadioMove">
+                    <property name="label" translatable="yes">Move</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="active">True</property>
+                    <property name="draw-indicator">True</property>
+                    <property name="group">WID_DR_RadioRename</property>
+                    <signal name="toggled" handler="CB_DR_RadioPurpose" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkRadioButton" id="WID_DR_RadioCopy">
+                    <property name="label" translatable="yes">Copy</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="active">True</property>
+                    <property name="draw-indicator">True</property>
+                    <property name="group">WID_DR_RadioRename</property>
+                    <signal name="toggled" handler="CB_DR_RadioPurpose" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSeparator">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="margin-top">4</property>
+                <property name="margin-bottom">4</property>
+                <property name="homogeneous">True</property>
+                <child>
+                  <object class="GtkRadioButton" id="WID_DR_RadioProject">
+                    <property name="label" translatable="yes">Project</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="active">True</property>
+                    <property name="draw-indicator">True</property>
+                    <signal name="toggled" handler="CB_DR_RadioTarget" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkRadioButton" id="WID_DR_RadioCal">
+                    <property name="label" translatable="yes">Calibration</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="draw-indicator">True</property>
+                    <property name="group">WID_DR_RadioProject</property>
+                    <signal name="toggled" handler="CB_DR_RadioTarget" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkRadioButton" id="WID_DR_RadioTrace">
+                    <property name="label" translatable="yes">Trace</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">False</property>
+                    <property name="draw-indicator">True</property>
+                    <property name="group">WID_DR_RadioProject</property>
+                    <signal name="toggled" handler="CB_DR_RadioTarget" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSeparator">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="margin-bottom">6</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="WID_DR_Lbl_From">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="halign">start</property>
+                <property name="margin-top">4</property>
+                <property name="margin-bottom">4</property>
+                <property name="label" translatable="yes">Rename project from</property>
+                <property name="use-markup">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="WID_DR_Edit_From">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="margin-start">4</property>
+                <property name="margin-end">4</property>
+                <property name="editable">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="halign">start</property>
+                <property name="margin-top">4</property>
+                <property name="margin-bottom">4</property>
+                <property name="label" translatable="yes">to</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">6</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkEntry" id="WID_DR_Entry_To">
+                <property name="name">WID_Entry_NewName</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="has-focus">True</property>
+                <property name="margin-start">4</property>
+                <property name="margin-end">4</property>
+                <property name="margin-bottom">4</property>
+                <property name="activates-default">True</property>
+                <signal name="changed" handler="CB_DR_ToNameChanged" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">7</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBoxText" id="WID_DR_ComboProject">
+                <property name="can-focus">False</property>
+                <property name="margin-start">4</property>
+                <property name="margin-end">4</property>
+                <property name="margin-bottom">4</property>
+                <property name="has-entry">True</property>
+                <child internal-child="entry">
+                  <object class="GtkEntry">
+                    <property name="can-focus">True</property>
+                    <signal name="changed" handler="CB_DR_ToNameChanged" swapped="no"/>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">8</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="-6">button2</action-widget>
+      <action-widget response="-5">WID_DR_BtnOK</action-widget>
+    </action-widgets>
+  </object>
   <object class="GtkWindow" id="WID_Splash">
     <property name="can-focus">False</property>
     <property name="type">popup</property>
@@ -51,7 +366,7 @@
                   <object class="GtkLabel" id="WID_LblVersion">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">Version 1.19 - April 2023</property>
+                    <property name="label" translatable="yes">Version 1.20 - November 2023</property>
                     <property name="justify">center</property>
                     <attributes>
                       <attribute name="style" value="oblique"/>
@@ -127,7 +442,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="margin-top">5</property>
-                    <property name="label" translatable="yes">&lt;span foreground="gray"&gt;Copyright © 2022  Michael G. Katzmann
+                    <property name="label" translatable="yes">&lt;span foreground="gray"&gt;Copyright © 2022, 2023  Michael G. Katzmann
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -173,7 +488,7 @@ limitations under the License.&lt;/span&gt;</property>
   </object>
   <object class="GtkApplicationWindow" id="WID_hp8753c_main">
     <property name="can-focus">False</property>
-    <property name="gravity">center</property>
+    <property name="gravity">static</property>
     <signal name="realize" handler="CB_hp8753c_main_Realize" swapped="no"/>
     <child>
       <!-- n-columns=4 n-rows=1 -->
@@ -302,18 +617,7 @@ traces from the HP8753.</property>
                   <placeholder/>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="WID_LblTraceTime">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="halign">end</property>
-                    <property name="margin-start">4</property>
-                    <property name="margin-end">6</property>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">2</property>
-                  </packing>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
@@ -337,48 +641,6 @@ traces from the HP8753.</property>
                 <property name="fill">True</property>
                 <property name="pack-type">end</property>
                 <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkFrame">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="margin-start">4</property>
-                <property name="margin-end">4</property>
-                <property name="margin-bottom">4</property>
-                <property name="label-xalign">0</property>
-                <property name="shadow-type">in</property>
-                <child>
-                  <object class="GtkAlignment">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <child>
-                      <object class="GtkEntry" id="WID_Entry_Title">
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="margin-start">4</property>
-                        <property name="margin-end">4</property>
-                        <property name="margin-bottom">4</property>
-                        <property name="shadow-type">etched-in</property>
-                        <signal name="changed" handler="CB_EntryTitle_Changed" swapped="no"/>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-                <child type="label">
-                  <object class="GtkLabel" id="WID_Lbl_Title">
-                    <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="margin-start">4</property>
-                    <property name="label" translatable="yes">Title</property>
-                    <property name="wrap">True</property>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">2</property>
               </packing>
             </child>
             <child>
@@ -461,7 +723,7 @@ traces from the HP8753.</property>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">3</property>
+                <property name="position">2</property>
               </packing>
             </child>
             <child>
@@ -480,10 +742,151 @@ traces from the HP8753.</property>
                     <property name="can-focus">False</property>
                     <property name="margin-bottom">4</property>
                     <child>
-                      <object class="GtkBox">
+                      <object class="GtkBox" id="WID_BoxRecallSaveDelete">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="orientation">vertical</property>
+                        <child>
+                          <object class="GtkFrame" id="Frm_Project">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label-xalign">0</property>
+                            <property name="shadow-type">none</property>
+                            <child>
+                              <object class="GtkAlignment">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <child>
+                                  <object class="GtkComboBoxText" id="WID_Combo_Project">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="tooltip-markup" translatable="yes">Project name to group calibration, setup and traces.
+&lt;span style="italic"&gt;(press F2 to rename project)&lt;/span&gt;</property>
+                                    <property name="margin-start">4</property>
+                                    <property name="margin-end">4</property>
+                                    <property name="margin-bottom">2</property>
+                                    <property name="button-sensitivity">on</property>
+                                    <property name="has-entry">True</property>
+                                    <property name="popup-fixed-width">False</property>
+                                    <signal name="changed" handler="CB_ComboProjectSelect" swapped="no"/>
+                                    <child internal-child="entry">
+                                      <object class="GtkEntry" id="WID_EntryProject">
+                                        <property name="can-focus">True</property>
+                                        <signal name="changed" handler="CB_EditableProjectName" swapped="no"/>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                            <child type="label">
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="margin-start">3</property>
+                                <property name="label" translatable="yes">Project</property>
+                              </object>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <!-- n-columns=2 n-rows=2 -->
+                          <object class="GtkGrid">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="row-spacing">2</property>
+                            <property name="row-homogeneous">True</property>
+                            <child>
+                              <object class="GtkRadioButton" id="WID_RadioCal">
+                                <property name="label" translatable="yes">Cal. &amp; Setup</property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">False</property>
+                                <property name="active">True</property>
+                                <property name="draw-indicator">True</property>
+                                <signal name="toggled" handler="CB_Radio_Calibration" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkRadioButton" id="WID_RadioTraces">
+                                <property name="label" translatable="yes">Traces</property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">False</property>
+                                <property name="active">True</property>
+                                <property name="draw-indicator">True</property>
+                                <property name="group">WID_RadioCal</property>
+                                <signal name="toggled" handler="CB_Radio_Trace" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkComboBoxText" id="WID_Combo_CalibrationProfile">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="tooltip-markup" translatable="yes">Calibration/setup profile
+&lt;span style="italic"&gt;(press F2 to rename the profile or to move or copy it to another project)&lt;/span&gt;</property>
+                                <property name="margin-start">4</property>
+                                <property name="margin-end">4</property>
+                                <property name="button-sensitivity">on</property>
+                                <property name="has-entry">True</property>
+                                <property name="popup-fixed-width">False</property>
+                                <signal name="changed" handler="CB_ComboBoxCalibrationProfileName" swapped="no"/>
+                                <child internal-child="entry">
+                                  <object class="GtkEntry" id="WID_EntryCal">
+                                    <property name="can-focus">True</property>
+                                    <signal name="changed" handler="CB_EditableCalibrationProfileName" swapped="no"/>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkComboBoxText" id="WID_Combo_TraceProfile">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="tooltip-markup" translatable="yes">Trace profile
+&lt;span style="italic"&gt;(press F2 to rename the profile or to move or copy it to another project)&lt;/span&gt;</property>
+                                <property name="margin-start">4</property>
+                                <property name="margin-end">4</property>
+                                <property name="button-sensitivity">on</property>
+                                <property name="has-entry">True</property>
+                                <property name="popup-fixed-width">False</property>
+                                <signal name="changed" handler="CB_ComboBoxTraceProfileName" swapped="no"/>
+                                <child internal-child="entry">
+                                  <object class="GtkEntry" id="WID_EntryTrace">
+                                    <property name="can-focus">True</property>
+                                    <signal name="changed" handler="CB_EditableTraceProfileName" swapped="no"/>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
                         <child>
                           <object class="GtkBox" id="WID_Box_SaveRecallDelete">
                             <property name="visible">True</property>
@@ -544,95 +947,7 @@ traces from the HP8753.</property>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
                             <property name="pack-type">end</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <!-- n-columns=2 n-rows=2 -->
-                          <object class="GtkGrid">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="row-spacing">2</property>
-                            <property name="row-homogeneous">True</property>
-                            <child>
-                              <object class="GtkRadioButton" id="WID_RadioCal">
-                                <property name="label" translatable="yes">Cal. &amp; Setup</property>
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">False</property>
-                                <property name="active">True</property>
-                                <property name="draw-indicator">True</property>
-                                <signal name="toggled" handler="CB_Radio_Calibration" swapped="no"/>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkRadioButton" id="WID_RadioTraces">
-                                <property name="label" translatable="yes">Traces</property>
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">False</property>
-                                <property name="active">True</property>
-                                <property name="draw-indicator">True</property>
-                                <property name="group">WID_RadioCal</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">1</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkComboBoxText" id="WID_Combo_CalibrationProfile">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="tooltip-text" translatable="yes">Calibration/setup profile</property>
-                                <property name="margin-start">4</property>
-                                <property name="margin-end">4</property>
-                                <property name="button-sensitivity">on</property>
-                                <property name="has-entry">True</property>
-                                <property name="popup-fixed-width">False</property>
-                                <child internal-child="entry">
-                                  <object class="GtkEntry">
-                                    <property name="can-focus">True</property>
-                                    <signal name="changed" handler="CB_EditableCalibrationProfileName" swapped="no"/>
-                                  </object>
-                                </child>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkComboBoxText" id="WID_Combo_TraceProfile">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="tooltip-text" translatable="yes">Trace profile</property>
-                                <property name="margin-start">4</property>
-                                <property name="margin-end">4</property>
-                                <property name="button-sensitivity">on</property>
-                                <property name="has-entry">True</property>
-                                <property name="popup-fixed-width">False</property>
-                                <child internal-child="entry">
-                                  <object class="GtkEntry">
-                                    <property name="can-focus">True</property>
-                                    <signal name="changed" handler="CB_EditableTraceProfileName" swapped="no"/>
-                                  </object>
-                                </child>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">1</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
+                            <property name="position">2</property>
                           </packing>
                         </child>
                       </object>
@@ -657,15 +972,6 @@ traces from the HP8753.</property>
               </packing>
             </child>
             <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
               <object class="GtkNotebook" id="WID_Note">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
@@ -675,7 +981,7 @@ traces from the HP8753.</property>
                 <property name="enable-popup">True</property>
                 <signal name="switch-page" handler="CB_Notebook_Select" swapped="no"/>
                 <child>
-                  <object class="GtkBox">
+                  <object class="GtkBox" id="Tab_calibration">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="orientation">vertical</property>
@@ -689,6 +995,8 @@ traces from the HP8753.</property>
                           <object class="GtkTextView" id="WID_TextView_CalibrationNote">
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
+                            <property name="tooltip-text" translatable="yes">Description of setup for this calibration and setup.
+(e.g. cabling &amp; adapters specific to this calibration or purpose of the setup)</property>
                             <property name="margin-start">4</property>
                             <property name="margin-end">4</property>
                             <property name="margin-top">4</property>
@@ -696,6 +1004,7 @@ traces from the HP8753.</property>
                             <property name="hscroll-policy">natural</property>
                             <property name="vscroll-policy">natural</property>
                             <property name="wrap-mode">word</property>
+                            <property name="input-hints">GTK_INPUT_HINT_EMOJI | GTK_INPUT_HINT_NONE</property>
                           </object>
                         </child>
                       </object>
@@ -777,20 +1086,159 @@ Setup of HP8753 that relate to the calibration error cofficient arrays.</propert
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkScrolledWindow">
+                  <object class="GtkBox" id="Tab_trace">
                     <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="shadow-type">in</property>
+                    <property name="can-focus">False</property>
+                    <property name="orientation">vertical</property>
                     <child>
-                      <object class="GtkTextView" id="WID_TextView_TraceNote">
+                      <object class="GtkFrame">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="margin-start">4</property>
                         <property name="margin-end">4</property>
-                        <property name="margin-top">4</property>
-                        <property name="margin-bottom">4</property>
-                        <property name="wrap-mode">word</property>
+                        <property name="label-xalign">0</property>
+                        <property name="shadow-type">none</property>
+                        <child>
+                          <object class="GtkAlignment">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <child>
+                              <object class="GtkEntry" id="WID_Entry_Title">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="margin-start">4</property>
+                                <property name="margin-end">4</property>
+                                <property name="margin-bottom">4</property>
+                                <signal name="changed" handler="CB_EntryTitle_Changed" swapped="no"/>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <child type="label">
+                          <object class="GtkLabel" id="WID_Lbl_Title">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="margin-start">4</property>
+                            <property name="label" translatable="yes">Title</property>
+                            <property name="wrap">True</property>
+                          </object>
+                        </child>
                       </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <child>
+                          <object class="GtkLabel" id="WID_LblTraceTime">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="valign">center</property>
+                            <property name="margin-start">4</property>
+                            <property name="margin-end">6</property>
+                            <property name="margin-bottom">2</property>
+                            <attributes>
+                              <attribute name="foreground" value="#000000008b8b"/>
+                            </attributes>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                        <child>
+                          <object class="GtkBox" id="WID_BoxPlotType">
+                            <property name="visible">True</property>
+                            <property name="sensitive">False</property>
+                            <property name="can-focus">False</property>
+                            <property name="homogeneous">True</property>
+                            <child>
+                              <object class="GtkRadioButton" id="WID_RadioBtn_PlotTypeHighRes">
+                                <property name="label" translatable="yes">High Res.</property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">False</property>
+                                <property name="margin-end">2</property>
+                                <property name="margin-bottom">2</property>
+                                <property name="active">True</property>
+                                <property name="draw-indicator">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkRadioButton" id="WID_RadioBtn_PlotTypeHPGL">
+                                <property name="label" translatable="yes">HPGL</property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">False</property>
+                                <property name="margin-right">2</property>
+                                <property name="margin-end">2</property>
+                                <property name="margin-bottom">2</property>
+                                <property name="active">True</property>
+                                <property name="draw-indicator">True</property>
+                                <property name="group">WID_RadioBtn_PlotTypeHighRes</property>
+                                <signal name="toggled" handler="CB_RadioBtn_ScreenPlot" swapped="no"/>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="pack-type">end</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkScrolledWindow">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="shadow-type">in</property>
+                        <child>
+                          <object class="GtkTextView" id="WID_TextView_TraceNote">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="tooltip-text" translatable="yes">Description of trace for reference.
+(e.g. device and setup to give context to the trace)</property>
+                            <property name="margin-start">4</property>
+                            <property name="margin-end">4</property>
+                            <property name="margin-top">4</property>
+                            <property name="margin-bottom">4</property>
+                            <property name="wrap-mode">word</property>
+                            <property name="input-hints">GTK_INPUT_HINT_EMOJI | GTK_INPUT_HINT_NONE</property>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
                     </child>
                   </object>
                   <packing>
@@ -812,7 +1260,7 @@ Setup of HP8753 that relate to the calibration error cofficient arrays.</propert
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkBox">
+                  <object class="GtkBox" id="Tab_data">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="orientation">vertical</property>
@@ -1058,6 +1506,24 @@ Set this switch to display the actual simulus and response values for the refere
                       </packing>
                     </child>
                     <child>
+                      <object class="GtkCheckButton" id="WID_ChkBtn_DoNotRetrieveHPGL">
+                        <property name="label" translatable="yes">Do not retrieve HPGL screen plot</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="tooltip-text" translatable="yes">It takes several seconds to retrieve the HPGL screen plot.
+If the screen image is not required, cheking this box will
+result in a faster completion of 'Get Trace'</property>
+                        <property name="draw-indicator">True</property>
+                        <signal name="toggled" handler="CB_ChkBtn_DoNotRetrieveHPGL" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">4</property>
+                      </packing>
+                    </child>
+                    <child>
                       <object class="GtkBox">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
@@ -1106,7 +1572,7 @@ segments (in list frequency sweep)</property>
                       <packing>
                         <property name="expand">False</property>
                         <property name="fill">True</property>
-                        <property name="position">4</property>
+                        <property name="position">5</property>
                       </packing>
                     </child>
                   </object>
@@ -1131,7 +1597,7 @@ segments (in list frequency sweep)</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkBox">
+                  <object class="GtkBox" id="Tab_GPIB">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="orientation">vertical</property>
@@ -1338,7 +1804,7 @@ segments (in list frequency sweep)</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkBox">
+                  <object class="GtkBox" id="Tab_calkit">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="margin-top">4</property>

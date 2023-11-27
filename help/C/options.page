@@ -41,5 +41,10 @@
     <p>When using delta markers, the HP8753 displays the stimulus and response values of the selected reference marker as zero.</p>
     <p>This option is available to display the absolute value of the reference marker stimulus and response values.</p>
   </section>
+  <section id="HPGL">
+    <title>Do not retrieve HPGL screen plot</title>
+    <p>By default, both the trace data and an HPGL plot of the screen contents are retrieved from the HP8753 when the <key>Get Trace</key> button is pressed.</p>
+    <p>If the HPGL plot is not needed, selecting this option will instruct the application not to request the HPGL screen plot. This will reduce the data transfer time as there is less traffic on the GPIB; however, the HPGL plot of the screen will not be avaiable for display and will not be saved with the trace.</p>
+  </section>
 
 </page>
