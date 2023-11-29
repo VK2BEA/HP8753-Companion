@@ -303,8 +303,8 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 		// This maps the pen number to a color
 		// todo: allow the user to select the mapping
 #define MAX_HPGL_PENS 16
-		eColor pens[ MAX_HPGL_PENS ] = {
-				eColorBlack, eColorDarkBlue, eColorDarkGreen, eColorGray,
+		eColor pens[ MAX_HPGL_PENS ] = {    // HP 8753 can use pens 0 - 10 ToDo: make configurable
+				eColorBlack, eColorDarkGreen, eColorDarkBlue, eColorGray,
 				eColorDarkRed, eColorPurple, eColorDarkBrown, eColorBlack,
 				eColorLightPeach, eColorLightPurple, eColorBlue, eColorGreen,
 				eColorBrown, eColorBlack, eColorBlack, eColorBlack };
@@ -317,12 +317,12 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 
 	    cairo_save(cr);
 	    {
-			// Noto Sans Mono ExtraLight
+			// Noto Sans Mono Light
 			cairo_select_font_face(cr, HPGL_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
 			// If we don't set the color its black ... but the HP8753 does
 			setCairoColor ( cr, COLOR_HPGL_DEFAULT );
-			cairo_set_line_width (cr, areaWidth / 1000.0 * 0.5);
+			cairo_set_line_width (cr, areaWidth / 1000.0 * 0.75);
 
 			do {
 				// get compiled HPGL command byte

@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.20-5"
+   #define VERSION "1.21-1"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -579,7 +579,7 @@ tHP8753traceAbstract *cloneTraceProfileAbstract( tHP8753traceAbstract *, gchar *
 #define MARKER_SYMBOL_FONT	"Nimbus Sans"
 #define HP_LOGO_FONT "Nimbus Sans"
 #define STIMULUS_LEGEND_FONT "Nimbus Sans"
-#define HPGL_FONT "Noto Sans Mono ExtraLight"
+#define HPGL_FONT "Noto Sans Mono Light"   // OR "Noto Sans Mono ExtraLight"
 
 #define TIMEOUT_SWEEP	200		// if 10Hz RBW and 1601 points, it may take a long time to sweep
 #define LOCAL_DELAYms   50		// Delay after going to local from remote
