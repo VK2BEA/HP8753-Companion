@@ -8,7 +8,7 @@ This is a program to augment functionality of the HP 8753 Vector Nework Analyzer
 1. Save calibration and setup / Restore calibration & setup
 2. Transfer trace data from HP8753 and display on Linux computer
        - also use the mouse to examine the trace (show source and response settings at corresponding mouse position)
-3. Save traces as an image files (PNG (bitmap) or PDF (vector))
+3. Save traces as image files (PNG (bitmap) or PDF (vector))
 4. Acquire HPGL plot of screen
 5. Save trace data in CSV or Touchstone S2P format
 6. Print high resolution traces (or HPGL plot) to Linux CUPS printer
