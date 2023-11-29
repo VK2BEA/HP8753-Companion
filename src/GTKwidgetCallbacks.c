@@ -333,10 +333,15 @@ CB_BtnRecall (GtkButton * button, tGlobal *pGlobal)
 				// Show whichever trace was showing when saved (High Resolution or HPGL)
 				GtkWidget *wRadioHPGLplot = g_hash_table_lookup(pGlobal->widgetHashTable,
 						(gconstpointer )"WID_RadioBtn_PlotTypeHPGL");
+                GtkWidget *wRadioHIRESplot = g_hash_table_lookup(pGlobal->widgetHashTable,
+                        (gconstpointer )"WID_RadioBtn_PlotTypeHighRes");
 				GtkWidget *wBoxPlotType = g_hash_table_lookup(pGlobal->widgetHashTable,
 				                        (gconstpointer )"WID_BoxPlotType");
-				gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(wRadioHPGLplot),
-						pGlobal->HP8753.plotHPGL != NULL ? pGlobal->HP8753.flags.bShowHPGLplot : 0);
+				if( pGlobal->HP8753.plotHPGL && pGlobal->HP8753.flags.bShowHPGLplot )
+				    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(wRadioHPGLplot), TRUE );
+				else
+                    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(wRadioHIRESplot), TRUE );
+
 				gtk_widget_set_sensitive (GTK_WIDGET( wBoxPlotType ), pGlobal->HP8753.plotHPGL != NULL );
 
 				// Restore the color of the title entry window
