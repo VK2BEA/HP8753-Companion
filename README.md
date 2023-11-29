@@ -15,7 +15,7 @@ This is a program to augment functionality of the HP 8753 Vector Nework Analyzer
 7. Import .XKT calibration kit definitions and send them to the HP8753 (optionally saving as a user kit)
 
 Please see the YouTube description here:  
-[![HP8753 Companion video](https://user-images.githubusercontent.com/3782222/175981747-694a58f8-853c-42fa-a6b7-16cd8f814a27.png)](https://www.youtube.com/watch?v=ORWQE22tbRo)
+[![HP8753 Companion video](https://github.com/VK2BEA/HP8753-Companion/assets/3782222/f3309627-889d-4e28-8884-ea4f6471a7ff)](https://www.youtube.com/watch?v=ORWQE22tbRo)
 
 To install on the Linux Fedora distribution:
 -------------------------------------------
