@@ -200,7 +200,7 @@ plotSmithGrid (cairo_t *cr, gboolean bAnnotate, tGridParameters *pGrid, eChannel
 				cairo_stroke( cr );
 				cairo_save( cr );
 				cairo_set_line_width (cr, SMITH_LINE_THICKNESS * 2 * gammaScale);
-				setCairoColor (cr, eColorGreen );
+				setCairoColor (cr, COLOR_50ohm_SMITH );
 				cairo_arc (cr, x, centerY, fabs(radius), 0, 2 * G_PI);
 				cairo_stroke( cr );
 				cairo_restore( cr );
@@ -237,7 +237,7 @@ plotSmithGrid (cairo_t *cr, gboolean bAnnotate, tGridParameters *pGrid, eChannel
 			// labels
 			// resistance first
 			cairo_reset_clip( cr );
-			setCairoColor (cr, eColorGray );
+			setCairoColor (cr, COLOR_SMITH_GRID_ANNOTATIONS );
 			setCairoFontSize(cr, pGrid->fontSize * 0.75 / pGrid->scale);
 
 			double lastRad = 1000.0;
@@ -592,7 +592,7 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 				}
 
 				// draw circle around response point on trace
-				setCairoColor(cr, eColorRed );
+				setCairoColor(cr, COLOR_LIVE_MKR_CURSOR );
 				cairo_set_line_width (cr, (pGrid->areaWidth / 1000.0 * 3.0) / pGrid->scale);
 				cairo_new_path( cr );
 				if (bValidSample) {
@@ -602,7 +602,7 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 
 				// return to the initial transform
 				cairo_set_matrix (cr, &pGrid->initialMatrix);
-				setCairoColor(cr, eColorBlue );
+				setCairoColor(cr, COLOR_LIVE_MKR_FREQ_TICKS );
 				cairo_set_line_width (cr, 0.5);
 
 				// draw frequency / seconds tick marks
@@ -641,7 +641,7 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 					}
 				}
 
-				setCairoColor(cr, eColorRed );
+				setCairoColor(cr, COLOR_LIVE_MKR_CURSOR );
 				cairo_set_line_width (cr, pGrid->areaWidth / 1000.0 * 3.0);
 				// the actual xMouse position must be rescaled and translated
 				// because 0,0 is at the center of the smith chart

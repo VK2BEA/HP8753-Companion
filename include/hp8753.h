@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.20-4"
+   #define VERSION "1.20-5"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -191,7 +191,7 @@ typedef struct {
 	tComplex *responsePoints;
 	gdouble  *stimulusPoints;
 	struct {
-		unsigned short bUnused         				: 1;
+		unsigned short bSweepHold     				: 1;
 		unsigned short bValidData					: 1;
 		unsigned short bMkrs						: MAX_MKRS;
 		unsigned short bMkrsDelta					: 1;
@@ -238,11 +238,19 @@ typedef enum { eCH_ONE = 0, eCH_SINGLE = 0, eCH_TWO = 1, eNUM_CH = 2, eCH_BOTH =
 typedef enum { eProjectName = 0, eCalibrationName = 1, eTraceName = 2 } tRMCtarget;
 typedef enum { eRename = 0, eMove = 1, eCopy = 2 } tRMCpurpose;
 
-#define CH_ONE_COLOR				eColorDarkGreen
-#define CH_TWO_COLOR				eColorDarkBlue
-#define CH_ALL_COLOR				eColorBlack
-#define COLOR_GRID					eColorLightBlue
-#define COLOR_GRID_OVERLAY			eColorLightPeach
+#define CH_ONE_COLOR				    eColorDarkGreen
+#define CH_TWO_COLOR				    eColorDarkBlue
+#define CH_ALL_COLOR				    eColorBlack
+#define COLOR_GRID					    eColorLightBlue
+#define COLOR_GRID_OVERLAY			    eColorLightPeach
+#define COLOR_TEXT_SPAN_COUPLED         eColorBlue
+#define COLOR_TEXT_TITLE                eColorBlack
+#define COLOR_LINE_REF                  eColorRed
+#define COLOR_LIVE_MKR_CURSOR           eColorRed
+#define COLOR_LIVE_MKR_FREQ_TICKS       eColorBlue
+#define COLOR_HPGL_DEFAULT              eColorBlack     // HPGL from 8753 always sets the color .. so not useful
+#define COLOR_50ohm_SMITH               eColorGreen     // This is disabled by FIFTY_OHM_GREEN
+#define COLOR_SMITH_GRID_ANNOTATIONS    eColorGray
 
 enum { eNoInterplativeCalibration = 0, eInterplativeCalibration = 1, eInterplativeCalibrationButNotEnabled = 2 };
 typedef struct {

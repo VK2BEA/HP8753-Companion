@@ -226,7 +226,7 @@ plotCartesianTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlob
 	cairo_save( cr ); {
 		// Draw reference line
 
-		setCairoColor(cr, eColorRed );
+		setCairoColor(cr, COLOR_LINE_REF );
 		cairo_set_line_width (cr, pGrid->areaWidth / 1000.0 * 1.5);
 		cairo_move_to(cr, pGrid->leftMargin, pGrid->bottomMargin + refPos * pGrid->gridHeight / NVGRIDS);
 		cairo_rel_line_to(cr, pGrid->gridWidth, 0.0);
@@ -321,7 +321,7 @@ plotCartesianTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlob
 					y = LIN_INTERP( yl, yu, (x-xl));
 					bValidSample = TRUE;
 				}
-				setCairoColor(cr, eColorRed );
+				setCairoColor(cr, COLOR_LIVE_MKR_CURSOR );
 				cairo_set_line_width (cr, pGrid->areaWidth / 1000.0 * 3.0);
 
 				cairo_move_to( cr, x * sweepScale, -(refPos * perDiv * levelScale));

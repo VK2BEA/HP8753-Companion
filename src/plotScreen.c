@@ -61,7 +61,20 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 	static tCoord *currentLine = 0;
 	static gint	nPointsInLine = 0;
 	static gboolean	bNewPosition = FALSE;
-
+	struct scanArrow {
+		eHPGL code1;     // code CHPGL_LINE2PT
+	    tCoord vert1, vert2;
+	    eHPGL code2;    // code CHPGL_LINE
+	    guint16 nPts;
+	    tCoord arrowHead1, arrowHead2, addowHead3;
+	} __attribute__((packed)) ;
+	static const struct scanArrow upperScanArrow = {
+	        CHPGL_LINE2PT, {77, 2432}, {77, 2492 },
+	        CHPGL_LINE, 3, {65, 2474}, {77, 2492}, {88, 2474} };
+	static const struct scanArrow lowerScanArrow = {
+	        CHPGL_LINE2PT, {77, 384}, {77, 444 },
+            CHPGL_LINE, 3, {65, 426}, {77, 444}, {88, 426}
+	};
 	// number of bytes used in the malloced memory
 	guint HPGLserialCount;
 
@@ -107,8 +120,8 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 			currentLine[ nPointsInLine ] = posn;
 			nPointsInLine++;
 		}
-		// we have more than just x and y .. i.e another command on the same line
-		// I don't think this should occure with HPGL ... but there you have it
+		// we have more than just x and y .. i.e another command on the same lineHLD_LBL_YPOS_CH1
+		// I don't think this should occur with HPGL ... but there you have it
 		if( nArgs == 3 ) {
 			*(guint *)(pGlobal->HP8753.plotHPGL) = HPGLserialCount;
 			parseHPGL( (gchar *)secondHPGLcmd, pGlobal );
@@ -121,6 +134,34 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 		int strLength = strlen( sHPGL+2 );
 		if( strLength == 0 )
 			break;	// don't bother adding null labels ("LB;")
+
+#define HLD_LBL_YPOS_CH2	384
+#define HLD_LBL_YPOS_CH1	2432
+		// Dont show the Hld if we are not in hold
+		if( g_str_has_prefix( sHPGL, "LBHld\003" )  && posn.x == 0 ) {
+		    if( posn.y == HLD_LBL_YPOS_CH1 ) {
+		        if( ( pGlobal->HP8753.flags.bDualChannel && !pGlobal->HP8753.channels[ eCH_ONE ].chFlags.bSweepHold )
+		                || ( !pGlobal->HP8753.flags.bDualChannel &&
+		                        !pGlobal->HP8753.channels[ pGlobal->HP8753.activeChannel ].chFlags.bSweepHold ) ) {
+		            // show the scan arrow instead of 'Hld'
+		            // allocate more space if needed
+		            pGlobal->HP8753.plotHPGL = g_realloc( pGlobal->HP8753.plotHPGL,
+		                    QUANTIZE( HPGLserialCount + sizeof( struct scanArrow ), 1000 ) );
+		            memcpy( pGlobal->HP8753.plotHPGL + HPGLserialCount, &upperScanArrow, sizeof (struct scanArrow ));
+		            HPGLserialCount += sizeof (struct scanArrow );
+		            break;
+		        }
+		    } else if( !pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bSweepHold ) {
+                // show the scan arrow instead of 'Hld'
+                // allocate more space if needed
+                pGlobal->HP8753.plotHPGL = g_realloc( pGlobal->HP8753.plotHPGL,
+                        QUANTIZE( HPGLserialCount + sizeof( struct scanArrow ), 1000 ) );
+                memcpy( pGlobal->HP8753.plotHPGL + HPGLserialCount, &lowerScanArrow, sizeof (struct scanArrow ));
+                HPGLserialCount += sizeof (struct scanArrow );
+                break;
+            }
+		}
+
 		// some labels from the 8753C have 003 characters .. remove them
 		if( sHPGL[ 2 + strLength - 1 ] == '\003' )
 			sHPGL[ 2 + strLength - 1 ] = 0;
@@ -280,7 +321,7 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 			cairo_select_font_face(cr, HPGL_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
 			// If we don't set the color its black ... but the HP8753 does
-			setCairoColor ( cr, eColorBlack );
+			setCairoColor ( cr, COLOR_HPGL_DEFAULT );
 			cairo_set_line_width (cr, areaWidth / 1000.0 * 0.5);
 
 			do {
@@ -319,7 +360,7 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 				case CHPGL_PEN:
 					HPGLpen = *(guchar *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);
 					HPGLserialCount += sizeof( guchar );
-					setCairoColor ( cr, HPGLpen < MAX_HPGL_PENS ? pens[ HPGLpen ] : eColorBlack );
+					setCairoColor ( cr, HPGLpen < MAX_HPGL_PENS ? pens[ HPGLpen ] : COLOR_HPGL_DEFAULT );
 					break;
 				case CHPGL_LINETYPE:
 					HPGLlineType = *(guchar *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);

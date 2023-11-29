@@ -779,7 +779,7 @@ showStimulusInformation (cairo_t *cr, tGridParameters *pGrid, eChannel channel, 
 		cairo_select_font_face(cr, STIMULUS_LEGEND_FONT, CAIRO_FONT_SLANT_ITALIC, CAIRO_FONT_WEIGHT_NORMAL );
 		setCairoFontSize(cr, pGrid->fontSize * 0.8); // slighly smaller font
 		if( !pGrid->overlay.bAny || pGrid->bSourceCoupled )
-			setCairoColor ( cr, eColorBlue );
+			setCairoColor ( cr, COLOR_TEXT_SPAN_COUPLED );
 
 		if( pChannel->sweepType == eSWP_LINFREQ &&
 				( pChannel->format != eFMT_SMITH && pChannel->format != eFMT_POLAR)) {
@@ -814,7 +814,7 @@ showTitleAndTime( cairo_t *cr, tGridParameters *pGrid, gchar *sTitle, gchar *sTi
 	cairo_save( cr ); {
 		cairo_reset_clip( cr );
 		cairo_set_matrix (cr, &pGrid->initialMatrix);
-		setCairoColor ( cr, eColorBlack );
+		setCairoColor ( cr, COLOR_TEXT_TITLE );
 
 		cairo_select_font_face(cr, LABEL_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
 		setCairoFontSize(cr, pGrid->fontSize * 1.3); // initially 10 pixels

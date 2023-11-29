@@ -1608,7 +1608,7 @@ segments (in list frequency sweep)</property>
                         <child>
                           <object class="GtkFrame" id="WID_Frm_GPIB_HP8753_Identifier">
                             <property name="visible">True</property>
-                            <property name="can-focus">False</property>
+                            <property name="can-focus">True</property>
                             <property name="tooltip-text" translatable="yes">Name of device to be looked up in /etc/gpib.conf (or /etc/local/etc/gpib.conf)</property>
                             <property name="margin-left">4</property>
                             <property name="margin-right">4</property>

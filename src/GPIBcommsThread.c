@@ -551,7 +551,6 @@ threadGPIB(gpointer _pGlobal) {
     gint descGPIB_HP8753 = ERROR;
     messageEventData *message;
     gboolean bRunning = TRUE;
-    gboolean bHoldThisChannel = FALSE, bHoldOtherChannel = FALSE;
     gulong __attribute__((unused)) datum = 0;
     static guchar *pHP8753C_learn = NULL;
 
@@ -729,16 +728,8 @@ threadGPIB(gpointer _pGlobal) {
                 // We stop sweeping so that the trace and markers give the same data
                 // If the source is coupled, then a single hold works for both channels, if not, we
                 // must hold when we change to the other channel
-                bHoldThisChannel = getHP8753switchOnOrOff(descGPIB_HP8753, "HOLD", &GPIBstatus);
+                pGlobal->HP8753.channels[ pGlobal->HP8753.activeChannel ].chFlags.bSweepHold = getHP8753switchOnOrOff(descGPIB_HP8753, "HOLD", &GPIBstatus);
                 GPIBasyncWrite(descGPIB_HP8753, "HOLD;", &GPIBstatus, 1.0);
-
-                if (pGlobal->flags.bDoNotRetrieveHPGLdata) {
-                    pGlobal->HP8753.flags.bHPGLdataValid = FALSE;
-                } else {
-                    postInfo("Acquire HPGL screen plot");
-                    if (acquireHPGLplot(descGPIB_HP8753, pGlobal, &GPIBstatus) != 0)
-                        postError("Cannot acquire HPGL plot");
-                }
 
                 postInfo("Get trace data channel");
                 // if dual channel, then get both channels
@@ -747,13 +738,13 @@ threadGPIB(gpointer _pGlobal) {
                     // start with the other channel because we will then return to the active
                     // channel. We can only determine the active channel from the learn sting, so
                     // where we can't determine the active channel, this is assumed to be channel 1
-                    for (int i = 0, channel = (pGlobal->HP8753.activeChannel + 1) % eNUM_CH;
+                    for (int i = 0, channel = ( pGlobal->HP8753.activeChannel == eCH_ONE ? eCH_TWO : eCH_ONE );
                             i < eNUM_CH; i++, channel = (channel + 1) % eNUM_CH) {
                         setHP8753channel(descGPIB_HP8753, channel, &GPIBstatus);
                         if (!pGlobal->HP8753.flags.bSourceCoupled && i == 0) {
                             // if uncoupled, we need to hold the other channel also
-                            bHoldOtherChannel = getHP8753switchOnOrOff(descGPIB_HP8753, "HOLD",
-                                    &GPIBstatus);
+                            pGlobal->HP8753.channels[ channel ].chFlags.bSweepHold
+                                    = getHP8753switchOnOrOff(descGPIB_HP8753, "HOLD", &GPIBstatus);
                             GPIBasyncWrite(descGPIB_HP8753, "HOLD;", &GPIBstatus, 1.0);
                         }
                         getHP8753channelTrace(descGPIB_HP8753, pGlobal, channel, &GPIBstatus);
@@ -769,20 +760,31 @@ threadGPIB(gpointer _pGlobal) {
 
                 if (GPIBfailed(GPIBstatus))
                     break;
+
+                if (pGlobal->flags.bDoNotRetrieveHPGLdata) {
+                    pGlobal->HP8753.flags.bHPGLdataValid = FALSE;
+                } else {
+                    postInfo("Acquire HPGL screen plot");
+                    if (acquireHPGLplot(descGPIB_HP8753, pGlobal, &GPIBstatus) != 0)
+                        postError("Cannot acquire HPGL plot");
+                }
+
                 // Display the new data
                 postDataToMainLoop(TM_REFRESH_TRACE, eCH_ONE);
+
                 if (pGlobal->HP8753.flags.bDualChannel && pGlobal->HP8753.flags.bSplitChannels)
                     postDataToMainLoop(TM_REFRESH_TRACE, (void*) eCH_TWO);
 
-                if (!bHoldThisChannel) {
+                if (pGlobal->HP8753.channels[ pGlobal->HP8753.activeChannel ].chFlags.bSweepHold == FALSE) {
                     GPIBasyncWrite(descGPIB_HP8753, "CONT;", &GPIBstatus, 1.0);
                 }
 
                 if (pGlobal->HP8753.flags.bDualChannel) {
                     // if we are uncoupled, then we need to restart that trace separately
-                    if (!pGlobal->HP8753.flags.bSourceCoupled && !bHoldOtherChannel) {
+                    if (!pGlobal->HP8753.flags.bSourceCoupled &&
+                            pGlobal->HP8753.channels[ pGlobal->HP8753.activeChannel == eCH_ONE ? eCH_TWO : eCH_ONE ].chFlags.bSweepHold == FALSE) {
                         setHP8753channel(descGPIB_HP8753,
-                                (pGlobal->HP8753.activeChannel + 1) % eNUM_CH, &GPIBstatus);
+                                pGlobal->HP8753.activeChannel == eCH_ONE ? eCH_TWO : eCH_ONE, &GPIBstatus);
                         GPIBasyncWrite(descGPIB_HP8753, "CONT;", &GPIBstatus, 1.0);
                         setHP8753channel(descGPIB_HP8753, pGlobal->HP8753.activeChannel,
                                 &GPIBstatus);
