@@ -176,7 +176,12 @@ plotSmithGrid (cairo_t *cr, gboolean bAnnotate, tGridParameters *pGrid, eChannel
 		cairo_set_line_width (cr, SMITH_LINE_THICKNESS * gammaScale);
 		cairo_arc (cr, 0,0, 1.0, 0, 2 * G_PI);
 
-		setCairoColor (cr, COLOR_GRID );
+        if( pGrid->overlay.bSmithWithDiferentScaling && channel == eCH_TWO ) {
+            gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorGridPolarOverlay   ] );
+        } else {
+            gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorGrid   ] );
+        }
+
 		cairo_new_path(cr);
     	cairo_arc(cr, centerX, centerY, UNIT_CIRCLE * gammaScale, 0, 2 * G_PI);
     	cairo_stroke (cr);
@@ -237,7 +242,7 @@ plotSmithGrid (cairo_t *cr, gboolean bAnnotate, tGridParameters *pGrid, eChannel
 			// labels
 			// resistance first
 			cairo_reset_clip( cr );
-			setCairoColor (cr, COLOR_SMITH_GRID_ANNOTATIONS );
+			gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorSmithGridAnnotations ] );
 			setCairoFontSize(cr, pGrid->fontSize * 0.75 / pGrid->scale);
 
 			double lastRad = 1000.0;
@@ -592,7 +597,7 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 				}
 
 				// draw circle around response point on trace
-				setCairoColor(cr, COLOR_LIVE_MKR_CURSOR );
+				gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorLiveMkrCursor ] );
 				cairo_set_line_width (cr, (pGrid->areaWidth / 1000.0 * 3.0) / pGrid->scale);
 				cairo_new_path( cr );
 				if (bValidSample) {
@@ -602,7 +607,7 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 
 				// return to the initial transform
 				cairo_set_matrix (cr, &pGrid->initialMatrix);
-				setCairoColor(cr, COLOR_LIVE_MKR_FREQ_TICKS );
+				gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorLiveMkrFreqTicks ] );
 				cairo_set_line_width (cr, 0.5);
 
 				// draw frequency / seconds tick marks
@@ -641,7 +646,7 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 					}
 				}
 
-				setCairoColor(cr, COLOR_LIVE_MKR_CURSOR );
+				gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorLiveMkrCursor ] );
 				cairo_set_line_width (cr, pGrid->areaWidth / 1000.0 * 3.0);
 				// the actual xMouse position must be rescaled and translated
 				// because 0,0 is at the center of the smith chart

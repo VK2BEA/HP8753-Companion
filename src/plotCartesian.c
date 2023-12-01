@@ -55,7 +55,14 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 	gint i;
 	gchar *sYlabels[ NVGRIDS+1 ];
 	cairo_text_extents_t YlabelExtents[ NVGRIDS+1 ];
-	gdouble maxWidth = 0.0;
+	static gdouble maxYlabelWidth = 0.0;
+	double yLabelScale = 1.0;
+
+	// In calculating the maximum Y label we need to see both sides
+	// So don't reset if we are overlaying and this is ch 2
+	if( channel == eCH_ONE || !pGrid->overlay.bCartesian ) {
+		maxYlabelWidth = 0.0;
+	}
 
     cairo_save(cr);
     {
@@ -80,25 +87,22 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 		// on the right of the grid (for a dual single plot)
 		for( i=0; i < NVGRIDS+1; i++ ) {
 			double yTicValue = min + (i * perDiv);
-			// This avoids odd runding error isses (0 showing as extremely small number)
+			// This avoids odd rounding error issues (0 showing as extremely small number)
 			if( refVal != 0.0 && fabs( yTicValue ) < perDiv / 1.0e6 )
 				yTicValue = 0.0;
 			sYlabels[i] = engNotation( yTicValue, 2, eENG_NORMAL, NULL);
 			cairo_text_extents (cr, sYlabels[i], &YlabelExtents[i]);
-			if( YlabelExtents[i].width + YlabelExtents[i].x_bearing > maxWidth )
-				maxWidth = YlabelExtents[i].width + YlabelExtents[i].x_bearing;
+			if( YlabelExtents[i].width + YlabelExtents[i].x_bearing > maxYlabelWidth )
+				maxYlabelWidth = YlabelExtents[i].width + YlabelExtents[i].x_bearing;
 		}
-		// If we have a larger than usual response (Y) label, then make room by expanding the margin
-		if( maxWidth > pGrid->leftMargin ) {
-			pGrid->leftMargin = maxWidth + pGrid->textMargin;
-			if( pGrid->overlay.bCartesian  )
-				pGrid->rightMargin = maxWidth + pGrid->textMargin;
+		// If we have a larger than usual response (Y) label, then make room by expanding the margins to accomodate
+		if( maxYlabelWidth + pGrid->textMargin  > pGrid->leftMargin   ) {
+			yLabelScale = (pGrid->leftMargin - pGrid->textMargin) / maxYlabelWidth;
 		}
-
 		// Draw grid pattern
 
-		// Don't redraw if we have already drawn it (when overlaying)
-		if( channel == eCH_ONE || !pGrid->overlay.bCartesian ) {
+		// Don't redraw if we will draw over (when overlaying)
+		if( channel == eCH_TWO || !pGrid->overlay.bCartesian ) {
 			switch ( pChannel->sweepType ) {
 			case eSWP_LOGFREQ:
 				logStartFreq = log10( pChannel->sweepStart );
@@ -143,7 +147,7 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 			//    gtk_style_context_get_color (context, gtk_style_context_get_state (context), &color);
 			//    gdk_cairo_set_source_rgba (cr, &color);
 
-			setCairoColor ( cr, COLOR_GRID );
+			gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorGrid   ] );
 			cairo_set_line_width (cr, pGrid->areaWidth / 1000.0 * 0.5);
 			cairo_stroke (cr);
 
@@ -159,14 +163,18 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 		// put bottom left of the grid at 0.0
 		cairo_translate( cr, pGrid->leftMargin, pGrid->bottomMargin);
 
+		setCairoFontSize(cr, pGrid->fontSize * yLabelScale); // initially 10 pixels
+
 		for( i=0; i < NVGRIDS+1; i++ ) {
 			if( !pGrid->overlay.bCartesian || channel == eCH_ONE ) {
-				cairo_move_to(cr, - (YlabelExtents[i].width + YlabelExtents[i].x_bearing) - pGrid->textMargin,
+				// Left side Y labels
+				cairo_move_to(cr,
+						- (YlabelExtents[i].width + YlabelExtents[i].x_bearing) * yLabelScale - pGrid->textMargin,
 						(i * pGrid->gridHeight / NVGRIDS) - (YlabelExtents[i].height/2 + YlabelExtents[i].y_bearing));
 			} else {
-				cairo_move_to(cr, pGrid->gridWidth * 1.01
-						+ maxWidth
-						- (YlabelExtents[i].width + YlabelExtents[i].x_bearing),
+				cairo_move_to(cr, pGrid->gridWidth
+						+ maxYlabelWidth * yLabelScale
+						- (YlabelExtents[i].width + YlabelExtents[i].x_bearing) * yLabelScale + pGrid->textMargin,
 						(i * pGrid->gridHeight / NVGRIDS) - (YlabelExtents[i].height/2 + YlabelExtents[i].y_bearing));
 			}
 			cairo_show_text (cr, sYlabels[i]);
@@ -226,7 +234,7 @@ plotCartesianTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlob
 	cairo_save( cr ); {
 		// Draw reference line
 
-		setCairoColor(cr, COLOR_LINE_REF );
+	    gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorRefLine1   ] );
 		cairo_set_line_width (cr, pGrid->areaWidth / 1000.0 * 1.5);
 		cairo_move_to(cr, pGrid->leftMargin, pGrid->bottomMargin + refPos * pGrid->gridHeight / NVGRIDS);
 		cairo_rel_line_to(cr, pGrid->gridWidth, 0.0);
@@ -321,7 +329,7 @@ plotCartesianTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlob
 					y = LIN_INTERP( yl, yu, (x-xl));
 					bValidSample = TRUE;
 				}
-				setCairoColor(cr, COLOR_LIVE_MKR_CURSOR );
+				gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorLiveMkrCursor ] );
 				cairo_set_line_width (cr, pGrid->areaWidth / 1000.0 * 3.0);
 
 				cairo_move_to( cr, x * sweepScale, -(refPos * perDiv * levelScale));

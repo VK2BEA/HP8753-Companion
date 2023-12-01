@@ -1,6 +1,6 @@
 MAINTAINERCLEANFILES = Makefile.in
 
-#pkginclude_HEADERS = ../include/GPIBcomms.h ../include/hp8753comms.h ../include/hp8753.h ../include/messageEvent.h ../include/smithChartPS.h
+#pkginclude_HEADERS = ../include/GPIBcomms.h ../include/hp8753comms.h ../include/hp8753.h ../include/messageEvent.h ../include/smithChartPS.h ../include/HPGLplot.h ../include/calibrationKit.h
 #Library specific CPPFLAGS
 
 if DEBUG
@@ -34,7 +34,7 @@ hp8753_SOURCES = databaseSaveAndRestore.c  GTKplotMarkers.c \
                  printWidgetCallbacks.c utility.c \
                  GPIBcommsThread.c GTKrenameDialogWidgets.c \
                  hp8753.c HP8753setupAndCal.c \
-                 HPlogo.c noteDataWidgets.c \
+                 HPlogo.c noteDataWidgets.c noteColor.c \
                  parseCalibrationKit.c plotScreen.c \
                  resource.c GTKplot.c \
                  GTKutility.c HP8753comms.c \

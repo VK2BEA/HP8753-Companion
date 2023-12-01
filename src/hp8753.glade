@@ -366,7 +366,7 @@
                   <object class="GtkLabel" id="WID_LblVersion">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">Version 1.21 - November 2023</property>
+                    <property name="label" translatable="yes">Version 1.22 - November 2023</property>
                     <property name="justify">center</property>
                     <attributes>
                       <attribute name="style" value="oblique"/>
@@ -474,6 +474,21 @@ limitations under the License.&lt;/span&gt;</property>
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkRecentChooserMenu">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="limit">10</property>
+  </object>
+  <object class="GtkRecentChooserMenu">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="limit">10</property>
+  </object>
+  <object class="GtkRecentChooserMenu">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="limit">10</property>
   </object>
   <object class="GtkAdjustment" id="adj_GPIB_Controller_Card">
     <property name="upper">8</property>
@@ -1974,6 +1989,243 @@ segments (in list frequency sweep)</property>
                   </object>
                   <packing>
                     <property name="position">5</property>
+                    <property name="tab-fill">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkBox" id="Tab_color">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="orientation">vertical</property>
+                    <child>
+                      <object class="GtkFrame">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="margin-start">4</property>
+                        <property name="margin-end">4</property>
+                        <property name="margin-top">4</property>
+                        <property name="margin-bottom">4</property>
+                        <property name="label-xalign">0.05000000074505806</property>
+                        <property name="shadow-type">in</property>
+                        <child>
+                          <object class="GtkAlignment">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="left-padding">12</property>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="margin-end">4</property>
+                                <property name="margin-bottom">4</property>
+                                <child>
+                                  <object class="GtkComboBoxText" id="WID_CB_HiResColor">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="margin-start">4</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="active">0</property>
+                                    <property name="active-id">0</property>
+                                    <items>
+                                      <item id="0" translatable="yes">Trace (overlay 1️⃣)</item>
+                                      <item id="1" translatable="yes">Trace (overlay 2️⃣)</item>
+                                      <item id="2" translatable="yes">Trace (separate)</item>
+                                      <item id="3" translatable="yes">Grid</item>
+                                      <item id="4" translatable="yes">Grid (polar/Smith overlay)</item>
+                                      <item id="8" translatable="yes">Reference line 1️⃣</item>
+                                      <item id="9" translatable="yes">Reference line 2️⃣ </item>
+                                      <item id="10" translatable="yes">Live Marker Cursor</item>
+                                      <item id="7" translatable="yes">Title</item>
+                                      <item id="5" translatable="yes">Smith Grid text</item>
+                                      <item id="6" translatable="yes">Source /div text (separate)</item>
+                                    </items>
+                                    <signal name="changed" handler="CB_NC_ComboBox_HiResColor" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkColorButton" id="WID_CP_HiResColor">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">True</property>
+                                    <property name="halign">end</property>
+                                    <property name="rgba">rgb(0,0,0)</property>
+                                    <signal name="color-activated" handler="CB_HighResColor" swapped="no"/>
+                                    <signal name="color-set" handler="CB_ColorBtn_HighResColor" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <child type="label">
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">High Resolution Plot Colors</property>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkFrame">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="margin-start">4</property>
+                        <property name="margin-end">4</property>
+                        <property name="margin-top">4</property>
+                        <property name="margin-bottom">4</property>
+                        <property name="label-xalign">0.029999999329447746</property>
+                        <property name="shadow-type">in</property>
+                        <child>
+                          <object class="GtkAlignment">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="left-padding">12</property>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="margin-start">4</property>
+                                <property name="margin-end">4</property>
+                                <property name="margin-bottom">4</property>
+                                <child>
+                                  <object class="GtkComboBoxText" id="WID_CB_HPGLcolor">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="active">0</property>
+                                    <property name="active-id">0</property>
+                                    <items>
+                                      <item id="0" translatable="yes">Pen 0</item>
+                                      <item id="1" translatable="yes">Pen 1</item>
+                                      <item id="2" translatable="yes">Pen 2</item>
+                                      <item id="3" translatable="yes">Pen 3</item>
+                                      <item id="4" translatable="yes">Pen 4</item>
+                                      <item id="5" translatable="yes">Pen 5</item>
+                                      <item id="6" translatable="yes">Pen 6</item>
+                                      <item id="7" translatable="yes">Pen 7</item>
+                                      <item id="8" translatable="yes">Pen 8</item>
+                                      <item id="9" translatable="yes">Pen 9</item>
+                                      <item id="10" translatable="yes">Pen 10</item>
+                                    </items>
+                                    <signal name="changed" handler="CB_NC_ComboBox_HPGLcolor" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkColorButton" id="WID_CP_HPGLcolor">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">True</property>
+                                    <property name="halign">end</property>
+                                    <property name="rgba">rgb(0,0,0)</property>
+                                    <signal name="color-set" handler="CB_ColorBtn_HPGLcolor" swapped="no"/>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <child type="label">
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">HPGL Plot Colors</property>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="valign">center</property>
+                        <property name="homogeneous">True</property>
+                        <child>
+                          <object class="GtkButton">
+                            <property name="label" translatable="yes">Reset</property>
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="receives-default">True</property>
+                            <signal name="released" handler="CB_NC_BtnResetColors" swapped="no"/>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="position">6</property>
+                  </packing>
+                </child>
+                <child type="tab">
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="label" translatable="yes">Color</property>
+                  </object>
+                  <packing>
+                    <property name="position">6</property>
                     <property name="tab-fill">False</property>
                   </packing>
                 </child>

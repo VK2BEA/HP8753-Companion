@@ -1,0 +1,55 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      type="topic" style="guide"
+      id="colors">
+
+  <info>
+    <link type="guide" xref="index#setup"/>
+    <revision pkgversion="7.10.1" date="2018-06-17" status="candidate" />
+
+    <credit type="author">
+      <name>Michael Katzmann</name>
+      <email>michaelk@IEEE.org</email>
+    </credit>
+
+    <include href="legal.xml" xmlns="http://www.w3.org/2001/XInclude"/>
+
+    <desc>Customizing the colors of plot elements</desc>
+  </info>
+  
+  <title>Colors</title>
+  <p><media type="image" width="300" mime="image/png" src="media/color.png" /></p>
+  <p>The colors of the high resolution and HPGL screen plots may be customized from the <key>Color</key> notebook page.</p>
+  <section id="high-resolution">
+    <title>High Resolution plots</title>
+    <p> The color of many plot elements may be customized. The colors selected apply to all plots, not just the one currently selected.</p>
+    <p>Select the plot element from the combo box list, press the color button to the right and select the new color.</p>
+    <p>The elements that can be customized are:</p>
+    <list>
+      <item><p><em>Trace (overlay 1)</em> - Channel 1 trace when both trace 1 and 2 are overlayed on the same display</p></item>
+      <item><p><em>Trace (overlay 2)</em> - Channel 2 trace when both trace 1 and 2 are overlayed on the same display</p></item>
+      <item><p><em>Trace (separate)</em> - Trace when trace 1 and 2 are on separate displays or there is only one display</p></item>
+      <item><p><em>Grid</em> - Cartesian, polar or Smith grid for channel 1 or when there are separate displays</p></item>
+      <item><p><em>Grid (polar/Smith overlay)</em> - Polar or Smith grid for channel 2 when there are both channel 1 and channel 2 overlayed and having diferent scales</p></item>
+      <item><p><em>Reference line 1</em></p></item>
+      <item><p><em>Reference line 2</em></p></item>
+      <item><p><em>Live Marker Cursor</em> - cursor that follows the current responce level based on the position of the mouse cursor on the screen withing the stimulus range</p></item>
+      <item><p><em>Title</em> - Title text and date/time</p></item>
+      <item><p><em>Smith Grid text</em> - Annotations (real and imaginary) on the Smith grid lines</p></item>
+      <item><p><em>Source /div text (separate)</em> - the annotation showing the span and per division stimulus size when there are a single or separate plots</p></item>
+    </list>
+   
+  </section>
+  <section id="hpgl">
+    <title>HPGL Pen Colors</title>
+    <p>Elements of the HPGL screen plots are drawn by different pens. The pen for each element, e.g. trace or grid for channel 1, may be selected using the HP8753 <key>Copy</key> menu. These are pens 0 through 11.</p>
+    <p>The pen number corresponds to a pen loaded into the vector pen plotter (e.g. 7470A)</p>
+    <p>The color corresponding to the pen number can be changed from the default using the controls on the <key>Color</key> notebook page.</p>
+    <p>Select the pen number from the combo box list, press the color button to the right and select the new color</p>
+   
+  </section>
+  <section id="color-reset">
+    <title>Reset Colors</title>
+    <p>Colors can be reset to the default valuse by pressing the <key>Reset</key> button.</p>
+  </section>
+<note style="information"><p>Since the markers are sampled on the HP8753 using linear interpolation, the Bezier interpolated curves may not necessarily exactly go through the marker points.</p></note>
+</page>

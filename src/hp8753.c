@@ -296,6 +296,12 @@ on_activate (GApplication *app, gpointer udata)
 	PopulateProjectComboBoxWidget( pGlobal );
 	PopulateCalComboBoxWidget( pGlobal );
 	PopulateTraceComboBoxWidget( pGlobal );
+
+	// Set the color buttons on the color note page
+	// according to the element displayed in the combo boxes
+	setNotePageColorButton (pGlobal, TRUE );
+    setNotePageColorButton (pGlobal, FALSE );
+
     // pGlobal->pCalibrationAbstract is initialized by inventorySavedSetupsAndCal()
 	// and pGlobal->pGlobalTraceAbstract by inventorySavedTraceNames()
 	// As  a side-effect this will also choose the selected calibration and trace profiles
@@ -411,6 +417,13 @@ on_startup (GApplication *app, gpointer udata)
     clearHP8753traces( &pGlobal->HP8753 );
 
     openOrCreateDB();
+
+    for( int i=0; i < NUM_HPGL_PENS; i++ ) {
+        HPGLpens[ i ] = HPGLpensFactory[ i ];
+    }
+    for( int i=0; i < eMAX_COLORS; i++ ) {
+        plotElementColors[ i ] = plotElementColorsFactory[ i ];
+    }
 
 	if( bAbort )
 		g_application_quit (G_APPLICATION ( app ));

@@ -283,47 +283,6 @@ void multiLineText(
 	} cairo_restore( cr );
 }
 
-/*!     \brief  Set foreground color
- *
- * Set the forground color. On initial use GdkRGBA structures
- * are populated which are subsequently accessed.
- *
- * \ingroup drawing
- *
- * \param cr		pointer to cairo context
- * \param color		set the color to one of a group of predefined colors
- *
- */
-void
-setCairoColor( cairo_t *cr, eColor color ) {
-	static gboolean bInitial = TRUE;
-    static GdkRGBA colors[ eColorLast ];
-
-	// gamma for full scale
-
-    if( bInitial ) {
-		gdk_rgba_parse (&colors[ eColorBlack      ],         "black");
-		gdk_rgba_parse (&colors[ eColorWhite      ],         "white");
-		gdk_rgba_parse (&colors[ eColorYellow     ], "darkgoldenrod");
-		gdk_rgba_parse (&colors[ eColorBlue       ],      "darkblue");
-		gdk_rgba_parse (&colors[ eColorGreen      ],         "green");
-		gdk_rgba_parse (&colors[ eColorDarkGreen  ],     "darkgreen");
-		gdk_rgba_parse (&colors[ eColorRed        ],           "red");
-		gdk_rgba_parse (&colors[ eColorDarkRed    ],       "darkred");
-		gdk_rgba_parse (&colors[ eColorGray       ],          "gray");
-		gdk_rgba_parse (&colors[ eColorLightBlue  ],       "#A0A0E0");
-		gdk_rgba_parse (&colors[ eColorPurple ],            "purple");
-		gdk_rgba_parse (&colors[ eColorLightPurple ],      "#E6D3FD");
-		gdk_rgba_parse (&colors[ eColorLightPeach ],       "#FFA664");
-		gdk_rgba_parse (&colors[ eColorDarkBlue   ],      "darkblue");
-		gdk_rgba_parse (&colors[ eColorBrown      ],       "#BD9A7A");
-		gdk_rgba_parse (&colors[ eColorDarkBrown  ],       "#654321");
-    bInitial = FALSE;
-    }
-
-	gdk_cairo_set_source_rgba (cr, &colors[ color   ] );
-}
-
 /*!     \brief  Set the trace color
  *
  * Set the trace color based on channel and overlay
@@ -338,12 +297,12 @@ void
 setTraceColor( cairo_t *cr,gboolean bOverlay, eChannel channel ) {
 	if( bOverlay ) {
 		if ( channel == eCH_ONE ) {
-			setCairoColor ( cr, CH_ONE_COLOR );
+		    gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorTrace1   ] );
 		} else {
-			setCairoColor ( cr, CH_TWO_COLOR );
+            gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorTrace2   ] );
 		}
 	} else {
-		setCairoColor ( cr, CH_ALL_COLOR );
+        gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorTraceSeparate  ] );
 	}
 }
 
@@ -554,13 +513,13 @@ showStatusInformation (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tG
 
 		if( pGrid->overlay.bAny ) {
 			if ( channel == 0 ) {
-				setCairoColor ( cr, CH_ONE_COLOR );
+			    gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorTrace1   ] );
 			} else {
-				setCairoColor ( cr, CH_TWO_COLOR );
+			    gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorTrace2   ] );
 				xOffset = 5.0 * pGrid->gridWidth / NHGRIDS;
 			}
 		} else {
-			setCairoColor ( cr, CH_ALL_COLOR );
+		    gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorTraceSeparate   ] );
 		}
 		multiLineText( cr, optMeasurementType[ pChannel->measurementType ].desc,
 				1, lineSpacing, pGrid->leftMargin + xOffset, pGrid->areaHeight, eTopLeft );
@@ -778,8 +737,9 @@ showStimulusInformation (cairo_t *cr, tGridParameters *pGrid, eChannel channel, 
 
 		cairo_select_font_face(cr, STIMULUS_LEGEND_FONT, CAIRO_FONT_SLANT_ITALIC, CAIRO_FONT_WEIGHT_NORMAL );
 		setCairoFontSize(cr, pGrid->fontSize * 0.8); // slighly smaller font
+		// if the sources are coupled or we do not have an overlay, use distinct color
 		if( !pGrid->overlay.bAny || pGrid->bSourceCoupled )
-			setCairoColor ( cr, COLOR_TEXT_SPAN_COUPLED );
+		    gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorTextSpanPerDivCoupled   ] );
 
 		if( pChannel->sweepType == eSWP_LINFREQ &&
 				( pChannel->format != eFMT_SMITH && pChannel->format != eFMT_POLAR)) {
@@ -814,7 +774,7 @@ showTitleAndTime( cairo_t *cr, tGridParameters *pGrid, gchar *sTitle, gchar *sTi
 	cairo_save( cr ); {
 		cairo_reset_clip( cr );
 		cairo_set_matrix (cr, &pGrid->initialMatrix);
-		setCairoColor ( cr, COLOR_TEXT_TITLE );
+		gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorTextTitle ] );
 
 		cairo_select_font_face(cr, LABEL_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
 		setCairoFontSize(cr, pGrid->fontSize * 1.3); // initially 10 pixels
@@ -1048,8 +1008,11 @@ gboolean plotB (guint areaWidth, guint areaHeight, cairo_t *cr, tGlobal *pGlobal
 		plotCartesianTrace (cr, &grid, eCH_TWO, pGlobal);
 		break;
 	case eFMT_SMITH:
+        plotSmithGrid( cr, TRUE, &grid, eCH_TWO, pGlobal);
+        plotSmithAndPolarTrace (cr, &grid, eCH_TWO, pGlobal);
+        break;
 	case eFMT_POLAR:
-		plotSmithGrid( cr, TRUE, &grid, eCH_TWO, pGlobal);
+		plotPolarGrid( cr, TRUE, &grid, eCH_TWO, pGlobal);
 		plotSmithAndPolarTrace (cr, &grid, eCH_TWO, pGlobal);
  		break;
 	}

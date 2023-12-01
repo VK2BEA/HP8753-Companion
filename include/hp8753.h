@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.21-1"
+   #define VERSION "1.22-1"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -238,19 +238,23 @@ typedef enum { eCH_ONE = 0, eCH_SINGLE = 0, eCH_TWO = 1, eNUM_CH = 2, eCH_BOTH =
 typedef enum { eProjectName = 0, eCalibrationName = 1, eTraceName = 2 } tRMCtarget;
 typedef enum { eRename = 0, eMove = 1, eCopy = 2 } tRMCpurpose;
 
-#define CH_ONE_COLOR				    eColorDarkGreen
-#define CH_TWO_COLOR				    eColorDarkBlue
-#define CH_ALL_COLOR				    eColorBlack
-#define COLOR_GRID					    eColorLightBlue
-#define COLOR_GRID_OVERLAY			    eColorLightPeach
-#define COLOR_TEXT_SPAN_COUPLED         eColorBlue
-#define COLOR_TEXT_TITLE                eColorBlack
-#define COLOR_LINE_REF                  eColorRed
-#define COLOR_LIVE_MKR_CURSOR           eColorRed
-#define COLOR_LIVE_MKR_FREQ_TICKS       eColorBlue
+typedef enum {  eColorTrace1 = 0, eColorTrace2 = 1, eColorTraceSeparate = 2,
+                eColorGrid = 3, eColorGridPolarOverlay = 4, eColorSmithGridAnnotations = 5,
+                eColorTextSpanPerDivCoupled = 6, eColorTextTitle = 7, eColorRefLine1 = 8,
+                eColorRefLine2 = 9, eColorLiveMkrCursor = 10, eColorLiveMkrFreqTicks = 11,
+                eMAX_COLORS = 12
+} tElementColor;
+
+#define NUM_HPGL_PENS   11      // limit by HP8753
+
+extern GdkRGBA plotElementColors[ eMAX_COLORS ];
+extern GdkRGBA HPGLpens[ NUM_HPGL_PENS ];
+extern GdkRGBA plotElementColorsFactory[ eMAX_COLORS ];
+extern GdkRGBA HPGLpensFactory[ NUM_HPGL_PENS ];
+
 #define COLOR_HPGL_DEFAULT              eColorBlack     // HPGL from 8753 always sets the color .. so not useful
 #define COLOR_50ohm_SMITH               eColorGreen     // This is disabled by FIFTY_OHM_GREEN
-#define COLOR_SMITH_GRID_ANNOTATIONS    eColorGray
+
 
 enum { eNoInterplativeCalibration = 0, eInterplativeCalibration = 1, eInterplativeCalibrationButNotEnabled = 2 };
 typedef struct {
@@ -558,6 +562,8 @@ tHP8753traceAbstract *selectTraceProfile( tGlobal *, gchar *, gchar * );
 tHP8753cal *cloneCalibrationProfile( tHP8753cal *, gchar * );
 tHP8753traceAbstract *cloneTraceProfileAbstract( tHP8753traceAbstract *, gchar * );
 
+gint setNotePageColorButton (tGlobal *, gboolean );
+
 #define DATETIME_SIZE  64
 
 #define NHGRIDS   10
@@ -607,7 +613,7 @@ g_memdup2(gconstpointer mem, gsize byte_size) {
 	if( globalData.flags.bbDebug >= level ) \
 		LOG( G_LOG_LEVEL_DEBUG, message, ## __VA_ARGS__)
 
-#define CURRENT_DB_SCHEMA	1
+#define CURRENT_DB_SCHEMA	2
 // This character separates project name from item name in database
 // ... its more complicated to ensure compatability with older database schemas
 #define ETX 0x03

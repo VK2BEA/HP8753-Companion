@@ -82,9 +82,9 @@ plotPolarGrid (cairo_t *cr, gboolean bAnnotate, tGridParameters *pGrid, eChannel
 		cairo_set_line_width (cr, LINE_THICKNESS/pGrid->scale);
 
 		if( pGrid->overlay.bAny && channel == eCH_TWO ) {
-			setCairoColor (cr, COLOR_GRID_OVERLAY );
+		    gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorGridPolarOverlay   ] );
 		} else {
-			setCairoColor (cr, COLOR_GRID );
+		    gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorGrid   ] );
 		}
 	#define ONEonSQRT2 0.70710678118
 

@@ -300,14 +300,6 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 
 		tCoord *pPoint;
 		gint i;
-		// This maps the pen number to a color
-		// todo: allow the user to select the mapping
-#define MAX_HPGL_PENS 16
-		eColor pens[ MAX_HPGL_PENS ] = {    // HP 8753 can use pens 0 - 10 ToDo: make configurable
-				eColorBlack, eColorDarkGreen, eColorDarkBlue, eColorGray,
-				eColorDarkRed, eColorPurple, eColorDarkBrown, eColorBlack,
-				eColorLightPeach, eColorLightPurple, eColorBlue, eColorGreen,
-				eColorBrown, eColorBlack, eColorBlack, eColorBlack };
 
 		// There is always a character count at the head of the data
 		HPGLserialCount += sizeof(guint);
@@ -321,7 +313,7 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 			cairo_select_font_face(cr, HPGL_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
 			// If we don't set the color its black ... but the HP8753 does
-			setCairoColor ( cr, COLOR_HPGL_DEFAULT );
+			gdk_cairo_set_source_rgba (cr, &HPGLpens[1] );      // black pen by default
 			cairo_set_line_width (cr, areaWidth / 1000.0 * 0.75);
 
 			do {
@@ -360,7 +352,7 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 				case CHPGL_PEN:
 					HPGLpen = *(guchar *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);
 					HPGLserialCount += sizeof( guchar );
-					setCairoColor ( cr, HPGLpen < MAX_HPGL_PENS ? pens[ HPGLpen ] : COLOR_HPGL_DEFAULT );
+					gdk_cairo_set_source_rgba (cr, &HPGLpens[ HPGLpen < NUM_HPGL_PENS ? HPGLpen : 1 ] );
 					break;
 				case CHPGL_LINETYPE:
 					HPGLlineType = *(guchar *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);

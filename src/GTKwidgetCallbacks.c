@@ -362,7 +362,7 @@ CB_BtnRecall (GtkButton * button, tGlobal *pGlobal)
 }
 
 void
-CB_BtnSave (GtkButton * button, tGlobal *pGlobal)
+CB_BtnSave (GtkButton *wButton, tGlobal *pGlobal)
 {
 	GtkComboBoxText *wComboBoxName;
 	gchar *sName, *sNote;

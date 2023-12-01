@@ -134,6 +134,8 @@ gchar *sqlCreateTables[] = {
 			"calProfile			TEXT,"
 			"traceProfile		TEXT,"
 		    "project            TEXT,"
+            "colors             BLOB,"
+            "colorsHPGL         BLOB,"
 			"learnStringIndexes BLOB,"
 		    "product            TEXT,"
 			"PRIMARY KEY (ID)"
@@ -1225,9 +1227,9 @@ saveProgramOptions(tGlobal *pGlobal) {
 			"INSERT OR REPLACE INTO OPTIONS"
 			" (ID, flags, GPIBcontrollerName, GPIBdeviceName, GPIBcontrollerCard, "
 			"  GPIBdevicePID, GtkPrintSettings, GtkPageSetup, lastDirectory, calProfile, "
-			"  traceProfile, project, learnStringIndexes, product"
+			"  traceProfile, project, colors, colorsHPGL, learnStringIndexes, product"
 			" )"
-			" VALUES (?,?,?,?,?, ?,?,?,?,?, ?,?,?,?)", -1, &stmt, NULL) != SQLITE_OK) {
+			" VALUES (?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?,?)", -1, &stmt, NULL) != SQLITE_OK) {
 		postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
 		return ERROR;
 	}
@@ -1294,10 +1296,23 @@ saveProgramOptions(tGlobal *pGlobal) {
 	} else {
 		++queryIndex;
 	}
+
+	// plot colors
+    if (sqlite3_bind_blob(stmt, ++queryIndex, &plotElementColors,
+                            sizeof( plotElementColors ), SQLITE_STATIC) != SQLITE_OK)
+        goto err;
+
+    // HPGL plot colors
+    if (sqlite3_bind_blob(stmt, ++queryIndex, &HPGLpens,
+                            sizeof( HPGLpens ), SQLITE_STATIC) != SQLITE_OK) {
+        goto err;
+    }
+
 	if( pGlobal->HP8753.analyzedLSindexes.version != 0 ) {
 		if (sqlite3_bind_blob(stmt, ++queryIndex, &pGlobal->HP8753.analyzedLSindexes,
-								sizeof( tLearnStringIndexes ), SQLITE_STATIC) != SQLITE_OK)
+								sizeof( tLearnStringIndexes ), SQLITE_STATIC) != SQLITE_OK) {
 			goto err;
+		}
 	} else {
 		++queryIndex;
 	}
@@ -1505,6 +1520,14 @@ recoverProgramOptions(tGlobal *pGlobal) {
 				schemaVersion++;
 				break;
 			case 1: // from version 1 to version 2 (when we get there)
+                if (sqlite3_exec(db,
+                        "ALTER TABLE Options ADD COLUMN colors BLOB; ALTER TABLE Options ADD COLUMN colorsHPGL BLOB;"
+                        , NULL, NULL, NULL) != SQLITE_OK) {
+                    postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
+                    return ERROR;
+                }
+			    break;
+			case 2:
 			    break;
 			default:
 				postMessageToMainLoop(TM_ERROR, (gchar*) "Database schema version error");
@@ -1512,7 +1535,7 @@ recoverProgramOptions(tGlobal *pGlobal) {
 			}
 
 			// Update the schema so that if we crash, the schema ID will reflect reality
-			gchar *sCmd = g_strdup_printf( "UPDATE OPTIONS SET ID = %d;", schemaVersion );
+			gchar *sCmd = g_strdup_printf( "UPDATE OPTIONS SET ID = %d;", ++schemaVersion );
 			if (sqlite3_exec(db, sCmd, NULL, NULL, NULL) != SQLITE_OK) {
 				postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
 				g_free( sCmd );
@@ -1525,7 +1548,7 @@ recoverProgramOptions(tGlobal *pGlobal) {
 	if (sqlite3_prepare_v2(db,
 			"SELECT flags, GPIBcontrollerName, GPIBdeviceName, "
 			"  GPIBcontrollerCard, GPIBdevicePID, "
-			"  GtkPrintSettings, GtkPageSetup, lastDirectory, calProfile, traceProfile, project, learnStringIndexes, product FROM OPTIONS;",
+			"  GtkPrintSettings, GtkPageSetup, lastDirectory, calProfile, traceProfile, project, colors, colorsHPGL, learnStringIndexes, product FROM OPTIONS;",
 			-1, &stmt, NULL) != SQLITE_OK) {
 		postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
 		return ERROR;
@@ -1597,6 +1620,17 @@ recoverProgramOptions(tGlobal *pGlobal) {
 			queryIndex++;
 
 			pGlobal->sProject = g_strdup(  (gchar *)sqlite3_column_text(stmt, queryIndex++) );
+
+			// plot colors
+            size = sqlite3_column_bytes(stmt, queryIndex);
+			tBlob = sqlite3_column_blob(stmt, queryIndex++);
+            if( size == sizeof( plotElementColors ))
+                 memcpy( &plotElementColors, tBlob, sizeof( plotElementColors ));
+			// HPGL plot colors
+            size = sqlite3_column_bytes(stmt, queryIndex);
+			tBlob = sqlite3_column_blob(stmt, queryIndex++);
+            if( size == sizeof( HPGLpens ))
+                 memcpy( &HPGLpens, tBlob, sizeof( HPGLpens ));
 
 			size = sqlite3_column_bytes(stmt, queryIndex);
 			tBlob = sqlite3_column_blob(stmt, queryIndex++);
