@@ -159,7 +159,7 @@ plotSmithGrid (cairo_t *cr, gboolean bAnnotate, tGridParameters *pGrid, eChannel
 		showStimulusInformation (cr, pGrid, channel, pGlobal);
 		cairo_new_path( cr );
 		//The origin is now in the middle of the gamma (reflection) circle
-		cairo_translate(cr, pGrid->leftMargin + pGrid->gridWidth/2.0, pGrid->bottomMargin + pGrid->gridHeight/2.0);
+		cairo_translate(cr, pGrid->leftGridPosn + pGrid->gridWidth/2.0, pGrid->bottomGridPosn + pGrid->gridHeight/2.0);
 
 		radiusInitial = MIN (pGrid->gridHeight, pGrid->gridWidth) / 2.0;
 		pGrid->scale = radiusInitial/gammaScale;
@@ -360,15 +360,15 @@ showSmithCursorInfo(
 	// We use this font because it has the relevant Unicode glyphs for gamma and degrees
 	cairo_select_font_face(cr, CURSOR_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
-	xTextPos = pGrid->areaWidth * 0.05 + pGrid->leftMargin;
+	xTextPos = pGrid->areaWidth * 0.05 + pGrid->leftGridPosn;
 
 	if( !pGrid->overlay.bAny ) {
-		yTextPos = pGrid->bottomMargin * 1.1;
+		yTextPos = pGrid->bottomGridPosn * 1.1;
 	} else {
 		if ( channel == eCH_ONE ) {
-			yTextPos = pGrid->gridHeight + pGrid->bottomMargin - 9 * pGrid->fontSize;
+			yTextPos = pGrid->gridHeight + pGrid->bottomGridPosn - 9 * pGrid->fontSize;
 		} else {
-			yTextPos = pGrid->bottomMargin - 0.7 * pGrid->fontSize ;
+			yTextPos = pGrid->bottomGridPosn - 0.7 * pGrid->fontSize ;
 		}
 		if( gridType[ pGlobal->HP8753.channels[ (channel + 1) % eNUM_CH ].format ] != eGridCartesian )
 			xTextPos -= pGrid->areaWidth * 0.04;
@@ -461,7 +461,7 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 		cairo_new_path( cr );
 		// Translate coordinate system so that 0,0 is in the center of the Smith chart (gamma 0)
 		// Scale for 1.0 being the gamma scale (1.0 for usual smith chart view)
-		cairo_translate(cr, pGrid->leftMargin + pGrid->gridWidth/2.0, pGrid->bottomMargin + pGrid->gridHeight/2.0);
+		cairo_translate(cr, pGrid->leftGridPosn + pGrid->gridWidth/2.0, pGrid->bottomGridPosn + pGrid->gridHeight/2.0);
 		radiusInitial = MIN (pGrid->gridHeight, pGrid->gridWidth) / 2.0;
 		pGrid->scale = radiusInitial/gammaScale;
 		cairo_scale( cr, pGrid->scale, pGrid->scale );
@@ -536,8 +536,8 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 			else
 				xMouse = pGlobal->mousePosition[channel].r;
 
-			if ( xMouse >= pGrid->leftMargin && xMouse <= pGrid->gridWidth+pGrid->leftMargin ) {
-				xFract = (xMouse-pGrid->leftMargin) / pGrid->gridWidth;
+			if ( xMouse >= pGrid->leftGridPosn && xMouse <= pGrid->gridWidth+pGrid->leftGridPosn ) {
+				xFract = (xMouse-pGrid->leftGridPosn) / pGrid->gridWidth;
 				cairo_reset_clip( cr);
 				// find out what sample corresponds to the x mouse position
 				// This is straightforward unless we are using the list frequency sweep with all segments
@@ -632,15 +632,15 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 							break;
 						else {
 							xGrid = (logGrids[ i ] - startOffset + decades) / logSpan * pGrid->gridWidth;
-							cairo_move_to(cr, pGrid->leftMargin + xGrid, pGrid->bottomMargin + (gdouble)pGrid->gridHeight/NVGRIDS/8.0);
+							cairo_move_to(cr, pGrid->leftGridPosn + xGrid, pGrid->bottomGridPosn + (gdouble)pGrid->gridHeight/NVGRIDS/8.0);
 							cairo_rel_line_to( cr, 0.0, -(gdouble)pGrid->gridHeight/NVGRIDS/4.0 );
 							cairo_stroke( cr );
 						}
 					}
 				} else {
 					for (int i=0; i <= NHGRIDS; i++ ) {
-						cairo_move_to( cr, pGrid->leftMargin + (pGrid->gridWidth / NHGRIDS * i),
-								 pGrid->bottomMargin + (gdouble)pGrid->gridHeight/NVGRIDS/8.0 );
+						cairo_move_to( cr, pGrid->leftGridPosn + (pGrid->gridWidth / NHGRIDS * i),
+								 pGrid->bottomGridPosn + (gdouble)pGrid->gridHeight/NVGRIDS/8.0 );
 						cairo_rel_line_to( cr, 0.0, -(gdouble)pGrid->gridHeight/NVGRIDS/4.0 );
 						cairo_stroke( cr );
 					}
@@ -651,7 +651,7 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 				// the actual xMouse position must be rescaled and translated
 				// because 0,0 is at the center of the smith chart
 				cairo_move_to( cr, xMouse,
-						pGrid->bottomMargin );
+						pGrid->bottomGridPosn );
 				cairo_rel_line_to( cr, 0, -(gdouble)pGrid->gridHeight/NVGRIDS/8 );
 				cairo_stroke(cr);
 

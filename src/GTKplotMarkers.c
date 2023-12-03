@@ -199,7 +199,7 @@ drawMarkerText( cairo_t *cr,
 
 		// Top left of marker text area
 		X = pGrid->areaWidth - pGrid->makerAreaWidth * 0.925;
-		Y = (pGrid->areaHeight - pGrid->topMargin) - ((nPosition * (bPolarOrSmith ? 3.25: 2.25) + 1.0) * lineSpacing);
+		Y = (pGrid->areaHeight - pGrid->topGridPosn) - ((nPosition * (bPolarOrSmith ? 3.25: 2.25) + 1.0) * lineSpacing);
 
 		if( pGrid->overlay.bAny && channel == eCH_TWO ) {
 			Y -= pGrid->gridHeight / 2.0;
@@ -313,7 +313,7 @@ drawBandwidthText( cairo_t *cr,
 
 		// Bottom of text area for channel
 		X = pGrid->areaWidth - pGrid->makerAreaWidth * 0.925;
-		Y = (pGrid->bottomMargin + pGrid->gridHeight) - lineSpacing;
+		Y = (pGrid->bottomGridPosn + pGrid->gridHeight) - lineSpacing;
 
 		if( pGrid->overlay.bAny && channel == eCH_TWO ) {
 			Y -= pGrid->gridHeight / 2.0;

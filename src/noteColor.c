@@ -118,7 +118,7 @@ CB_ColorBtn_HPGLcolor( GtkColorButton *wColorBtn , tGlobal *pGlobal)
 
 /*!     \brief  Callback selection of GtkComboBoxText for what hi-res color to change
  *
- * Callback when the hi-res element GtkComboBoxText is changed (to apply ne color
+ * Callback when the hi-res element GtkComboBoxText is changed (select which element to change color)
  *
  * \param  wHiResColorCombo    pointer to GtkComboBox widget
  * \param  tGlobal            pointer global data
@@ -137,9 +137,9 @@ CB_NC_ComboBox_HiResColor (GtkComboBoxText *wHiResColorCombo, tGlobal *pGlobal) 
         gtk_color_chooser_set_rgba( wColor, &plotElementColors[ id ] );
 }
 
-/*!     \brief  Callback selection of GtkComboBoxText for what hi-res color to change
+/*!     \brief  Callback selection of GtkComboBoxText for what HPGL color to change
  *
- * Callback when the hi-res element GtkComboBoxText is changed (to apply ne color
+ * Callback when the HPGL element GtkComboBoxText is changed (select which pen to change color)
  *
  * \param  wHiResColorCombo    pointer to GtkComboBox widget
  * \param  tGlobal            pointer global data

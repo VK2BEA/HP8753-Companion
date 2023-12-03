@@ -296,7 +296,9 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 		scaleX = (gdouble)areaWidth / (gdouble)HPGL_MAX_X * ASPECT_CORRECTION;
 		scaleY = (gdouble)areaHeight / (gdouble)HPGL_MAX_Y;
 
-		double LeftMargin = areaWidth / 22.0;
+		// Better center the plot in the screen
+		double leftOffset  = areaWidth   /  25.0;
+		double bottomOffset = areaHeight / 100.0;
 
 		tCoord *pPoint;
 		gint i;
@@ -329,10 +331,10 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 					pPoint = (tCoord *)(pGlobal->HP8753.plotHPGL+HPGLserialCount);
 					cairo_new_path( cr );
 					// move to first point
-					cairo_move_to(cr, LeftMargin + pPoint->x * scaleX, pPoint->y * scaleY );
+					cairo_move_to(cr, leftOffset + pPoint->x * scaleX, bottomOffset + pPoint->y * scaleY );
 					// plot to each subsequent point
 					for( i=1, pPoint++; i < ptsInLine; pPoint++, i++ ) {
-						cairo_line_to(cr, LeftMargin + pPoint->x * scaleX, pPoint->y * scaleY );
+						cairo_line_to(cr, leftOffset + pPoint->x * scaleX, bottomOffset + pPoint->y * scaleY );
 					}
 					cairo_stroke( cr );
 
@@ -342,9 +344,9 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 					pPoint = (tCoord *)(pGlobal->HP8753.plotHPGL+HPGLserialCount);
 					cairo_new_path( cr );
 					// move to first point
-					cairo_move_to(cr, LeftMargin + pPoint->x * scaleX, pPoint->y * scaleY );
+					cairo_move_to(cr, leftOffset + pPoint->x * scaleX, bottomOffset + pPoint->y * scaleY );
 					pPoint++;
-					cairo_line_to(cr, LeftMargin + pPoint->x * scaleX, pPoint->y * scaleY );
+					cairo_line_to(cr, leftOffset + pPoint->x * scaleX, bottomOffset + pPoint->y * scaleY );
 					cairo_stroke( cr );
 
 					HPGLserialCount += (2 * sizeof( tCoord ));
@@ -363,7 +365,7 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 					pPoint = (tCoord *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);
 					HPGLserialCount += sizeof( tCoord );
 					if( cmd == CHPGL_LABEL )
-						cairo_move_to(cr, LeftMargin + pPoint->x * scaleX, pPoint->y * scaleY );
+						cairo_move_to(cr, leftOffset + pPoint->x * scaleX, bottomOffset + pPoint->y * scaleY );
 					guint labelLength = *(guchar *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);
 					HPGLserialCount += sizeof( guchar );
 					// label is null terminated

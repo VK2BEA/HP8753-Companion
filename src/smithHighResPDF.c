@@ -110,8 +110,36 @@ smithHighResPDF(tGlobal *pGlobal, gchar *filename, eChannel channel)
 		code = gsapi_init_with_args(minst, gsargc, gsargv);
 
 	// The program
-	gsapi_run_string(minst, smithPS, 0, &exit_code);
+	gchar *setPaperSize = g_strdup_printf( " /pageWidth %d def /pageHeight %d def ",
+	           paperDimensions[ pGlobal->PDFpaperSize ].height, // this is reversed from
+	           paperDimensions[ pGlobal->PDFpaperSize ].width); // the low res orientation
+	gsapi_run_string(minst, setPaperSize, 0, &exit_code);
+	g_free( setPaperSize );
 
+    GTimeZone   *tz = (GTimeZone *)g_time_zone_new_local();
+    GDateTime   *dt = (GDateTime *)g_date_time_new_now( tz );
+	gchar * dateStr = (gchar *)g_date_time_format(dt, "D:%Y%m%d%H%M%S%z");
+
+	gchar *sMetaData = g_strdup_printf(
+	        "[ /Title (%s) "
+	        "  /Author  (%s) "
+	        "  /Subject (Smith chart) "
+	        "  /Creator (HP8753 Companion) "
+	        "  /ModDate (D:19700101000000+01'00') "
+	        "  /Producer (A 'pdfmark' trick with Ghostscript) "
+	        "  /Keywords (Metadata, HP8753, Ghostscript, PDF, Linux) "
+	        "  /CreationDate (%s) "
+	        "  /DOCINFO "
+	        "pdfmark ", pGlobal->HP8753.sTitle == NULL ? "HP8753 Network Analyzer Plot" : pGlobal->HP8753.sTitle,
+	                g_get_real_name (), dateStr
+	);
+	gsapi_run_string(minst, sMetaData, 0, &exit_code);
+    g_date_time_unref(dt);
+    g_time_zone_unref(tz);
+    g_free(dateStr);
+	g_free( sMetaData );
+
+	gsapi_run_string(minst, smithPS, 0, &exit_code);
 	for( eChannel chan = (channel != eCH_BOTH ? channel : 0); chan < eNUM_CH; chan++ ) {
 		if( pGlobal->HP8753.channels[chan].chFlags.bAdmitanceSmith || pGlobal->flags.bAdmitanceSmith) {
 			if( eLastGrid == eNone || eLastGrid == eRX )

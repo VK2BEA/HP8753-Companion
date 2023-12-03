@@ -424,6 +424,7 @@ on_startup (GApplication *app, gpointer udata)
     for( int i=0; i < eMAX_COLORS; i++ ) {
         plotElementColors[ i ] = plotElementColorsFactory[ i ];
     }
+    pGlobal->PDFpaperSize = eLetter;
 
 	if( bAbort )
 		g_application_quit (G_APPLICATION ( app ));

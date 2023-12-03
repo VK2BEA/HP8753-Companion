@@ -64,7 +64,7 @@ plotPolarGrid (cairo_t *cr, gboolean bAnnotate, tGridParameters *pGrid, eChannel
 		showStimulusInformation (cr, pGrid, channel, pGlobal);
 		cairo_new_path( cr );
 		//The origin is now in the middle of the polar circle
-		cairo_translate(cr, pGrid->leftMargin + pGrid->gridWidth/2.0, pGrid->bottomMargin + pGrid->gridHeight/2.0);
+		cairo_translate(cr, pGrid->leftGridPosn + pGrid->gridWidth/2.0, pGrid->bottomGridPosn + pGrid->gridHeight/2.0);
 
 		centerX = 0.0;
 		centerY = 0.0;
@@ -195,15 +195,15 @@ showPolarCursorInfo(
 	// We use this font because it has the relevant Unicode glyphs for gamma and degrees
 	cairo_select_font_face(cr, CURSOR_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
-	xTextPos = pGrid->areaWidth * 0.05 + pGrid->leftMargin;
+	xTextPos = pGrid->areaWidth * 0.05 + pGrid->leftGridPosn;
 
 	if( !pGrid->overlay.bAny ) {
-		yTextPos = pGrid->bottomMargin * 1.1;
+		yTextPos = pGrid->bottomGridPosn * 1.1;
 	} else {
 		if ( channel == eCH_ONE ) {
-			yTextPos = pGrid->gridHeight + pGrid->bottomMargin - 4 * pGrid->fontSize;
+			yTextPos = pGrid->gridHeight + pGrid->bottomGridPosn - 4 * pGrid->fontSize;
 		} else {
-			yTextPos = pGrid->bottomMargin * 1.1;
+			yTextPos = pGrid->bottomGridPosn * 1.1;
 		}
 	}
 

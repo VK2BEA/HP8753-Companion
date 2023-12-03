@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.22-1"
+   #define VERSION "1.22-2"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -131,6 +131,8 @@ typedef enum {
 } eColor;
 
 typedef enum { eDB_CALandSETUP, eDB_TRACE, eDB_CALKIT } tDBtable;
+
+typedef enum { eA4 = 0, eLetter = 1, eA3 = 2, eTabloid = 3, eNumPaperSizes = 4 } tPaperSize;
 
 extern const tGrid gridType[];
 
@@ -368,21 +370,22 @@ typedef struct {
 
 	GHashTable *widgetHashTable;
 
-	gint	 GPIBcontrollerIndex,  GPIBdevicePID;
-	gchar 	*sGPIBdeviceName;
-	GtkPrintSettings *printSettings;
-	GtkPageSetup 	 *pageSetup;
-	gchar			 *sLastDirectory;
+	gint                GPIBcontrollerIndex,  GPIBdevicePID;
+	gchar               *sGPIBdeviceName;
+	GtkPrintSettings    *printSettings;
+	GtkPageSetup        *pageSetup;
+	tPaperSize          PDFpaperSize;
+	gchar			    *sLastDirectory;
 
 	// names of the currently selected objects
 	tHP8753traceAbstract    *pTraceAbstract;
 	tHP8753cal              *pCalibrationAbstract;
-	gchar			 *sProject;
-	gchar			 *sCalKit;
+	gchar			    *sProject;
+	gchar			    *sCalKit;
 
-	GSource *		messageEventSource;
-	GAsyncQueue *	messageQueueToMain;
-	GAsyncQueue *	messageQueueToGPIB;
+	GSource         *messageEventSource;
+	GAsyncQueue     *messageQueueToMain;
+	GAsyncQueue     *messageQueueToGPIB;
 
 	GList *pProjectList;
 	GList *pCalList;		// list containing tHP8753cal objects
@@ -427,14 +430,16 @@ typedef struct {
 	guint areaWidth;
 	guint areaHeight;
 
-	gdouble leftMargin;
-	gdouble rightMargin;
+	gdouble margin;
+
+	gdouble leftGridPosn;
+	gdouble rightGridPosn;
 
 	gdouble gridWidth;
 	gdouble gridHeight;
 
-	gdouble bottomMargin;
-	gdouble topMargin;
+	gdouble bottomGridPosn;
+	gdouble topGridPosn;
 
 	gdouble textMargin;
 	gdouble makerAreaWidth;
@@ -445,6 +450,13 @@ typedef struct {
 
 	cairo_matrix_t initialMatrix;
 } tGridParameters;
+
+typedef struct {
+    guint   height, width;
+    gdouble margin;
+} tPaperDimensions;
+
+extern tPaperDimensions paperDimensions[];
 
 #define DEFAULT_GPIB_DEVICE_ID		16
 #define DEFAULT_GPIB_HP8753C_DEVICE_NAME "hp8753c"
@@ -496,8 +508,8 @@ void hide_Frame_Plot_B (tGlobal *);
 void FORM1toDouble( guint8 *, gdouble *, gdouble * );
 void initializeFORM1exponentTable( void );
 void drawBezierSpline( cairo_t *ctx, const tComplex *pt, int cnt );
-gboolean plotA( guint, guint, cairo_t *, tGlobal * );
-gboolean plotB( guint, guint, cairo_t *, tGlobal * );
+gboolean plotA( guint, guint, gdouble, cairo_t *, tGlobal * );
+gboolean plotB( guint, guint, gdouble, cairo_t *, tGlobal * );
 gint smithHighResPDF( tGlobal *, gchar *, eChannel );
 void bezierControlPoints( const tLine *, const tLine *, tComplex *, tComplex * );
 gchar* doubleToStringWithSpaces( gdouble freq, gchar *sUnits );

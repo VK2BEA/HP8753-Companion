@@ -96,8 +96,8 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 				maxYlabelWidth = YlabelExtents[i].width + YlabelExtents[i].x_bearing;
 		}
 		// If we have a larger than usual response (Y) label, then make room by expanding the margins to accomodate
-		if( maxYlabelWidth + pGrid->textMargin  > pGrid->leftMargin   ) {
-			yLabelScale = (pGrid->leftMargin - pGrid->textMargin) / maxYlabelWidth;
+		if( maxYlabelWidth + pGrid->textMargin  > pGrid->leftGridPosn   ) {
+			yLabelScale = (pGrid->leftGridPosn - pGrid->textMargin) / maxYlabelWidth;
 		}
 		// Draw grid pattern
 
@@ -123,25 +123,25 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 						break;
 					else {
 						xGrid = (logGrids[ i ] - startOffset + decades) / logSpan * pGrid->gridWidth;
-						cairo_move_to(cr, pGrid->leftMargin + xGrid, pGrid->bottomMargin );
-						cairo_line_to(cr, pGrid->leftMargin + xGrid, pGrid->areaHeight - pGrid->topMargin );
+						cairo_move_to(cr, pGrid->leftGridPosn + xGrid, pGrid->bottomGridPosn );
+						cairo_line_to(cr, pGrid->leftGridPosn + xGrid, pGrid->areaHeight - pGrid->topGridPosn );
 					}
 				}
-				cairo_move_to(cr, pGrid->leftMargin, pGrid->bottomMargin );
-				cairo_line_to(cr, pGrid->leftMargin, pGrid->areaHeight - pGrid->topMargin );
-				cairo_move_to(cr, pGrid->leftMargin + pGrid->gridWidth, pGrid->bottomMargin );
-				cairo_line_to(cr, pGrid->leftMargin + pGrid->gridWidth, pGrid->areaHeight - pGrid->topMargin );
+				cairo_move_to(cr, pGrid->leftGridPosn, pGrid->bottomGridPosn );
+				cairo_line_to(cr, pGrid->leftGridPosn, pGrid->areaHeight - pGrid->topGridPosn );
+				cairo_move_to(cr, pGrid->leftGridPosn + pGrid->gridWidth, pGrid->bottomGridPosn );
+				cairo_line_to(cr, pGrid->leftGridPosn + pGrid->gridWidth, pGrid->areaHeight - pGrid->topGridPosn );
 				break;
 			default:
 				for( i=0; i < NHGRIDS+1; i++ ) {	// Vertical grid lines
-					cairo_move_to(cr, pGrid->leftMargin + (i * pGrid->gridWidth / NHGRIDS), pGrid->bottomMargin );
-					cairo_line_to(cr, pGrid->leftMargin + (i * pGrid->gridWidth / NHGRIDS), pGrid->areaHeight - pGrid->topMargin );
+					cairo_move_to(cr, pGrid->leftGridPosn + (i * pGrid->gridWidth / NHGRIDS), pGrid->bottomGridPosn );
+					cairo_line_to(cr, pGrid->leftGridPosn + (i * pGrid->gridWidth / NHGRIDS), pGrid->areaHeight - pGrid->topGridPosn );
 				}
 				break;
 			}
 			for( i=0; i < NVGRIDS+1; i++ ) {	// Horizontal grid lines
-				cairo_move_to(cr, pGrid->leftMargin, pGrid->bottomMargin + (i * pGrid->gridHeight / NVGRIDS) );
-				cairo_line_to(cr, pGrid->areaWidth - pGrid->rightMargin, pGrid->bottomMargin + (i * pGrid->gridHeight / NVGRIDS) );
+				cairo_move_to(cr, pGrid->leftGridPosn, pGrid->bottomGridPosn + (i * pGrid->gridHeight / NVGRIDS) );
+				cairo_line_to(cr, pGrid->areaWidth - pGrid->rightGridPosn, pGrid->bottomGridPosn + (i * pGrid->gridHeight / NVGRIDS) );
 			}
 
 			//    gtk_style_context_get_color (context, gtk_style_context_get_state (context), &color);
@@ -161,7 +161,7 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 
 		// y-axis labels
 		// put bottom left of the grid at 0.0
-		cairo_translate( cr, pGrid->leftMargin, pGrid->bottomMargin);
+		cairo_translate( cr, pGrid->leftGridPosn, pGrid->bottomGridPosn);
 
 		setCairoFontSize(cr, pGrid->fontSize * yLabelScale); // initially 10 pixels
 
@@ -236,14 +236,14 @@ plotCartesianTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlob
 
 	    gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorRefLine1   ] );
 		cairo_set_line_width (cr, pGrid->areaWidth / 1000.0 * 1.5);
-		cairo_move_to(cr, pGrid->leftMargin, pGrid->bottomMargin + refPos * pGrid->gridHeight / NVGRIDS);
+		cairo_move_to(cr, pGrid->leftGridPosn, pGrid->bottomGridPosn + refPos * pGrid->gridHeight / NVGRIDS);
 		cairo_rel_line_to(cr, pGrid->gridWidth, 0.0);
 		cairo_stroke( cr );
 
 
 		if ( npoints ) {
 			// put bottom left of the grid at 0.0
-			cairo_translate( cr, pGrid->leftMargin, pGrid->bottomMargin);
+			cairo_translate( cr, pGrid->leftGridPosn, pGrid->bottomGridPosn);
 			// clip to grid
 			cairo_rectangle( cr, 0, 0, pGrid->gridWidth, pGrid->gridHeight);
 			cairo_clip(cr);
@@ -304,9 +304,9 @@ plotCartesianTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlob
 			else
 				xMouse = pGlobal->mousePosition[channel].r;
 
-			if ( xMouse >= pGrid->leftMargin && xMouse <= pGrid->gridWidth+pGrid->leftMargin ) {
+			if ( xMouse >= pGrid->leftGridPosn && xMouse <= pGrid->gridWidth+pGrid->leftGridPosn ) {
 				gboolean bValidSample = FALSE;
-				xFract = (xMouse-pGrid->leftMargin) / pGrid->gridWidth;
+				xFract = (xMouse-pGrid->leftGridPosn) / pGrid->gridWidth;
 				x = (npoints-1) * xFract; y=0.0;
 				xl = (gint)floor(x); xu = (gint)ceil(x);
 
@@ -369,11 +369,11 @@ plotCartesianTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlob
 					setTraceColor( cr, pGrid->overlay.bAny, channel );
 					// Where to place the text indicating the freq / value
 					if( pGrid->overlay.bAny && channel == eCH_TWO )
-						ylabel= pGrid->bottomMargin + pGrid->gridHeight * 0.09;
+						ylabel= pGrid->bottomGridPosn + pGrid->gridHeight * 0.09;
 					else
-						ylabel= pGrid->bottomMargin + pGrid->gridHeight;
+						ylabel= pGrid->bottomGridPosn + pGrid->gridHeight;
 
-					xlabel = pGrid->leftMargin + 0.095 * pGrid->gridWidth;
+					xlabel = pGrid->leftGridPosn + 0.095 * pGrid->gridWidth;
 
 					filmCreditsCairoText( cr, sLabel, sNote, 0, xlabel, ylabel, eTopLeft );
 					g_snprintf( sNote, BUFFER_SIZE_100, "%.1f", y);

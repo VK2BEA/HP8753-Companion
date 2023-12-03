@@ -434,18 +434,18 @@ determineGridPosition( cairo_t *cr, tGlobal *pGlobal, eChannel channel, tGridPar
 	}
 	pGrid->bSourceCoupled = pGlobal->HP8753.flags.bSourceCoupled;
 
-	pGrid->leftMargin   = PERCENT(pGrid->areaWidth,  5.0);
+	pGrid->leftGridPosn   = PERCENT(pGrid->areaWidth,  5.0);
 	if( pGrid->overlay.bCartesian  )
-		pGrid->rightMargin  = PERCENT(pGrid->areaWidth,  5.0);
+		pGrid->rightGridPosn  = PERCENT(pGrid->areaWidth,  5.0);
 	else
-		pGrid->rightMargin  = PERCENT(pGrid->areaWidth,  2.0);
+		pGrid->rightGridPosn  = PERCENT(pGrid->areaWidth,  2.0);
 
 	if( pGrid->overlay.bAny  && !pGrid->bSourceCoupled )
-		pGrid->bottomMargin = PERCENT(pGrid->areaHeight,  8.0);
+		pGrid->bottomGridPosn = PERCENT(pGrid->areaHeight,  8.0);
 	else
-		pGrid->bottomMargin = PERCENT(pGrid->areaHeight,  5.0);
+		pGrid->bottomGridPosn = PERCENT(pGrid->areaHeight,  5.0);
 
-	pGrid->topMargin  = PERCENT(pGrid->areaHeight, 12.0);
+	pGrid->topGridPosn  = PERCENT(pGrid->areaHeight, 12.0);
 
 
 	// pGrid->fontSize = fontSize( (gdouble)pGrid->areaHeight, (gdouble)pGrid->areaWidth );
@@ -455,13 +455,13 @@ determineGridPosition( cairo_t *cr, tGlobal *pGlobal, eChannel channel, tGridPar
 
 	if( pGlobal->HP8753.channels[ channel ].chFlags.bMkrs ) {
 		pGrid->makerAreaWidth = pGrid->fontSize * 10.0;
-		pGrid->rightMargin += pGrid->makerAreaWidth;
+		pGrid->rightGridPosn += pGrid->makerAreaWidth;
 	} else {
 		pGrid->makerAreaWidth = 0.0;
 	}
 
-	pGrid->gridWidth  = (gdouble)pGrid->areaWidth  - (pGrid->leftMargin + pGrid->rightMargin);
-	pGrid->gridHeight = (gdouble)pGrid->areaHeight - (pGrid->topMargin + pGrid->bottomMargin);
+	pGrid->gridWidth  = (gdouble)pGrid->areaWidth  - (pGrid->leftGridPosn + pGrid->rightGridPosn);
+	pGrid->gridHeight = (gdouble)pGrid->areaHeight - (pGrid->topGridPosn + pGrid->bottomGridPosn);
 
 	pGrid->lineSpacing = (gdouble)pGrid->gridHeight / 32.0;
 
@@ -522,21 +522,21 @@ showStatusInformation (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tG
 		    gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorTraceSeparate   ] );
 		}
 		multiLineText( cr, optMeasurementType[ pChannel->measurementType ].desc,
-				1, lineSpacing, pGrid->leftMargin + xOffset, pGrid->areaHeight, eTopLeft );
+				1, lineSpacing, pGrid->leftGridPosn + xOffset, pGrid->areaHeight, eTopLeft );
 		multiLineText( cr, optFormat[ pChannel->format ].desc,
-				1, lineSpacing, pGrid->leftMargin + xOffset + 1.5 * (pGrid->gridWidth / NHGRIDS), pGrid->areaHeight, eTopLeft );
+				1, lineSpacing, pGrid->leftGridPosn + xOffset + 1.5 * (pGrid->gridWidth / NHGRIDS), pGrid->areaHeight, eTopLeft );
 		gchar *tStr = engNotation( refVal, 2, eENG_NORMAL, NULL );
 		if(eFormat == eFMT_POLAR || eFormat == eFMT_SMITH )
 			g_snprintf( sInfo, INFO_LEN, "%s%s FS", tStr, formatSymbols[eFormat]);
 		else
 			g_snprintf( sInfo, INFO_LEN, "Ref. %s%s", tStr, formatSymbols[eFormat]);
-		multiLineText( cr, sInfo, 2, lineSpacing, pGrid->leftMargin + xOffset, pGrid->areaHeight, eTopLeft );
+		multiLineText( cr, sInfo, 2, lineSpacing, pGrid->leftGridPosn + xOffset, pGrid->areaHeight, eTopLeft );
 		g_free( tStr );
 		tStr = engNotation( perDiv, 2,  eENG_NORMAL, NULL );
 		g_snprintf( sInfo, INFO_LEN, "%s%s/div", perDiv == 0 ? "10" : tStr, formatSymbols[eFormat]);
 		if(	!(eFormat == eFMT_POLAR || eFormat == eFMT_SMITH) )
 			multiLineText( cr, sInfo, 2, lineSpacing,
-					pGrid->leftMargin + xOffset + 1.5 * (pGrid->gridWidth / NHGRIDS), pGrid->areaHeight, eTopLeft );
+					pGrid->leftGridPosn + xOffset + 1.5 * (pGrid->gridWidth / NHGRIDS), pGrid->areaHeight, eTopLeft );
 		// IF BW
 		gchar *sTemp = engNotation( pGlobal->HP8753.channels[channel].IFbandwidth, 0, eENG_NORMAL, NULL );
 
@@ -547,7 +547,7 @@ showStatusInformation (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tG
 
 		multiLineText( cr, sInfo,
 				!pGlobal->HP8753.flags.bSourceCoupled && pGrid->overlay.bAny ? channel + 1: 2,
-						lineSpacing, pGrid->leftMargin + pGrid->gridWidth, pGrid->areaHeight, eTopRight );
+						lineSpacing, pGrid->leftGridPosn + pGrid->gridWidth, pGrid->areaHeight, eTopRight );
 		g_free( sTemp );
 		g_free( tStr );
 	} cairo_restore( cr);
@@ -684,12 +684,12 @@ showStimulusInformation (cairo_t *cr, tGridParameters *pGrid, eChannel channel, 
 	}
 	perDiv = (pChannel->sweepStop-pChannel->sweepStart) / NHGRIDS;
 
-	posXstop   = pGrid->areaWidth - pGrid->rightMargin;
-	posXstart  = pGrid->leftMargin;
-	posXcenter = pGrid->leftMargin + pGrid->gridWidth / 2.0;
-	posXperDiv = pGrid->leftMargin + pGrid->gridWidth * 3.50 / 10;
-	posXspan   = pGrid->leftMargin + pGrid->gridWidth * 7.75 / 10;
-	posY = pGrid->bottomMargin - 1.4 * pGrid->fontSize;
+	posXstop   = pGrid->areaWidth - pGrid->rightGridPosn;
+	posXstart  = pGrid->leftGridPosn;
+	posXcenter = pGrid->leftGridPosn + pGrid->gridWidth / 2.0;
+	posXperDiv = pGrid->leftGridPosn + pGrid->gridWidth * 3.50 / 10;
+	posXspan   = pGrid->leftGridPosn + pGrid->gridWidth * 7.75 / 10;
+	posY = pGrid->bottomGridPosn - 1.4 * pGrid->fontSize;
 
 	if( pGrid->overlay.bAny && !pGrid->bSourceCoupled && channel == eCH_TWO) {
 		posY -= pGrid->lineSpacing;
@@ -779,13 +779,13 @@ showTitleAndTime( cairo_t *cr, tGridParameters *pGrid, gchar *sTitle, gchar *sTi
 		cairo_select_font_face(cr, LABEL_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
 		setCairoFontSize(cr, pGrid->fontSize * 1.3); // initially 10 pixels
 
-		cairo_move_to(cr, pGrid->leftMargin, pGrid->areaHeight-(pGrid->lineSpacing * 1.3) );
+		cairo_move_to(cr, pGrid->leftGridPosn, pGrid->areaHeight-(pGrid->lineSpacing * 1.3) );
 		cairo_show_text (cr, sTitle);
 
 		cairo_select_font_face(cr, LABEL_FONT, CAIRO_FONT_SLANT_ITALIC, CAIRO_FONT_WEIGHT_NORMAL);
 		setCairoFontSize(cr, pGrid->fontSize * 0.8); // initially 10 pixels
 		rightJustifiedCairoText( cr,
-				sTime, pGrid->areaWidth - pGrid->rightMargin,
+				sTime, pGrid->areaWidth - pGrid->rightGridPosn,
 				pGrid->areaHeight-(pGrid->lineSpacing * 1.0) );
 
 	} cairo_restore( cr );
@@ -836,17 +836,24 @@ calculateSegmentLinearlyInterpolatedResponse( gint nStart, gint nEnd, tChannel *
  *
  * \param areaWidth	 width (in points) of the cairo drawing area
  * \param areaHeight height (in points) of the cairo drawing area
+ * \param margin     margin (in points )
  * \param cr		 pointer to cairo structure
  * \param pGlobal	 pointer to the global data structure
  * \return			 FALSE
  */
-gboolean plotA (guint areaWidth, guint areaHeight, cairo_t *cr, tGlobal *pGlobal)
+gboolean plotA (guint areaWidth, guint areaHeight, gdouble margin, cairo_t *cr, tGlobal *pGlobal)
 {
     // If we have dual display and it is not split, we show both traces on this DrawingArea
     gboolean bOverlay = !(pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid) &&
     		( pGlobal->HP8753.flags.bDualChannel && !pGlobal->HP8753.flags.bSplitChannels );
 
-    tGridParameters grid = {.areaWidth = areaWidth, .areaHeight = areaHeight, 0};
+    cairo_translate( cr, margin, margin );
+
+    // adjust area to accomodate margin
+    areaWidth  -= 2 * margin;
+    areaHeight -= 2 * margin;
+
+    tGridParameters grid = {.areaWidth = areaWidth, .areaHeight = areaHeight, .margin = margin, 0};
 
 #if 0
     pGlobal->HP8753.channels[ 0 ].format = HP8753C_FMT_SMITH;
@@ -970,7 +977,7 @@ gboolean CB_DrawingArea_A_Draw (GtkWidget *widget, cairo_t *cr, tGlobal *pGlobal
 		cairo_paint( cr );
     }
 
-    return plotA ( areaWidth,  areaHeight, cr, pGlobal);
+    return plotA ( areaWidth,  areaHeight, 0, cr, pGlobal);
 }
 
 /*!     \brief  Plot the second channel
@@ -980,13 +987,20 @@ gboolean CB_DrawingArea_A_Draw (GtkWidget *widget, cairo_t *cr, tGlobal *pGlobal
  *
  * \param areaWidth	 width (in points) of the cairo drawing area
  * \param areaHeight height (in points) of the cairo drawing area
+ * \param margin     margin (used for PDF and print)
  * \param cr		 pointer to cairo structure
  * \param pGlobal	 pointer to the global data structure
  * \return			 FALSE
  */
-gboolean plotB (guint areaWidth, guint areaHeight, cairo_t *cr, tGlobal *pGlobal)
+gboolean plotB (guint areaWidth, guint areaHeight, gdouble margin, cairo_t *cr, tGlobal *pGlobal)
 {
-	tGridParameters grid = {.areaWidth = areaWidth, .areaHeight = areaHeight, 0};
+    cairo_translate( cr, margin, margin );
+
+    // adjust area to accomodate margin
+    areaWidth  -= 2 * margin;
+    areaHeight -= 2 * margin;
+
+    tGridParameters grid = {.areaWidth = areaWidth, .areaHeight = areaHeight, .margin = margin, 0};
 
 	if( !pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bValidData )
 		return FALSE;
@@ -1040,7 +1054,7 @@ CB_DrawingArea_B_Draw (GtkWidget *widget, cairo_t *cr, tGlobal *pGlobal)
 	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0 );
 	cairo_paint( cr );
 
-    return plotB ( areaWidth,  areaHeight, cr, pGlobal);
+    return plotB ( areaWidth,  areaHeight, 0.0, cr, pGlobal);
 }
 
 /*!     \brief  Act on mouse movement, enty or exit into the drawing area
