@@ -150,11 +150,10 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 			gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorGrid   ] );
 			cairo_set_line_width (cr, pGrid->areaWidth / 1000.0 * 0.5);
 			cairo_stroke (cr);
-
-			showStimulusInformation (cr, pGrid, channel, pGlobal);
-
 		}
-		if( pGrid->overlay.bAny && channel == eCH_TWO )
+		if( channel == eCH_ONE )
+		    showStimulusInformation (cr, pGrid, channel, pGlobal);
+		else if( pGrid->overlay.bAny && channel == eCH_TWO )
 			showStimulusInformation (cr, pGrid, channel, pGlobal);
 
 		setTraceColor( cr, pGrid->overlay.bAny, channel );
