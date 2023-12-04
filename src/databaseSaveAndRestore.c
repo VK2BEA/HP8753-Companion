@@ -1218,7 +1218,14 @@ saveProgramOptions(tGlobal *pGlobal) {
 
 	sqlite3_stmt *stmt = NULL;
 	gchar *zErrMsg = 0;
-	gushort options;
+	union uOptions {
+        struct stOptions {
+            guint16 flagsL;
+            guint8  flagsU;
+            guint8  PDFpaperSize;
+        } components;
+        guint all;
+	} options;
 	GBytes *byPage = NULL;
 	GBytes *byPrintSettings = NULL;
 	gint queryIndex;
@@ -1237,8 +1244,9 @@ saveProgramOptions(tGlobal *pGlobal) {
 	if (sqlite3_bind_int(stmt, ++queryIndex, CURRENT_DB_SCHEMA) != SQLITE_OK)		// always 0 for now
 		goto err;
 
-	memcpy( &options, &pGlobal->flags, sizeof( gushort ));
-	if (sqlite3_bind_int(stmt, ++queryIndex, options) != SQLITE_OK)
+	memcpy( &options.components.flagsL, &pGlobal->flags, sizeof( guint32 ));
+	options.components.PDFpaperSize = (guchar)pGlobal->PDFpaperSize;    // top 8 bits of a 64 bit word
+	if (sqlite3_bind_int(stmt, ++queryIndex, options.all) != SQLITE_OK)
 		goto err;
 	// No longer using sGPIBcontrollerName
 	++queryIndex;
@@ -1439,8 +1447,15 @@ recoverProgramOptions(tGlobal *pGlobal) {
 	const guchar *tBlob;
 	gint queryIndex;
 	gint schemaVersion = 0;
-	gushort options;
 	gboolean bOptionsRecovered  = FALSE;
+    union uOptions {
+        struct stOptions {
+            guint16 flagsL;
+            guint8  flagsU;
+            guint8  PDFpaperSize;
+        } components;
+        guint all;
+    } options;
 
 	// First update database schema if needed
 	// Find out the current schema ID
@@ -1558,10 +1573,15 @@ recoverProgramOptions(tGlobal *pGlobal) {
 			queryIndex = 0;
 			// check the database version and update if necessary
 
-			options = sqlite3_column_int(stmt, queryIndex++);
+			options.all = sqlite3_column_int(stmt, queryIndex++);
 			// don't overwrite this bit if it has been set with the command line switch
 			gint bNoGPIBtimeout = pGlobal->flags.bNoGPIBtimeout;
-			memcpy(&pGlobal->flags, &options, sizeof(gushort));
+			memcpy(&pGlobal->flags, &options.components.flagsL, sizeof(gushort));
+			// The top byte is the PDF paper size
+			pGlobal->PDFpaperSize = options.components.PDFpaperSize;
+			GtkComboBox     *wComboPDFpaperSize = GTK_COMBO_BOX ( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_CB_PDFpaperSize" ) );
+			gtk_combo_box_set_active( wComboPDFpaperSize, pGlobal->PDFpaperSize );
+
 			pGlobal->flags.bRunning = TRUE;
 			pGlobal->flags.bNoGPIBtimeout = bNoGPIBtimeout;
 
