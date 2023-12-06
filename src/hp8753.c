@@ -69,7 +69,7 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
 #endif
             break;
       case GDK_KEY_F2:
-          ShowRenameMoveCopyDialog( pGlobal );
+          showRenameMoveCopyDialog( pGlobal );
           break;
       case GDK_KEY_F12:
     	  if( modifier == GDK_SHIFT_MASK ) {
@@ -293,9 +293,9 @@ on_activate (GApplication *app, gpointer udata)
 	GtkComboBoxText *wComboBoxProject = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_Project") );
 	GtkComboBoxText *wComboBoxCalKit = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_CalKit") );
 
-	PopulateProjectComboBoxWidget( pGlobal );
-	PopulateCalComboBoxWidget( pGlobal );
-	PopulateTraceComboBoxWidget( pGlobal );
+	populateProjectComboBoxWidget( pGlobal );
+	populateCalComboBoxWidget( pGlobal );
+	populateTraceComboBoxWidget( pGlobal );
 
 	// Set the color buttons on the color note page
 	// according to the element displayed in the combo boxes

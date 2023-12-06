@@ -126,7 +126,7 @@ sensitiseControlsInUse( tGlobal *pGlobal, gboolean bSensitive ) {
  * \return		  number of setups in this project
  */
 int
-PopulateCalComboBoxWidget( tGlobal *pGlobal ) {
+populateCalComboBoxWidget( tGlobal *pGlobal ) {
 	GtkComboBoxText *wComboBoxCalibration = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_CalibrationProfile") );
 	GtkNotebook *wNotebook = GTK_NOTEBOOK( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_Note") );
 	void CB_ComboBoxCalibrationProfileName (GtkComboBoxText *, tGlobal *);
@@ -182,7 +182,7 @@ PopulateCalComboBoxWidget( tGlobal *pGlobal ) {
  * \return		  number of traces in this project
  */
 int
-PopulateTraceComboBoxWidget( tGlobal *pGlobal ) {
+populateTraceComboBoxWidget( tGlobal *pGlobal ) {
 	GtkComboBoxText *wComboBoxTrace = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_TraceProfile") );
 	GtkNotebook *wNotebook = GTK_NOTEBOOK( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_Note") );
 	void CB_ComboBoxTraceProfileName (GtkComboBoxText *, tGlobal *);
@@ -235,7 +235,7 @@ PopulateTraceComboBoxWidget( tGlobal *pGlobal ) {
  * \return		  number of projects
  */
 int
-PopulateProjectComboBoxWidget( tGlobal * pGlobal ) {
+populateProjectComboBoxWidget( tGlobal * pGlobal ) {
     GList *l;
     gint nProjects = 0, nPos=0;
 	GtkComboBoxText *wComboBoxProject
@@ -342,7 +342,10 @@ CB_BtnRecall (GtkButton * button, tGlobal *pGlobal)
 				else
                     gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(wRadioHIRESplot), TRUE );
 
-				gtk_widget_set_sensitive (GTK_WIDGET( wBoxPlotType ), pGlobal->HP8753.plotHPGL != NULL );
+				if( pGlobal->HP8753.plotHPGL == NULL )
+				    gtk_widget_hide (GTK_WIDGET( wBoxPlotType ));
+				else
+				    gtk_widget_show (GTK_WIDGET( wBoxPlotType ));
 
 				// Restore the color of the title entry window
 		        gtk_style_context_remove_provider ( gtk_widget_get_style_context ( GTK_WIDGET( wEntryTitle )),
@@ -464,7 +467,7 @@ CB_BtnSave (GtkButton *wButton, tGlobal *pGlobal)
 					    // This is also a new project
 						pGlobal->pProjectList = g_list_prepend( pGlobal->pProjectList, g_strdup( pGlobal->sProject ) );
 						pGlobal->pProjectList = g_list_sort (pGlobal->pProjectList, (GCompareFunc)g_strcmp0);
-						PopulateProjectComboBoxWidget( pGlobal );
+						populateProjectComboBoxWidget( pGlobal );
 					}
 				}
 				pGlobal->pTraceAbstract = g_list_find_custom( pGlobal->pTraceList, &projectAndName, (GCompareFunc)compareTraceItemsForFind )->data;
@@ -537,7 +540,7 @@ CB_BtnRemove (GtkButton * button, tGlobal *pGlobal)
 			if( pGlobal->flags.bCalibrationOrTrace ) {
 			    pGlobal->pCalibrationAbstract = NULL;
 
-				PopulateCalComboBoxWidget( pGlobal );
+				populateCalComboBoxWidget( pGlobal );
                 // We've deleted the calibration profile from this project
 				// so we are not looking at, so just select the first cal item
                 gtk_combo_box_set_active( GTK_COMBO_BOX(wCombo), 0);
@@ -547,7 +550,7 @@ CB_BtnRemove (GtkButton * button, tGlobal *pGlobal)
 			} else {
                 pGlobal->pTraceAbstract = NULL;
 
-                PopulateTraceComboBoxWidget( pGlobal );
+                populateTraceComboBoxWidget( pGlobal );
                 // We've deleted the calibration profile from this project
                 // so we are not looking at, so just select the first cal item
                 gtk_combo_box_set_active( GTK_COMBO_BOX(wCombo), 0);
@@ -805,8 +808,8 @@ CB_EditableProjectName( GtkEditable *wEditable, tGlobal *pGlobal ) {
 		pGlobal->sProject = (gchar *)0;
 		g_free( pProjectName );
 	}
-	PopulateCalComboBoxWidget( pGlobal );
-	PopulateTraceComboBoxWidget( pGlobal );
+	populateCalComboBoxWidget( pGlobal );
+	populateTraceComboBoxWidget( pGlobal );
 }
 
 void

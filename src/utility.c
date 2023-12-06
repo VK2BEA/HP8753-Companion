@@ -178,7 +178,7 @@ bezierInterpolate(
 // for non-integer position
 //
 gint
-splineInterpolate( gint npoints, tComplex curve[], double samplePoint, tComplex *result ) {
+splineInterpolate( gint npoints, tComplex curve[], gdouble samplePoint, tComplex *result ) {
 
 	tLine g, l;
 	tComplex c1, c2;

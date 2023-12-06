@@ -513,7 +513,8 @@ gint
 saveTraceData(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 
 	sqlite3_stmt *stmt = NULL;
-	guint perChannelFlags, generalFlags;
+	guint32 perChannelFlags=0;
+	guint16 generalFlags=0;
 	gint queryIndex;
 
 		// Source information
@@ -652,8 +653,8 @@ saveTraceData(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 		// notes
 		if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->HP8753.sNote, STRLENGTH, SQLITE_STATIC) != SQLITE_OK)
 			goto err;
-		memcpy(&perChannelFlags, &pGlobal->HP8753.channels[channel].chFlags, sizeof(gushort));
-		memcpy(&generalFlags, &pGlobal->HP8753.flags, sizeof(gushort));
+		memcpy(&perChannelFlags, &pGlobal->HP8753.channels[channel].chFlags, sizeof(guint32));
+		memcpy(&generalFlags, &pGlobal->HP8753.flags, sizeof(guint16));
 		// perChannelFlags
 		if (sqlite3_bind_int(stmt, ++queryIndex, perChannelFlags) != SQLITE_OK)
 			goto err;
@@ -698,7 +699,8 @@ recoverTraceData(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 
 	gint traceRetrieved = FALSE;
 	gint queryIndex;
-	gushort perChannelFlags, generalFlags;
+	guint32 perChannelFlags;
+	guint16 generalFlags;
 
 	if (sqlite3_prepare_v2(db,
 			"SELECT "
@@ -815,11 +817,11 @@ recoverTraceData(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 		}
 
 		perChannelFlags = sqlite3_column_int(stmt, queryIndex++);
-		memcpy(&pGlobal->HP8753.channels[channel].chFlags, &perChannelFlags, sizeof(gushort));
+		memcpy(&pGlobal->HP8753.channels[channel].chFlags, &perChannelFlags, sizeof(guint32));
 
 		if( channel == eCH_ONE ) {
 			generalFlags = sqlite3_column_int(stmt, queryIndex++);
-			memcpy(&pGlobal->HP8753.flags, &generalFlags, sizeof(gushort));
+			memcpy(&pGlobal->HP8753.flags, &generalFlags, sizeof(guint16));
 			pGlobal->HP8753.dateTime = g_strdup( (gchar *)sqlite3_column_text(stmt, queryIndex++) );
 		} else {
 			queryIndex +=2;
@@ -1223,7 +1225,7 @@ saveProgramOptions(tGlobal *pGlobal) {
             guint16 flagsL;
             guint8  flagsU;
             guint8  PDFpaperSize;
-        } components;
+        }  __attribute__((packed)) components;
         guint all;
 	} options;
 	GBytes *byPage = NULL;
@@ -1453,7 +1455,7 @@ recoverProgramOptions(tGlobal *pGlobal) {
             guint16 flagsL;
             guint8  flagsU;
             guint8  PDFpaperSize;
-        } components;
+        }  __attribute__((packed)) components;
         guint all;
     } options;
 
@@ -1871,7 +1873,7 @@ recoverCalibrationKit(tGlobal *pGlobal, gchar *sLabel) {
  * \return             completion status
  */
 gint
-RenameMoveCopyDBitems(tGlobal *pGlobal, tRMCtarget target, tRMCpurpose purpose,
+renameMoveCopyDBitems(tGlobal *pGlobal, tRMCtarget target, tRMCpurpose purpose,
         gchar *sWhat, gchar *sFrom, gchar *sTo) {
     gint rtn = ERROR;
     gchar *sSQL = 0;

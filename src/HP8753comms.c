@@ -738,6 +738,13 @@ getHP8753channelTrace(gint descGPIB_HP8753, tGlobal *pGlobal, eChannel channel, 
 	return (GPIBfailed(*pGPIBstatus));
 }
 
+
+const HP8753C_option optPlotQuadrant[] = {
+        { "LEFL?;", "Lower Left" },
+        { "LEFU?;", "Upper Left" },
+        { "RIGL?;", "Lower Right" },
+        { "RIGU?;", "Upper Right" }};
+
 /*!     \brief  Get  the configuration and trace data for a channel
  *
  * Get the configuration and trace data for the channel
@@ -752,10 +759,20 @@ gint
 acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 	gchar sHPGL[ MAX_HPGL_PLOT_CHUNK + 1 ];
 	gint nTokens = 0;
+	gboolean bFullPagePlot = TRUE;
+	gint plotQuadrant = 0;
 
 	pGlobal->HP8753.flags.bHPGLdataValid = FALSE;
 
-	GPIBasyncWrite(descGPIB_HP8753, "PTEXT ON;OUTPPLOT;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
+	// See if 8753 is set to ploat the full page..
+	// If it isn't find out what quadrant its set to, set it to full page and
+	// reset it after plot acquired
+	bFullPagePlot = askOption( descGPIB_HP8753, "FULP?;", pGPIBstatus );
+
+	if( !bFullPagePlot ) {
+	    plotQuadrant = findHP8753option( descGPIB_HP8753, optPlotQuadrant, sizeof(optPlotQuadrant) / sizeof(HP8753C_option), pGPIBstatus);
+	}
+	GPIBasyncWrite(descGPIB_HP8753, "SCAPFULL;FULP;PTEXT ON;OUTPPLOT;", pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
 	// read HPGL header (;;;;DF;IM;)(IP250,279,10250,7479;)(SC0 ,4095 ,0 ,4212 ;)(;PU;)
 	// This is always the same .. so we don't need to process it
 
@@ -802,6 +819,14 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 		// make sure we do not attempt to show the HPGL plot
 		pGlobal->HP8753.flags.bHPGLdataValid = FALSE;
 	}
+
+	// Restore plot quadrant .. if it was previously set
+	if( !bFullPagePlot && plotQuadrant < sizeof(optPlotQuadrant) / sizeof(HP8753C_option) ) {
+		gchar *plotQuadrantCmd = g_strdup_printf( "%.4s;", optPlotQuadrant[ plotQuadrant ].code );
+	    GPIBasyncWrite(descGPIB_HP8753, plotQuadrantCmd, pGPIBstatus, 5 * TIMEOUT_READ_1SEC);
+	    g_free( plotQuadrantCmd );
+	}
+
 	return ( GPIBfailed(*pGPIBstatus) );
 }
 

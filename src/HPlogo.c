@@ -20,16 +20,24 @@
 #include "GTKplot.h"
 #include <math.h>
 
+#define HP_LOGO_HEIGHT  501.0
+#define HP_LOGO_WIDTH  2557.0
 #define DECAL_WIDTH 270.0
 
 // HP logo converted from SVG to cairo
-void cairo_renderHewlettPackardLogo(cairo_t *cr) {
-#define HP_LOGO_HEIGHT	501.0
-#define HP_LOGO_WIDTH  2557.0
+void cairo_renderHewlettPackardLogo(cairo_t *cr, gdouble HPlogoWidth, gdouble HPlogoHeight) {
 	cairo_pattern_t *pattern;
+	gdouble x, y;
 	cairo_save( cr ); {
-		cairo_scale( cr, 112.0 / HP_LOGO_WIDTH, 112.0 / HP_LOGO_WIDTH );
-		cairo_translate( cr , 0.0, -HP_LOGO_HEIGHT);
+	    // draw log relative to the current point .. if defined
+	    // otherwise we assume 0.0, 0.0 .. usually translated prior to calling routine
+	    if ( cairo_has_current_point( cr ) ) {
+            cairo_get_current_point( cr, &x, &y );
+            cairo_translate( cr , x, y );
+	    }
+
+		cairo_scale( cr, 112.0 / HPlogoWidth, 112.0 / HPlogoWidth );
+		cairo_translate( cr , 0.0, -HPlogoHeight);
 
 		cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 		pattern = cairo_pattern_create_rgba(0,0.270588,0.552941,1);
@@ -437,7 +445,7 @@ drawHPlogo (cairo_t *cr, gchar *sProduct, gdouble centreX, gdouble lowerLeftY, g
 		cairo_scale( cr, 2.83 * scale, -2.83 * scale );
 		cairo_translate( cr , -DECAL_WIDTH/2.0, 0.0);
 
-        cairo_renderHewlettPackardLogo(cr);
+        cairo_renderHewlettPackardLogo(cr, HP_LOGO_WIDTH, HP_LOGO_HEIGHT);
 
         cairo_set_font_size( cr, 10.0 );
         rightJustifiedCairoText( cr, "300 kHz - 3 GHz", DECAL_WIDTH, -14.0);

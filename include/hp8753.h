@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.22-3"
+   #define VERSION "1.22-4"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -193,16 +193,17 @@ typedef struct {
 	tComplex *responsePoints;
 	gdouble  *stimulusPoints;
 	struct {
-		unsigned short bSweepHold     				: 1;
-		unsigned short bValidData					: 1;
-		unsigned short bMkrs						: MAX_MKRS;
-		unsigned short bMkrsDelta					: 1;
-		unsigned short bCenterSpan					: 1;
-		unsigned short bBandwidth					: 1;
-		unsigned short bAllSegments					: 1;
-		unsigned short bValidSegments				: 1;
-		unsigned short bAdmitanceSmith				: 1;
-		unsigned short bAveraging					: 1;
+		guint32 bSweepHold      : 1;
+		guint32 bValidData      : 1;
+		guint32 bMkrs           : MAX_MKRS;
+		guint32 bMkrsDelta      : 1;
+		guint32 bCenterSpan     : 1;
+		guint32 bBandwidth      : 1;
+		guint32 bAllSegments    : 1;
+		guint32 bValidSegments  : 1;
+		guint32 bAdmitanceSmith : 1;
+		guint32 bAveraging      : 1;
+		guint32 bbTBA           : 18;    // unused
 	} chFlags;
 
 	gdouble 	sweepStart;
@@ -262,22 +263,22 @@ enum { eNoInterplativeCalibration = 0, eInterplativeCalibration = 1, eInterplati
 typedef struct {
 	guint length;
 	struct {
-		unsigned short bDualChannel     		: 1;
-		unsigned short bSplitChannels   		: 1;
-		unsigned short bSourceCoupled			: 1;
-		unsigned short bMarkersCoupled			: 1;
-		unsigned short bLearnStringParsed       : 1;
-		unsigned short bLearnedStringIndexes	: 1;	// if locally obtained
-		unsigned short bHPGLdataValid			: 1;
-		unsigned short bShowHPGLplot            : 1;	// display HPGL plot instead of enhanced plots
+		guint16 bDualChannel     		: 1;
+		guint16 bSplitChannels   		: 1;
+		guint16 bSourceCoupled			: 1;
+		guint16 bMarkersCoupled			: 1;
+		guint16 bLearnStringParsed      : 1;
+		guint16 bLearnedStringIndexes	: 1;	// if locally obtained
+		guint16 bHPGLdataValid			: 1;
+		guint16 bShowHPGLplot           : 1;	// display HPGL plot instead of enhanced plots
 	} flags;
 
 	struct {
-		unsigned short bDualChannel     		: 1;
-		unsigned short bSplitChannels   		: 1;
-		unsigned short bSourceCoupled			: 1;
-		unsigned short bMarkersCoupled			: 1;
-		unsigned short bActiveChannel			: 1;
+	    guint16 bDualChannel     		: 1;
+	    guint16 bSplitChannels   		: 1;
+	    guint16 bSourceCoupled			: 1;
+	    guint16 bMarkersCoupled			: 1;
+	    guint16 bActiveChannel			: 1;
 	} calSettings;
 
 	tChannel channels[ eNUM_CH ];
@@ -308,8 +309,8 @@ typedef struct {
 typedef struct {
 
 	struct {
-		unsigned short bSourceCoupled			: 1;
-		unsigned short bActiveChannel			: 1;
+	    guint16 bSourceCoupled			: 1;
+	    guint16 bActiveChannel			: 1;
 	} settings;
 
 	struct {
@@ -322,10 +323,10 @@ typedef struct {
 		gdouble		CWfrequency;
 		gint		nPoints;
 		struct {
-			unsigned short bSweepHold					: 1;
-			unsigned short bbInterplativeCalibration	: 2;
-			unsigned short bValid						: 1;
-			unsigned short bAveraging					: 1;
+		    guint16 bSweepHold					: 1;
+		    guint16 bbInterplativeCalibration	: 2;
+		    guint16 bValid						: 1;
+		    guint16 bAveraging					: 1;
 		} settings;
 	} perChannelCal[ eNUM_CH ];
 
@@ -350,19 +351,19 @@ typedef struct {
 	tHP8753calibrationKit HP8753calibrationKit;
 
 	struct {
-		unsigned short bSmithSpline     		: 1;
-		unsigned short bGPIB_UseCardNoAndPID	: 1;
-		unsigned short bCalibrationOrTrace		: 1;
-		unsigned short bShowDateTime			: 1;
-		unsigned short bAdmitanceSmith			: 1;
-		unsigned short bDeltaMarkerZero			: 1;
-		unsigned short bSaveUserKit             : 1;
-		unsigned short bRunning         		: 1;
-		unsigned short bbDebug					: 3;
-		unsigned short bGPIBcommsActive			: 1;
-		unsigned short bProject                 : 1;
-		unsigned short bNoGPIBtimeout			: 1;
-		unsigned short bDoNotRetrieveHPGLdata   : 1;
+	    guint16 bSmithSpline     		: 1;
+	    guint16 bGPIB_UseCardNoAndPID	: 1;
+	    guint16 bCalibrationOrTrace		: 1;
+	    guint16 bShowDateTime			: 1;
+	    guint16 bAdmitanceSmith			: 1;
+	    guint16 bDeltaMarkerZero        : 1;
+	    guint16 bSaveUserKit            : 1;
+	    guint16 bRunning         		: 1;
+	    guint16 bbDebug					: 3;
+	    guint16 bGPIBcommsActive        : 1;
+	    guint16 bProject                : 1;
+	    guint16 bNoGPIBtimeout			: 1;
+	    guint16 bDoNotRetrieveHPGLdata  : 1;
 	} flags;
 
 	tRMCtarget RMCdialogTarget;
@@ -401,27 +402,27 @@ typedef struct {
 
 typedef union {
 	 struct {
-		double r;       // ∈ [0, 1]
-		double g;       // ∈ [0, 1]
-		double b;       // ∈ [0, 1]
+		gdouble r;       // ∈ [0, 1]
+		gdouble g;       // ∈ [0, 1]
+		gdouble b;       // ∈ [0, 1]
 	} RGB;
 	struct {
-	    double h;       // ∈ [0, 360]
-	    double s;       // ∈ [0, 1]
-	    double v;       // ∈ [0, 1]
+	    gdouble h;       // ∈ [0, 360]
+	    gdouble s;       // ∈ [0, 1]
+	    gdouble v;       // ∈ [0, 1]
 	} HSV;
 } tColor;
 
 
 typedef struct {
 	struct {
-		unsigned short     bAny   : 1;
-		unsigned short     bCartesian : 1;
-		unsigned short     bPolar : 1;
-		unsigned short     bPolarWithDiferentScaling : 1;
-		unsigned short     bSmith : 1;
-		unsigned short     bSmithWithDiferentScaling : 1;
-		unsigned short     bPolarSmith : 1;
+		guint16     bAny                        : 1;
+		guint16     bCartesian                  : 1;
+		guint16     bPolar                      : 1;
+		guint16     bPolarWithDiferentScaling   : 1;
+		guint16     bSmith                      : 1;
+		guint16     bSmithWithDiferentScaling   : 1;
+		guint16     bPolarSmith                 : 1;
 	} overlay;
 
 
@@ -477,55 +478,73 @@ extern GHashTable *widgetHashTable;
 #define NPAGE_GPIB			4
 #define NPAGE_CALKITS		5
 
-gpointer	threadGPIB (gpointer);
-
-int openOrCreateDB();
-void closeDB(void);
-
-gint recoverCalibrationAndSetup( tGlobal *, gchar *, gchar * );
-gint recoverTraceData( tGlobal *, gchar *, gchar * );
-gint saveCalibrationAndSetup( tGlobal *, gchar *, gchar * );
-gint saveLearnStringAnalysis( tGlobal *, tLearnStringIndexes * );
-gint saveTraceData( tGlobal *, gchar *, gchar * );
-gint inventorySavedSetupsAndCal(tGlobal *);
-void freeCalListItem( gpointer pCalItem );
-void freeTraceListItem( gpointer pTraceItem );
-
-gint compareCalItemsForFind( gpointer , gpointer );
-gint compareCalItemsForSort( gpointer , gpointer );
-gint compareTraceItemsForFind( gpointer , gpointer );
-gint compareTraceItemsForSort( gpointer , gpointer );
-
-guint inventorySavedTraceNames( tGlobal * );
-gint inventorySavedCalibrationKits( tGlobal * );
-gint inventoryProjects( tGlobal * );
-gint compareCalKitIdentifierItem( gpointer pCalKitIdentfierItem, gpointer sLabel );
-gint recoverCalibrationKit(tGlobal *pGlobal, gchar *sLabel);
-gint saveCalKit(tGlobal *pGlobal);
-guint deleteDBentry( tGlobal *, gchar *, gchar *, tDBtable );
-void hide_Frame_Plot_B (tGlobal *);
-
-void FORM1toDouble( guint8 *, gdouble *, gdouble * );
-void initializeFORM1exponentTable( void );
-void drawBezierSpline( cairo_t *ctx, const tComplex *pt, int cnt );
-gboolean plotA( guint, guint, gdouble, cairo_t *, tGlobal * );
-gboolean plotB( guint, guint, gdouble, cairo_t *, tGlobal * );
-gint smithHighResPDF( tGlobal *, gchar *, eChannel );
-void bezierControlPoints( const tLine *, const tLine *, tComplex *, tComplex * );
-gchar* doubleToStringWithSpaces( gdouble freq, gchar *sUnits );
-gchar* engNotation( gdouble, gint, tEngNotation, gchar ** );
-void drawMarkers( cairo_t *, tGlobal *, tGridParameters *, eChannel , gdouble, gdouble );
-void flipCairoText( cairo_t * );
-void rightJustifiedCairoText( cairo_t *, gchar *, gdouble, gdouble );
-void setCairoFontSize( cairo_t *, gdouble );
-void setCairoColor( cairo_t *, eColor );
-void drawHPlogo (cairo_t *, gchar *, gdouble , gdouble , gdouble );
-void clearHP8753traces( tHP8753 * );
-gint saveProgramOptions( tGlobal * );
-gint recoverProgramOptions( tGlobal * ) ;
-gboolean setGtkComboBox( GtkComboBox *, gchar * );
-void setUseGPIBcardNoAndPID( tGlobal *, gboolean );
-gint sendHP8753calibrationKit(gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );
+gboolean    addToComboBox( GtkComboBox *, gchar * );
+void        bezierControlPoints( const tLine *, const tLine *, tComplex *, tComplex * );
+void        CB_EditableCalibrationProfileName( GtkEditable *, tGlobal * );
+void        CB_EditableProjectName( GtkEditable *, tGlobal * );
+void        CB_EditableTraceProfileName( GtkEditable *, tGlobal * );
+void        CB_Radio_Calibration ( GtkRadioButton *, tGlobal * );
+void        clearHP8753traces ( tHP8753 * );
+tHP8753cal* cloneCalibrationProfile( tHP8753cal *, gchar * );
+tHP8753traceAbstract*   cloneTraceProfileAbstract( tHP8753traceAbstract *, gchar * );
+void        closeDB ( void );
+gint        compareCalItemsForFind ( gpointer , gpointer );
+gint        compareCalItemsForSort ( gpointer , gpointer );
+gint        compareCalKitIdentifierItem ( gpointer, gpointer );
+gint        compareTraceItemsForFind ( gpointer , gpointer );
+gint        compareTraceItemsForSort ( gpointer , gpointer );
+GList*      createIconList( void );
+guint       deleteDBentry ( tGlobal *, gchar *, gchar *, tDBtable );
+gchar*      doubleToStringWithSpaces( gdouble, gchar * );
+void        drawBezierSpline( cairo_t *, const tComplex *, gint );
+void        drawHPlogo (cairo_t *, gchar *, gdouble , gdouble , gdouble );
+void        drawMarkers( cairo_t *, tGlobal *, tGridParameters *, eChannel , gdouble, gdouble );
+gchar*      engNotation ( gdouble, gint, tEngNotation, gchar ** );
+void        flipCairoText( cairo_t * );
+gint        getTimeStamp( gchar ** );
+void        freeCalListItem ( gpointer );
+void        freeTraceListItem ( gpointer );
+void        hide_Frame_Plot_B ( tGlobal * );
+void        initializeFORM1exponentTable ( void );
+gint        inventoryProjects ( tGlobal * );
+gint        inventorySavedCalibrationKits ( tGlobal * );
+gint        inventorySavedSetupsAndCal ( tGlobal * );
+guint       inventorySavedTraceNames( tGlobal * );
+void        logVersion( void );
+gint        openOrCreateDB ( void ) ;
+gboolean    plotA( guint, guint, gdouble, cairo_t *, tGlobal * );
+gboolean    plotB( guint, guint, gdouble, cairo_t *, tGlobal * );
+gint        populateCalComboBoxWidget( tGlobal * );
+gint        populateProjectComboBoxWidget( tGlobal * );
+gint        populateTraceComboBoxWidget( tGlobal * );
+gint        recoverCalibrationAndSetup ( tGlobal *, gchar *, gchar * );
+gint        recoverCalibrationKit ( tGlobal *, gchar * );
+gint        recoverProgramOptions( tGlobal * );
+gint        recoverTraceData ( tGlobal *, gchar *, gchar * );
+gint        renameMoveCopyDBitems(tGlobal *, tRMCtarget, tRMCpurpose, gchar *, gchar *, gchar *);
+void        rightJustifiedCairoText( cairo_t *, gchar *, gdouble, gdouble );
+gint        saveCalibrationAndSetup ( tGlobal *, gchar *, gchar * );
+gint        saveCalKit ( tGlobal *pGlobal );
+gint        saveLearnStringAnalysis ( tGlobal *, tLearnStringIndexes * );
+gint        saveProgramOptions ( tGlobal * );
+tHP8753cal* selectCalibrationProfile( tGlobal *, gchar *, gchar * );
+gint        saveTraceData ( tGlobal *, gchar *, gchar * );
+tHP8753cal* selectFirstCalibrationProfileInProject( tGlobal * );
+tHP8753traceAbstract*   selectFirstTraceProfileInProject( tGlobal * );
+tHP8753traceAbstract*   selectTraceProfile( tGlobal *, gchar *, gchar * );
+gint        sendHP8753calibrationKit (gint, tGlobal *, gint * );
+void        sensitiseControlsInUse( tGlobal *, gboolean );
+void        setCairoColor( cairo_t *, eColor );
+void        setCairoFontSize( cairo_t *, gdouble );
+gboolean    setGtkComboBox( GtkComboBox *, gchar * );
+gint        setNotePageColorButton (tGlobal *, gboolean );
+void        setUseGPIBcardNoAndPID( tGlobal *, gboolean );
+void        showCalInfo( tHP8753cal *, tGlobal * );
+void        showRenameMoveCopyDialog( tGlobal * );
+gint        smithHighResPDF( tGlobal *, gchar *, eChannel );
+gint        splineInterpolate( gint, tComplex [], gdouble, tComplex * );
+gpointer    threadGPIB (gpointer);
+void        updateCalComboBox( gpointer , gpointer );
 
 extern tGlobal globalData;
 
@@ -550,31 +569,6 @@ extern tLearnStringIndexes learnStringIndexes[];
 #define SQU(x) ((x) * (x))
 #define fontSize( h, w ) (((h)<(w)*0.75 ? (h):(w)*0.75) / 50.0)
 #define LIN_INTERP( lower, upper, fract) ((upper) * (fract) + (lower) * (1.0 - (fract)))
-gint splineInterpolate( gint, tComplex [], double, tComplex * );
-void CB_Radio_Calibration ( GtkRadioButton *, tGlobal * );
-void showCalInfo( tHP8753cal *, tGlobal * );
-gboolean addToComboBox( GtkComboBox *, gchar * );
-void updateCalComboBox( gpointer , gpointer  );
-int PopulateCalComboBoxWidget( tGlobal * );
-int PopulateTraceComboBoxWidget( tGlobal * );
-int PopulateProjectComboBoxWidget( tGlobal * );
-void sensitiseControlsInUse( tGlobal *, gboolean  );
-void CB_EditableProjectName( GtkEditable *, tGlobal * );
-void CB_EditableCalibrationProfileName( GtkEditable *, tGlobal * );
-void CB_EditableTraceProfileName( GtkEditable *, tGlobal * );
-GList *createIconList( void );
-gint getTimeStamp( gchar ** );
-void logVersion(void);
-void ShowRenameMoveCopyDialog( tGlobal * );
-gint RenameMoveCopyDBitems(tGlobal *, tRMCtarget, tRMCpurpose, gchar *, gchar *, gchar *);
-tHP8753cal *selectFirstCalibrationProfileInProject( tGlobal * );
-tHP8753traceAbstract *selectFirstTraceProfileInProject( tGlobal * );
-tHP8753cal *selectCalibrationProfile( tGlobal *, gchar *, gchar * );
-tHP8753traceAbstract *selectTraceProfile( tGlobal *, gchar *, gchar * );
-tHP8753cal *cloneCalibrationProfile( tHP8753cal *, gchar * );
-tHP8753traceAbstract *cloneTraceProfileAbstract( tHP8753traceAbstract *, gchar * );
-
-gint setNotePageColorButton (tGlobal *, gboolean );
 
 #define DATETIME_SIZE  64
 

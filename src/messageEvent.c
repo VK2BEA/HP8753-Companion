@@ -81,7 +81,7 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 
 		case TM_SAVE_SETUPandCAL:
 			if( saveCalibrationAndSetup( pGlobal, pGlobal->sProject, (gchar *)message->data ) != ERROR ) {
-			    PopulateCalComboBoxWidget( pGlobal );
+			    populateCalComboBoxWidget( pGlobal );
 	            showCalInfo( &(pGlobal->HP8753cal), pGlobal );
 	            gtk_widget_set_sensitive(
 	                    GTK_WIDGET( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Btn_Recall")),
@@ -163,7 +163,10 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 
             GtkWidget *wBoxPlotType = g_hash_table_lookup(pGlobal->widgetHashTable,
                                     (gconstpointer )"WID_BoxPlotType");
-            gtk_widget_set_sensitive (GTK_WIDGET( wBoxPlotType ), pGlobal->HP8753.flags.bHPGLdataValid );
+            if( pGlobal->HP8753.plotHPGL == NULL )
+                gtk_widget_hide (GTK_WIDGET( wBoxPlotType ));
+            else
+                gtk_widget_show (GTK_WIDGET( wBoxPlotType ));
 
 			break;
 		default:

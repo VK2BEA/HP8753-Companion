@@ -132,7 +132,7 @@ keepProjectListUpdated( const gchar *possiblyNewProject, tGlobal *pGlobal ) {
         // This is a new project ... add it to the list
         pGlobal->pProjectList = g_list_prepend(pGlobal->pProjectList, g_strdup( possiblyNewProject ));
         pGlobal->pProjectList = g_list_sort (pGlobal->pProjectList, (GCompareFunc)g_strcmp0);
-        PopulateProjectComboBoxWidget( pGlobal );
+        populateProjectComboBoxWidget( pGlobal );
         return TRUE;
     }
     return FALSE;
@@ -172,7 +172,7 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
             sFrom = pGlobal->sProject;
             pGlobal->sProject = g_strdup( sTo );
             // rename the project in the database (cal and trace tables)
-            if( RenameMoveCopyDBitems(pGlobal, pGlobal->RMCdialogTarget, pGlobal->RMCdialogPurpose,
+            if( renameMoveCopyDBitems(pGlobal, pGlobal->RMCdialogTarget, pGlobal->RMCdialogPurpose,
                     NULL, sFrom, (gchar *)sTo ) == ERROR )
                 break;
             // change the project name in the list
@@ -203,7 +203,7 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
 
             // update the combobox widget
 
-            PopulateProjectComboBoxWidget( pGlobal );
+            populateProjectComboBoxWidget( pGlobal );
             // Block signals while we populate the entry widget programatically
             wComboBox = GTK_COMBO_BOX_TEXT(
                         g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_Project") );
@@ -221,7 +221,7 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
             case eRename:
                 sFrom = pGlobal->pCalibrationAbstract->projectAndName.sName;
                 // rename the project in the database (cal table)
-                if( RenameMoveCopyDBitems(pGlobal, pGlobal->RMCdialogTarget, pGlobal->RMCdialogPurpose,
+                if( renameMoveCopyDBitems(pGlobal, pGlobal->RMCdialogTarget, pGlobal->RMCdialogPurpose,
                         pGlobal->sProject, sFrom, (gchar *)sTo ) == ERROR )
                     break;
                     // Update the name in the list of calibration/setup profiles
@@ -240,7 +240,7 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
                         g_list_find_custom( pGlobal->pCalList, &projectAndName, (GCompareFunc)compareCalItemsForFind )->data;
 
                 // update the combobox widget
-                PopulateCalComboBoxWidget( pGlobal );
+                populateCalComboBoxWidget( pGlobal );
                 // Block signals while we populate the entry widget programatically
 
                 g_signal_handlers_block_by_func(G_OBJECT(wComboBox), CB_EditableCalibrationProfileName, pGlobal);
@@ -252,7 +252,7 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
                 sFrom = pGlobal->sProject;
                 keepProjectListUpdated( sProjectTo, pGlobal );
                 // move the calibration profile in the database (cal table)
-                if( RenameMoveCopyDBitems(pGlobal, pGlobal->RMCdialogTarget, pGlobal->RMCdialogPurpose,
+                if( renameMoveCopyDBitems(pGlobal, pGlobal->RMCdialogTarget, pGlobal->RMCdialogPurpose,
                         pGlobal->pCalibrationAbstract->projectAndName.sName, sFrom, sProjectTo ) == ERROR )
                     break;
                 g_free(pGlobal->pCalibrationAbstract->projectAndName.sProject);
@@ -264,14 +264,14 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
                 // that matches the project
                 pGlobal->pCalibrationAbstract=selectFirstCalibrationProfileInProject( pGlobal );
                 // populate the combobox and set the selected profile (0)
-                PopulateCalComboBoxWidget( pGlobal );
+                populateCalComboBoxWidget( pGlobal );
 
                 break;
             case eCopy:
                 sFrom = pGlobal->sProject;
                 keepProjectListUpdated( sProjectTo, pGlobal );
                 // copy the calibration profile in the database (cal table)
-                if( RenameMoveCopyDBitems(pGlobal, pGlobal->RMCdialogTarget, pGlobal->RMCdialogPurpose,
+                if( renameMoveCopyDBitems(pGlobal, pGlobal->RMCdialogTarget, pGlobal->RMCdialogPurpose,
                         pGlobal->pCalibrationAbstract->projectAndName.sName, sFrom, sProjectTo ) == ERROR )
                     break;
                 tHP8753cal *pCal = cloneCalibrationProfile( pGlobal->pCalibrationAbstract, sProjectTo );
@@ -288,7 +288,7 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
                 sFrom = pGlobal->pTraceAbstract->projectAndName.sName;
 
                 // rename the trace profile in the database (trace tables)
-                if( RenameMoveCopyDBitems(pGlobal, pGlobal->RMCdialogTarget, pGlobal->RMCdialogPurpose,
+                if( renameMoveCopyDBitems(pGlobal, pGlobal->RMCdialogTarget, pGlobal->RMCdialogPurpose,
                         pGlobal->sProject, sFrom, (gchar *)sTo ) == ERROR )
                     break;
 
@@ -308,7 +308,7 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
                 pGlobal->pTraceAbstract =
                         g_list_find_custom( pGlobal->pTraceList, &projectAndName, (GCompareFunc)compareCalItemsForFind )->data;
                 // Update the widget
-                PopulateTraceComboBoxWidget( pGlobal );
+                populateTraceComboBoxWidget( pGlobal );
 
                 // Block signals while we populate the entry widget programatically
                 g_signal_handlers_block_by_func(G_OBJECT(wComboBox), CB_EditableTraceProfileName, pGlobal);
@@ -321,7 +321,7 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
                 // see if this is a new project
                 keepProjectListUpdated( sProjectTo, pGlobal );
                 // move the calibration profile in the database (cal table)
-                if( RenameMoveCopyDBitems(pGlobal, pGlobal->RMCdialogTarget, pGlobal->RMCdialogPurpose,
+                if( renameMoveCopyDBitems(pGlobal, pGlobal->RMCdialogTarget, pGlobal->RMCdialogPurpose,
                         pGlobal->pTraceAbstract->projectAndName.sName, sFrom, sProjectTo ) == ERROR )
                     break;
 
@@ -334,7 +334,7 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
                 // that matches the project
                 pGlobal->pTraceAbstract=selectFirstTraceProfileInProject( pGlobal );
                 // populate the combobox and set the selected profile (0)
-                PopulateTraceComboBoxWidget( pGlobal );
+                populateTraceComboBoxWidget( pGlobal );
 
                 break;
             case eCopy:
@@ -342,7 +342,7 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
                 // see if this is a new project
                 keepProjectListUpdated( sProjectTo, pGlobal );
                 // copy the calibration profile in the database (cal table)
-                if( RenameMoveCopyDBitems(pGlobal, pGlobal->RMCdialogTarget, pGlobal->RMCdialogPurpose,
+                if( renameMoveCopyDBitems(pGlobal, pGlobal->RMCdialogTarget, pGlobal->RMCdialogPurpose,
                         pGlobal->pTraceAbstract->projectAndName.sName, sFrom, sProjectTo ) == ERROR )
                     break;
 
@@ -531,7 +531,7 @@ CB_DR_RadioTarget(GtkToggleButton *targetButton, tGlobal *pGlobal) {
  * \param pGlobal       pointer to global data
  */
 void
-ShowRenameMoveCopyDialog( tGlobal *pGlobal ) {
+showRenameMoveCopyDialog( tGlobal *pGlobal ) {
     int i, currentProjectIndex=-1;
     GList *l;
 
