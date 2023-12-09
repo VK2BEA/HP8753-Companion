@@ -16,7 +16,7 @@ This is a program to augment functionality of the HP 8753 Vector Nework Analyzer
 
 Please see the YouTube description here:  
 [![HP8753 Companion video](https://github.com/VK2BEA/HP8753-Companion/assets/3782222/f3309627-889d-4e28-8884-ea4f6471a7ff)](https://www.youtube.com/watch?v=ORWQE22tbRo)
-![HP8753 HPGL K+L](https://github.com/VK2BEA/HP8753-Companion/assets/3782222/14e20995-aede-409e-8829-9d42484e72bd)
+[![HP8753 HPGL K+L](https://github.com/VK2BEA/HP8753-Companion/assets/3782222/14e20995-aede-409e-8829-9d42484e72bd)](https://www.youtube.com/watch?v=ORWQE22tbRo)
 
 To install on the Linux Fedora distribution:
 -------------------------------------------
