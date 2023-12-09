@@ -92,10 +92,12 @@ CB_BtnS2P (GtkButton *wButton, tGlobal *pGlobal)
 		lastFilename = g_strdup(sFilename->str);
 
 		sensitiseControlsInUse( pGlobal, FALSE );
-		postDataToGPIBThread (TG_MEASURE_and_RETRIEVe_S2P_from_HP8753, sFilename->str);
-
+#if G_GNUC_CHECK_VERSION(2, 76)
+		postDataToGPIBThread (TG_MEASURE_and_RETRIEVe_S2P_from_HP8753, g_string_free_and_steal (sFilename));
+#else
+		postDataToGPIBThread (TG_MEASURE_and_RETRIEVe_S2P_from_HP8753, g_string_free (sFilename, FALSE));
+#endif
 		// sFilename->str is freed by thread
-		gpointer ignored __attribute__((unused)) = g_string_free_and_steal (sFilename);
 	}
 
 	g_free( sFilename );

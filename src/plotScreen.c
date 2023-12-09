@@ -56,7 +56,7 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 	static tCoord posn = {0};
 	static gfloat charSizeX = 0.0, charSizeY = 0.0;
 	static gint colour = 0, lineType = 0;
-
+	guchar *secondHPGLcmd = NULL;
 	// If a line is started .. we add to it
 	static tCoord *currentLine = 0;
 	static gint	nPointsInLine = 0;
@@ -77,6 +77,8 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 	};
 	// number of bytes used in the malloced memory
 	guint HPGLserialCount;
+	int nArgs;
+	int strLength;
 
 	// Initialize the serialized & compiled HPGL plot
 	if( sHPGL == NULL ) {
@@ -109,10 +111,10 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 		// to use in such a case to hold the second command
 		// e.g.: PA3084 ,2414 SR 1.472 , 2.279 ;
 		//       PA3444 ,736 SP1;
-		guchar *secondHPGLcmd = g_malloc0( strlen( sHPGL ) );
+		secondHPGLcmd = g_malloc0( strlen( sHPGL ) );
 		// so this will work to capture all of the trailing string.
 		// Normally %s will stop at a whitespace in sscanf so we use "not 0200" (everything)
-		int nArgs = sscanf(sHPGL+2, "%hd , %hd %[^\0200]", &posn.x, &posn.y, secondHPGLcmd);
+		nArgs = sscanf(sHPGL+2, "%hd , %hd %[^\0200]", &posn.x, &posn.y, secondHPGLcmd);
 
 		if( bPenDown ) {
 			// make sure we have enough space .. quantized by 100 points
@@ -131,7 +133,7 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 		bNewPosition = TRUE;
 		break;
 	case HPGL_LABEL:
-		int strLength = strlen( sHPGL+2 );
+		strLength = strlen( sHPGL+2 );
 		if( strLength == 0 )
 			break;	// don't bother adding null labels ("LB;")
 
@@ -288,6 +290,8 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 		static gfloat charSizeX = 1.0, charSizeY = 1.0;
 		guint length = *((guint *)pGlobal->HP8753.plotHPGL);
 		gint HPGLpen = 0;
+		gint ptsInLine;
+		cairo_matrix_t matrix;
 		__attribute__((unused)) gint HPGLlineType = 0;
 
 		double scaleX, scaleY;
@@ -326,7 +330,7 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 				switch ( cmd ) {
 				case CHPGL_LINE:
 					// the points in the line are preceded by the point count
-					gint ptsInLine = *((guint16 *)(pGlobal->HP8753.plotHPGL+HPGLserialCount));
+					ptsInLine = *((guint16 *)(pGlobal->HP8753.plotHPGL+HPGLserialCount));
 					HPGLserialCount += sizeof( guint16 );
 					pPoint = (tCoord *)(pGlobal->HP8753.plotHPGL+HPGLserialCount);
 					cairo_new_path( cr );
@@ -394,7 +398,7 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 
 					break;
 				case CHPGL_TEXT_SIZE:
-					cairo_matrix_t matrix = {0};
+				    cairo_matrix_init_identity( &matrix );
 					charSizeX = *(gfloat *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);
 					HPGLserialCount += sizeof( gfloat );
 					charSizeY = *(gfloat *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);

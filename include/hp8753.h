@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.22-4"
+   #define VERSION "1.22-5"
 #endif
 
 #include <glib-2.0/glib.h>
