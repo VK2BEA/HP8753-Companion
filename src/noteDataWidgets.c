@@ -92,7 +92,7 @@ CB_BtnS2P (GtkButton *wButton, tGlobal *pGlobal)
 		lastFilename = g_strdup(sFilename->str);
 
 		sensitiseControlsInUse( pGlobal, FALSE );
-#if G_GNUC_CHECK_VERSION(2, 76)
+#if GLIB_CHECK_VERSION(2,76,0)
 		postDataToGPIBThread (TG_MEASURE_and_RETRIEVe_S2P_from_HP8753, g_string_free_and_steal (sFilename));
 #else
 		postDataToGPIBThread (TG_MEASURE_and_RETRIEVe_S2P_from_HP8753, g_string_free (sFilename, FALSE));

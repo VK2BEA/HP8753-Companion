@@ -27,7 +27,7 @@ To install on the Linux Fedora distribution:
 To build & install using Linux autotools, install the following required packages & tools:
 ----------------------------------------------------------------------
 * `automake`, `autoconf` and `libtool`  
-* To build on Raspberri Pi / Debian: 	`libgs-dev libglib2.0-dev libgtk-3-dev libsqlite3-dev`  
+* To build on Raspberri Pi / Debian: 	`libgs-dev libglib2.0-dev libgtk-3-dev libsqlite3-dev yelp-tools`  
 * To run on Raspberry Pi / Debian :	`libglib-2, libgtk-3, libgs, libsqlite3, libgpib, fonts-noto-color-emoji`
 
 Install the GPIB driver: 

@@ -55,6 +55,12 @@ m4_include([config_m4/profiling.m4])
 # Checking libs
 m4_include([config_m4/versioning.m4])
 
+# yelp-tools
+AC_CHECK_PROG(YELP_CHECK,yelp-tools,yes)
+if test x"$YELP_CHECK" != x"yes" ; then
+   AC_MSG_ERROR([Please install yelp-tools before installing.])
+fi
+
 # ghostscript
 AC_CHECK_PROG(GS_CHECK,gs,yes)
 if test x"$GS_CHECK" != x"yes" ; then
