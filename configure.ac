@@ -56,7 +56,7 @@ m4_include([config_m4/profiling.m4])
 m4_include([config_m4/versioning.m4])
 
 # yelp-tools
-AC_CHECK_PROG(YELP_CHECK,yelp-tools,yes)
+AC_CHECK_PROG(YELP_CHECK,yelp-build,yes)
 if test x"$YELP_CHECK" != x"yes" ; then
    AC_MSG_ERROR([Please install yelp-tools before installing.])
 fi
