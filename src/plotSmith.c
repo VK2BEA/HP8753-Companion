@@ -345,6 +345,10 @@ showSmithCursorInfo(
 	gchar *label;
 	gchar sValue[ BUFFER_SIZE_100 ], *sPrefix="", *sUnit;
 
+	gdouble CWfrequency = pGlobal->HP8753.channels[ channel ].CWfrequency;
+	gboolean bUseCWfrequncy = pGlobal->HP8753.channels[ channel ].sweepType == eSWP_CWTIME
+	        || pGlobal->HP8753.channels[ channel ].sweepType == eSWP_PWR;
+
 	gammaMag = sqrt( SQU( gammaReal ) + SQU( gammaImag ) );
 	returnLoss = -20.0 * log10( gammaMag );
 	VSWR = (1+gammaMag)/(1-gammaMag);
@@ -378,15 +382,15 @@ showSmithCursorInfo(
 
 	if( x < 0 ) {
 		if( !pGlobal->flags.bAdmitanceSmith )
-			CapacitanceOrInductance = 1.0 / ((-x * Z0) * 2.0 * G_PI * frequency);
+			CapacitanceOrInductance = 1.0 / ((-x * Z0) * 2.0 * G_PI * (bUseCWfrequncy ? CWfrequency : frequency));
 		else
-			CapacitanceOrInductance = (b / Z0) / (2.0 * G_PI * frequency);
+			CapacitanceOrInductance = (b / Z0) / (2.0 * G_PI * (bUseCWfrequncy ? CWfrequency : frequency));
 		sUnit = "F";
 	} else {
 		if( !pGlobal->flags.bAdmitanceSmith )
-			CapacitanceOrInductance = (x * Z0) / (2.0 * G_PI * frequency);
+			CapacitanceOrInductance = (x * Z0) / (2.0 * G_PI * (bUseCWfrequncy ? CWfrequency : frequency));
 		else
-			CapacitanceOrInductance = 1.0 / ((-b / Z0) * (2.0 * G_PI * frequency));
+			CapacitanceOrInductance = 1.0 / ((-b / Z0) * (2.0 * G_PI * (bUseCWfrequncy ? CWfrequency : frequency)));
 		sUnit = "H";
 	}
 	label = engNotation( CapacitanceOrInductance, 2, eENG_SEPARATE, &sPrefix );
@@ -416,9 +420,27 @@ showSmithCursorInfo(
 	filmCreditsCairoText( cr, "RL =", label, 4,  xTextPos,  yTextPos, eBottomLeft );
 	g_free( label );
 
-	label = engNotation( frequency, 2, eENG_SEPARATE, &sPrefix );
-	g_snprintf( sValue, BUFFER_SIZE_100, " %s %sHz", label, sPrefix);
-	filmCreditsCairoText( cr, "Freq =", sValue, 5,  xTextPos,  yTextPos, eBottomLeft );
+    label = engNotation( frequency, 2, eENG_SEPARATE, &sPrefix );
+
+	switch ( pGlobal->HP8753.channels[ channel ].sweepType ) {
+	case eSWP_LINFREQ:
+	case eSWP_LOGFREQ:
+	case eSWP_LSTFREQ:
+	default:
+	    g_snprintf( sValue, BUFFER_SIZE_100, " %s %sHz", label, sPrefix);
+	    filmCreditsCairoText( cr, "Freq =", sValue, 5,  xTextPos,  yTextPos, eBottomLeft );
+	    break;
+	case eSWP_CWTIME:
+        g_snprintf( sValue, BUFFER_SIZE_100, " %s %ss", label, sPrefix);
+        filmCreditsCairoText( cr, "Time =", sValue, 5,  xTextPos,  yTextPos, eBottomLeft );
+	    break;
+	case eSWP_PWR:
+        g_snprintf( sValue, BUFFER_SIZE_100, " %s %sdBm", label, sPrefix);
+        filmCreditsCairoText( cr, "Power =", sValue, 5,  xTextPos,  yTextPos, eBottomLeft );
+	    break;
+	}
+
+
 	g_free( label );
 
     return TRUE;
@@ -657,6 +679,8 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 
 				switch( pChannel->sweepType ) {
 				case eSWP_LINFREQ:
+                case eSWP_PWR:      // actually power sweep
+                case eSWP_CWTIME:   // actually time sweep
 				default:
 					frequency = LIN_INTERP(pChannel->sweepStart,
 							pChannel->sweepStop, xFract);

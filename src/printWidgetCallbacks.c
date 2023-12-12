@@ -52,8 +52,9 @@ CB_BtnSavePNG (GtkButton * button, tGlobal *pGlobal)
     gchar *sFilename = NULL;
     gchar *sSuggestedFilename = g_date_time_format( now, "HP8753.%d%b%y.%H%M%S.png");
     static gboolean bUsedSuggested = FALSE;
+    gboolean bHPGL = (pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid);
 	gboolean bBoth = pGlobal->HP8753.flags.bDualChannel
-			&& pGlobal->HP8753.flags.bSplitChannels;
+			&& pGlobal->HP8753.flags.bSplitChannels && !bHPGL;
 
 	cs = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, PNG_WIDTH, PNG_HEIGHT);
 	cr = cairo_create (cs);
@@ -177,8 +178,9 @@ CB_BtnSavePDF (GtkButton * button, tGlobal *pGlobal)
     gchar *sFilename = NULL;
     gchar *sSuggestedFilename = g_date_time_format( now, "HP8753.%d%b%y.%H%M%S.pdf");
     static gboolean bUsedSuggested = FALSE;
+    gboolean bHPGL = (pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid);
 	gboolean bBoth = pGlobal->HP8753.flags.bDualChannel
-			&& pGlobal->HP8753.flags.bSplitChannels;
+			&& pGlobal->HP8753.flags.bSplitChannels && !bHPGL;
 
  //g_hash_table_lookup ( globalData.widgetHashTable, (gconstpointer)"WID_hp8753c_main")
     GtkDialog       *wPDFfileDlg = GTK_DIALOG( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Dlg_PDFfileChooser" ) );
@@ -316,7 +318,9 @@ CB_PrintBegin (GtkPrintOperation *printOp,
            GtkPrintContext   *context, tGlobal *pGlobal)
 {
 	gint pageNos = 1;
-	if( pGlobal->HP8753.flags.bDualChannel && pGlobal->HP8753.flags.bSplitChannels )
+	gboolean bHPGL = (pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid);
+	if( (pGlobal->HP8753.flags.bDualChannel && pGlobal->HP8753.flags.bSplitChannels)
+	        && !bHPGL )
 		pageNos = 2;
 	gtk_print_operation_set_n_pages( printOp, pageNos );
 }

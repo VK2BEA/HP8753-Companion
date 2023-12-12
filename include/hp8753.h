@@ -29,7 +29,7 @@
  */
 enum _debug
 {
-        eDEBUG_NONE      = 0,
+        eDEBUG_ALWAYS    = 0,
         eDEBUG_INFO      = 1,
         eDEBUG_MINOR     = 3,
         eDEBUG_EXTENSIVE = 5,
@@ -478,12 +478,38 @@ extern GHashTable *widgetHashTable;
 #define NPAGE_GPIB			4
 #define NPAGE_CALKITS		5
 
+
+// Bits in the HP8753 status register (and bits for SRE (mask for signaling an SRQ))
+#define ST_RevGET   1   // waiting for operator to connect device (reverse)
+#define ST_FwdGET   2   // waiting for operator to connect device (forward)
+#define ST_ESRB     4   // event status register b signal
+#define ST_CEQ      8   // check error queue
+#define ST_MOQ     16   // message in output queue
+#define ST_ESR     32   // event status register signal
+#define ST_SRQ     64   // request service
+#define ST_TBA    128   // unused
+
+// Bits in the HP8753 event status register
+#define ESE_OPC     1   // OPC
+#define ESE_RQC     2   // Request Control
+#define ESE_QERR    4   // Query Error
+#define ESE_SEQ     8   // Sequence Bit
+#define ESE_EERR   16   // Execution Error
+#define ESE_SERR   32   // Syntax Error
+#define ESE_USER   64   // User Request
+#define ESE_PWR   128   // Power On
+
+#define SEVER_DIPLOMATIC_RELATIONS -1
+#define THIRTY_MS 0.030
+#define FIVE_SECONDS 5.0
+
 gboolean    addToComboBox( GtkComboBox *, gchar * );
 void        bezierControlPoints( const tLine *, const tLine *, tComplex *, tComplex * );
 void        CB_EditableCalibrationProfileName( GtkEditable *, tGlobal * );
 void        CB_EditableProjectName( GtkEditable *, tGlobal * );
 void        CB_EditableTraceProfileName( GtkEditable *, tGlobal * );
 void        CB_Radio_Calibration ( GtkRadioButton *, tGlobal * );
+gint        checkMessageQueue(GAsyncQueue *);
 void        clearHP8753traces ( tHP8753 * );
 tHP8753cal* cloneCalibrationProfile( tHP8753cal *, gchar * );
 tHP8753traceAbstract*   cloneTraceProfileAbstract( tHP8753traceAbstract *, gchar * );

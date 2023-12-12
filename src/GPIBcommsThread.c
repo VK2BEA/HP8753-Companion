@@ -119,8 +119,6 @@ GPIBwriteOneOfN( gint GPIBdescriptor, const void *sData, gint number, gint *GPIB
 }
 #endif
 
-#define SEVER_DIPLOMATIC_RELATIONS -1
-
 /*!     \brief  See if there are messages on the asynchronous queue
  *
  * If the argument contains a pointer to a queue, set the default queue to it
@@ -130,8 +128,8 @@ GPIBwriteOneOfN( gint GPIBdescriptor, const void *sData, gint number, gint *GPIB
  * \param asyncQueue  pointer to async queue (or NULL)
  * \return            number of messages in queue
  */
-static gint
-GPIB_checkQueue(GAsyncQueue *asyncQueue) {
+gint
+checkMessageQueue(GAsyncQueue *asyncQueue) {
     static GAsyncQueue *queueToCheck = NULL;
     int queueLength;
 
@@ -155,8 +153,6 @@ GPIB_checkQueue(GAsyncQueue *asyncQueue) {
     }
 }
 
-#define THIRTY_MS 0.030
-#define FIVE_SECONDS 5.0
 /*!     \brief  Write data from the GPIB device asynchronously
  *
  * Read data from the GPIB device asynchronously while checking for exceptions
@@ -216,7 +212,7 @@ GPIBasyncWriteBinary(gint GPIBdescriptor, const void *sData, gint length, gint *
                 rtn = eRDWT_OK;
         }
         // If we get a message on the queue, it is assumed to be an abort
-        if (GPIB_checkQueue( NULL) == SEVER_DIPLOMATIC_RELATIONS) {
+        if (checkMessageQueue( NULL) == SEVER_DIPLOMATIC_RELATIONS) {
             // This will stop future GPIB commands for this sequence
             *pGPIBstatus |= ERR;
             rtn = eRDWT_ABORT;
@@ -339,7 +335,7 @@ GPIBasyncRead(gint GPIBdescriptor, void *readBuffer, long maxBytes, gint *pGPIBs
                 rtn = eRDWT_OK;
         }
         // If we get a message on the queue, it is assumed to be an abort
-        if (GPIB_checkQueue( NULL) == SEVER_DIPLOMATIC_RELATIONS) {
+        if (checkMessageQueue( NULL) == SEVER_DIPLOMATIC_RELATIONS) {
             // This will stop future GPIB commands for this sequence
             *pGPIBstatus |= ERR;
             rtn = eRDWT_ABORT;
@@ -576,7 +572,7 @@ threadGPIB(gpointer _pGlobal) {
     // loop waiting for messages from the main loop
 
     // Set the default queue to check for interruptions to async GPIB reads
-    GPIB_checkQueue(pGlobal->messageQueueToGPIB);
+    checkMessageQueue(pGlobal->messageQueueToGPIB);
 
     while (bRunning && (message = g_async_queue_pop(pGlobal->messageQueueToGPIB))) {
 
@@ -657,12 +653,10 @@ threadGPIB(gpointer _pGlobal) {
                 } else {
                     // beep
                     GPIBasyncWrite(descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus,
-                            5 * TIMEOUT_READ_1SEC);
+                            10 * TIMEOUT_RW_1SEC);
                 }
                 // local
-                IBLOC(descGPIB_HP8753, datum, GPIBstatus)
-                ;
-
+                IBLOC(descGPIB_HP8753, datum, GPIBstatus);
                 break;
             case TG_SEND_SETUPandCAL_to_HP8753:
                 // We have already obtained the data from the database
@@ -688,12 +682,10 @@ threadGPIB(gpointer _pGlobal) {
                 } else {
                     // beep
                     GPIBasyncWrite(descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus,
-                            5 * TIMEOUT_READ_1SEC);
+                            10 * TIMEOUT_RW_1SEC);
                 }
                 // local
-                IBLOC(descGPIB_HP8753, datum, GPIBstatus)
-                ;
-
+                IBLOC(descGPIB_HP8753, datum, GPIBstatus);
                 break;
 
             case TG_RETRIEVE_TRACE_from_HP8753:
@@ -738,6 +730,7 @@ threadGPIB(gpointer _pGlobal) {
                     // start with the other channel because we will then return to the active
                     // channel. We can only determine the active channel from the learn sting, so
                     // where we can't determine the active channel, this is assumed to be channel 1
+                	enableSRQonOPC( descGPIB_HP8753, &GPIBstatus );
                     for (int i = 0, channel = ( pGlobal->HP8753.activeChannel == eCH_ONE ? eCH_TWO : eCH_ONE );
                             i < eNUM_CH; i++, channel = (channel + 1) % eNUM_CH) {
                         setHP8753channel(descGPIB_HP8753, channel, &GPIBstatus);
@@ -799,7 +792,7 @@ threadGPIB(gpointer _pGlobal) {
                 } else {
                     // beep
                     GPIBasyncWrite(descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus,
-                            5 * TIMEOUT_READ_1SEC);
+                            10 * TIMEOUT_RW_1SEC);
                     postInfo("Trace(s) retrieved");
                 }
                 // local
@@ -807,9 +800,9 @@ threadGPIB(gpointer _pGlobal) {
                 break;
 
             case TG_MEASURE_and_RETRIEVe_S2P_from_HP8753:
+                postInfo("Measure and retrieve S2P");
                 // This can take some time
                 GPIBstatus = ibtmo(descGPIB_HP8753, T30s);
-                postInfo("Measure and retrieve S2P");
 
                 if (getHP3753_S2P(descGPIB_HP8753, pGlobal, &GPIBstatus) == OK
                         && GPIBsucceeded(GPIBstatus)) {
@@ -833,6 +826,7 @@ threadGPIB(gpointer _pGlobal) {
                 break;
             case TG_ANALYZE_LEARN_STRING:
                 postInfo("Discovering Learn String indexes");
+
                 if (analyze8753learnString(descGPIB_HP8753, &pGlobal->HP8753.analyzedLSindexes,
                         &GPIBstatus) == 0) {
                     postDataToMainLoop(TM_SAVE_LEARN_STRING_ANALYSIS,
@@ -860,19 +854,32 @@ threadGPIB(gpointer _pGlobal) {
                 {
                     gint LSsize = 0;
                     guchar *LearnString = NULL;
-                    get8753learnString(descGPIB_HP8753, &LearnString, &GPIBstatus);
+                    gboolean bDifferent = FALSE;
+                    if( pHP8753C_learn == NULL && get8753learnString(descGPIB_HP8753, &pHP8753C_learn, &GPIBstatus) !=  OK ) {
+                        g_printerr( "Cannot get learn string from HP8753\n" );
+                        break;
+                    }
+                    if( get8753learnString(descGPIB_HP8753, &LearnString, &GPIBstatus) != OK ) {
+                        g_printerr( "Cannot get learn string from HP8753\n" );
+                        break;
+                    }
                     LSsize = GUINT16_FROM_BE(*((guint* )(LearnString + 2)));
                     for (int i = 0; i < LSsize; i++) {
                         if (pHP8753C_learn[i] != LearnString[i]) {
-                            g_print("%-4d: 0x%02x  0x%02x\n", i, pHP8753C_learn[i],
-                                    LearnString[i]);
+                            g_print("%-4d: 0x%02x  0x%02x\n", i, pHP8753C_learn[i], LearnString[i]);
+                            bDifferent = TRUE;
                         }
                     }
-                    g_print("\n");
+                    if( !bDifferent )
+                        g_print( "No change in learn string\n");
+                    else
+                        g_print("\n");
+                    g_free( LearnString );
                 }
                 break;
             case TG_SEND_CALKIT_to_HP8753:
                 postInfo("Send calibration kit");
+
                 if (sendHP8753calibrationKit(descGPIB_HP8753, pGlobal, &GPIBstatus) == 0) {
                     postInfo("Calibration kit transfered");
                 } else {
@@ -890,13 +897,17 @@ threadGPIB(gpointer _pGlobal) {
                 }
 
                 GPIBasyncWrite(descGPIB_HP8753, "EMIB;", &GPIBstatus, 1.0);
-                IBLOC(descGPIB_HP8753, datum, GPIBstatus)
-                ;
+                IBLOC(descGPIB_HP8753, datum, GPIBstatus);
                 break;
             case TG_ABORT:
-                postError("Communication Aborted")
-                ;
-                GPIBstatus = ibclr(descGPIB_HP8753);
+                postError("Communication Aborted");
+                {   // Clear the interface
+                    gint boardIndex = 0;
+                    ibask( descGPIB_HP8753, IbaBNA, &boardIndex);
+                    ibsic( boardIndex );
+                    GPIBstatus = ibclr(descGPIB_HP8753);
+                    IBLOC(descGPIB_HP8753, datum, GPIBstatus);
+                }
                 break;
             default:
                 break;

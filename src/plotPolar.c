@@ -214,8 +214,25 @@ showPolarCursorInfo(
 	g_free( label );
 
 	label = engNotation( frequency, 2, eENG_SEPARATE, &sPrefix );
-	g_snprintf( sValue, BUFFER_SIZE_100, " %s %sHz", label, sPrefix);
-	filmCreditsCairoText( cr, "Freq =", sValue, 1,  xTextPos,  yTextPos, eBottomLeft );
+
+    switch ( pGlobal->HP8753.channels[ channel ].sweepType ) {
+    case eSWP_LINFREQ:
+    case eSWP_LOGFREQ:
+    case eSWP_LSTFREQ:
+    default:
+        g_snprintf( sValue, BUFFER_SIZE_100, " %s %sHz", label, sPrefix);
+        filmCreditsCairoText( cr, "Freq =", sValue, 1,  xTextPos,  yTextPos, eBottomLeft );
+        break;
+    case eSWP_CWTIME:
+        g_snprintf( sValue, BUFFER_SIZE_100, " %s %ss", label, sPrefix);
+        filmCreditsCairoText( cr, "Time =", sValue, 1,  xTextPos,  yTextPos, eBottomLeft );
+        break;
+    case eSWP_PWR:
+        g_snprintf( sValue, BUFFER_SIZE_100, " %s %sdBm", label, sPrefix);
+        filmCreditsCairoText( cr, "Power =", sValue, 1,  xTextPos,  yTextPos, eBottomLeft );
+        break;
+    }
+
 	g_free( label );
 
     return TRUE;

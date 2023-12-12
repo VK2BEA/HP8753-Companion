@@ -85,14 +85,14 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
               postDataToGPIBThread( TG_UTILITY, NULL );
     	  break;
       default:
-          return FALSE;     // pass tyhe event on to the underlying widgets
+          return FALSE;     // pass the event on to the underlying widgets
     	  break;
       }
    } else if( event->keyval == GDK_KEY_Escape &&  modifier == 0 ) {
 	   postDataToGPIBThread (TG_ABORT, NULL);
    } else {
        // not a Fn or Esc key .. do with it what you will
-       return FALSE;     // pass tyhe event on to the underlying widgets
+       return FALSE;     // pass the event on to the underlying widgets
    }
    return TRUE; // nothing more to see here
 }
@@ -494,7 +494,7 @@ on_shutdown (GApplication *app, gpointer userData)
  *
  * \param argc	number of arguments
  * \param argv	pointer to array of arguments
- * \return		sucess or failure error code
+ * \return		success or failure error code
  */
 int
 main(int argc, char *argv[]) {
