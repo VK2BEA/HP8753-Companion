@@ -49,3 +49,19 @@ To run:
 To uninstall:
         
         $ sudo make uninstall
+
+Troubleshooting:
+----------------------------------------------------------------------
+If problems are encountered, first confirm that correct GPIB communication is occuring. 
+
+Use the `ibtest` and `ibterm` tools distributed with the `linux-gpib` distribution.
+
+The HP8753 Companion logs some information to the journal, the verbosity of which can be set with the `--debug` command line switch.
+
+To enable debugging output to the journal, start the program with the `--debug 7` switch, <em>(Debug levels 0-7)</em>.
+
+If started without the switch, the default logging verbosity is 3.
+
+To view the output (in follow mode) use:
+
+        journalctl -t hp8753 -f
