@@ -49,9 +49,11 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 	guint16 CALheaderAndSize[2], CALsize;
 	gchar sCommand[ MAX_OUTPCAL_LEN ];
 	eChannel channel = eCH_ONE;
+	gdouble nPoints = 0;
 	int i;
 
 	postInfo("Retrieve learn string");
+	enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
 	// Request Learn string (probably don't need to set the format as the LS is always in 'form1')
 	GPIBasyncWrite(descGPIB_HP8753, "FORM1;", pGPIBstatus, 	10 * TIMEOUT_RW_1SEC);
 	if ( get8753learnString( descGPIB_HP8753, &pGlobal->HP8753cal.pHP8753C_learn, pGPIBstatus ))
@@ -76,18 +78,27 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 		pGlobal->HP8753cal.perChannelCal[ channel ].settings.bValid = FALSE;
 	}
 
+	// Its faster if we stop sweeping ... less for the microprocessor to handle
+	for( channel = eCH_ONE;  channel < eNUM_CH; channel++ ) {
+		// we separately save this state so we can selectively restart scanning on restoration
+		setHP8753channel( descGPIB_HP8753, channel, pGPIBstatus );
+		pGlobal->HP8753cal.perChannelCal[ channel ].settings.bSweepHold
+						= getHP8753switchOnOrOff( descGPIB_HP8753, "HOLD", pGPIBstatus );
+		GPIBasyncWrite(descGPIB_HP8753, "HOLD;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+
+		// If coupled we need go no further
+		if( pGlobal->HP8753cal.settings.bSourceCoupled ) {
+			pGlobal->HP8753cal.perChannelCal[ eCH_TWO ].settings.bSweepHold
+				= pGlobal->HP8753cal.perChannelCal[ eCH_ONE ].settings.bSweepHold;
+			break;
+		}
+	}
+
+
 	// maximum of two sets of calibration correction arrays.
 	// if we have a coupled source we break out after retrieving one set
 	for( channel = eCH_ONE; channel < eNUM_CH; channel++ ) {
-		// The calibration can only be different if the two channels have different
-		// source parameters
-		if( !pGlobal->HP8753cal.settings.bSourceCoupled )
-			setHP8753channel( descGPIB_HP8753, channel, pGPIBstatus );
-
-		// we separately save this state so we can selectively restart scanning on restoration
-		pGlobal->HP8753cal.perChannelCal[ channel ].settings.bSweepHold
-							= getHP8753switchOnOrOff( descGPIB_HP8753, "HOLD", pGPIBstatus );
-		GPIBasyncWrite(descGPIB_HP8753, "HOLD;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+		setHP8753channel( descGPIB_HP8753, channel, pGPIBstatus );
 		// Calibration data
 		// Depending on the calibration mode, no, 1, 2, 3 or 8 calibration error arrays are retrieved
 		postInfo("Determine the type of calibration");
@@ -107,6 +118,10 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 		}
 		// Ask for the IF resolution BW
 		askHP8753C_dbl(descGPIB_HP8753, "IFBW", &pGlobal->HP8753cal.perChannelCal[ channel ].IFbandwidth, pGPIBstatus);
+		// Ask for number of points
+		askHP8753C_dbl(descGPIB_HP8753, "POIN", &nPoints, pGPIBstatus);
+		pGlobal->HP8753cal.perChannelCal[ channel ].nPoints = (gint)nPoints;
+
 		pGlobal->HP8753cal.perChannelCal[ channel ].sweepType
 			= getHP8753sweepType( descGPIB_HP8753, pGPIBstatus );
 		// Get CW frequency
@@ -129,6 +144,7 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 					pGlobal->HP8753cal.perChannelCal[ channel ].settings.bbInterplativeCalibration = eInterplativeCalibration;
 					postInfo( "Retrieve the interpolated calibration arrays");
 				} else {
+					ibclr( descGPIB_HP8753 );
 					pGlobal->HP8753cal.perChannelCal[ channel ].settings.bbInterplativeCalibration = eNoInterplativeCalibration;
 					// Get measured calibration arrays if there are no interpolated arrays
 					GPIBasyncWrite(descGPIB_HP8753, "OUTPCALC01;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
@@ -156,10 +172,6 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 					postInfoWithCount( "Retrieve calibration array %d", i+1, 0 );
 				else
 					postInfoWithCount( "Retrieve channel %d calibration array %d", channel+1, i+1 );
-
-				if( i==0 ) {
-					pGlobal->HP8753cal.perChannelCal[ channel ].nPoints = CALsize / BYTES_PER_CALPOINT;
-				}
 			}
 		}
 
@@ -172,13 +184,9 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 				GPIBasyncWrite(descGPIB_HP8753, "CORIOFF;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
 			}
 		}
-
 		pGlobal->HP8753cal.perChannelCal[ channel ].settings.bValid = TRUE;
-		// Only get the calibration parameters for the first channel
-		// if they are duplicated in the second
-		if( pGlobal->HP8753cal.settings.bSourceCoupled )
-			break;
 	}
+
 	// Request modified learn string (without interpolative correction and with hold)
 	// so that when we restore we do so efficiently.
 	// We will re-enable cal after loading learn string.
@@ -186,48 +194,23 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 		goto err;
 
 	// Re-enable interpolative correction and sweeping if it was on previously
-	if( pGlobal->HP8753.calSettings.bSourceCoupled ) {
-		// We didn't change channels so just check channel one
-		if( pGlobal->HP8753cal.perChannelCal[ eCH_SINGLE ].settings.bbInterplativeCalibration == eInterplativeCalibration )
+	// maximum of two sets of calibration correction arrays.
+	// if we have a coupled source we break out after retrieving one set
+	for( channel = eCH_ONE; channel < eNUM_CH; channel++ ) {
+		setHP8753channel( descGPIB_HP8753, channel, pGPIBstatus );
+
+		if( pGlobal->HP8753cal.perChannelCal[ channel ].settings.bbInterplativeCalibration == eInterplativeCalibration )
 			GPIBasyncWrite(descGPIB_HP8753, "CORION;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
 
-		if( !pGlobal->HP8753cal.perChannelCal[ eCH_SINGLE ].settings.bSweepHold )
+		if( !pGlobal->HP8753cal.perChannelCal[ channel ].settings.bSweepHold
+				&& ( channel == eCH_ONE || !pGlobal->HP8753cal.settings.bSourceCoupled ))
 			GPIBasyncWrite(descGPIB_HP8753, "CONT;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
-	} else {
-		// channel is eCH_TWO from the for loop above when the source is uncoupled
-		// interpolative correction is possibly on in one or both of uncoupled channels
-		if( pGlobal->HP8753cal.perChannelCal[ eCH_TWO ].settings.bbInterplativeCalibration == eInterplativeCalibration )
-			GPIBasyncWrite(descGPIB_HP8753, "CORION;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
-
-		if( !pGlobal->HP8753cal.perChannelCal[ eCH_TWO ].settings.bSweepHold )
-			GPIBasyncWrite(descGPIB_HP8753, "CONT;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
-
-		if( pGlobal->HP8753cal.perChannelCal[ eCH_ONE ].settings.bbInterplativeCalibration == eInterplativeCalibration ) {
-			setHP8753channel( descGPIB_HP8753, channel = eCH_ONE, pGPIBstatus );
-			GPIBasyncWrite(descGPIB_HP8753, "CORION;", pGPIBstatus, TIMEOUT_RW_1SEC);
-		}
-
-		if ( !pGlobal->HP8753cal.perChannelCal[ eCH_TWO ].settings.bSweepHold ) {
-			if( channel != eCH_ONE )
-				setHP8753channel( descGPIB_HP8753, channel = eCH_ONE, pGPIBstatus );
-			GPIBasyncWrite(descGPIB_HP8753, "CONT;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
-		}
 	}
 
 	// We may have changed channels - return to regularly scheduled programming
-	if( !pGlobal->HP8753.calSettings.bSourceCoupled && pGlobal->HP8753cal.settings.bActiveChannel != channel )
+	if( pGlobal->HP8753cal.settings.bActiveChannel != channel )
 		setHP8753channel( descGPIB_HP8753, pGlobal->HP8753cal.settings.bActiveChannel, pGPIBstatus );
 
-#if 0
-	// Continuous Sweep
-	GPIBasyncWrite( descGPIB_HP8753, "CONT;", &GPIBstatus, 10 * TIMEOUT_RW_1SEC );
-	GPIBasyncWrite( descGPIB_HP8753, "OPC?;WAIT;", &GPIBstatus, 10 * TIMEOUT_RW_1SEC );
-	// read "1" for complete
-	if( GPIBasyncRead( descGPIB_HP8753, &complete, 1, &GPIBstatus, 100.0, pGlobal->messageQueueToGPIB ) != eRD_OK ) {
-		GPIBstatus = ERR;
-		break;
-	}
-#endif
 	// beep
 	GPIBasyncWrite( descGPIB_HP8753, "EMIB;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
 	return OK;
@@ -255,11 +238,13 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	eChannel channel = eCH_ONE;
 	int i;
 
+	enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
 	GPIBasyncWrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
 	// Includes the 4 byte header with size in bytes (big endian)
-	GPIBasyncWriteBinary( descGPIB_HP8753,
-			pGlobal->HP8753cal.pHP8753C_learn,
-			GUINT16_FROM_BE(*(guint16 *)(pGlobal->HP8753cal.pHP8753C_learn+2)) + 4, pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
+	gint LSsize = GUINT16_FROM_BE(*(guint16 *)(pGlobal->HP8753cal.pHP8753C_learn+2)) + 4;
+
+	GPIBasyncSRQwrite( descGPIB_HP8753, (gchar *)pGlobal->HP8753cal.pHP8753C_learn, LSsize,
+			pGPIBstatus, 10 * TIMEOUT_RW_1MIN );
 
 	// Restoring the setup seems to reset the ESR and SRQ enable ... so do it here
 	enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
@@ -272,13 +257,8 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	// the restored learn string will set the active channel but if the source is uncoupled
 	// we need to restore cal arrays for both channels
 	for(channel = eCH_ONE; channel < eNUM_CH; channel++ ) {
-		// we only to apply to multiple channels if the source is uncoupled
-		if( !pGlobal->HP8753cal.settings.bSourceCoupled )
-			setHP8753channel( descGPIB_HP8753, channel, pGPIBstatus );
-		if( pGlobal->HP8753cal.settings.bSourceCoupled )
-			postInfo( "Set channel calibration type" );
-		else
-			postInfoWithCount( "Send channel %d calibration type", channel+1, 0 );
+		setHP8753channel( descGPIB_HP8753, channel, pGPIBstatus );
+		postInfoWithCount( "Send channel %d calibration type", channel+1, 0 );
 
 		// Set the cal type (need to remove the ? from the string)
 		gchar *ts = g_malloc0( strlen( optCalType[ pGlobal->HP8753cal.perChannelCal[ channel ].iCalType ].code ) + 1 );
@@ -291,57 +271,53 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 		// Send the cal arrays
 		for( i=0; i < MAX_CAL_ARRAYS && pGlobal->HP8753cal.perChannelCal[ channel ].iCalType != eCALtypeNONE ; i++ ) {
 			if ( pGlobal->HP8753cal.perChannelCal[channel].pCalArrays[ i ] != NULL ) {
-				if( pGlobal->HP8753cal.settings.bSourceCoupled )
-					postInfoWithCount( "Send calibration array %d", i+1, 0 );
-				else
-					postInfoWithCount( "Send channel %d calibration array %d", channel+1, i+1 );
+				postInfoWithCount( "Send channel %d calibration array %d", channel+1, i+1 );
 				g_snprintf( sCommand, MAX_OUTPCAL_LEN, "INPUCALC%02d;", i+1);
 				GPIBasyncWrite( descGPIB_HP8753, sCommand, pGPIBstatus, 10 *TIMEOUT_RW_1SEC );
-				GPIBasyncWriteBinary( descGPIB_HP8753, pGlobal->HP8753cal.perChannelCal[ channel ].pCalArrays[ i ],
-						GUINT16_FROM_BE(*(guint16 *)(pGlobal->HP8753cal.perChannelCal[ channel ].pCalArrays[ i ]+2)) + 4,
-						pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
+
+				GPIBasyncSRQwrite( descGPIB_HP8753, pGlobal->HP8753cal.perChannelCal[ channel ].pCalArrays[ i ],
+						lengthFORM1data( pGlobal->HP8753cal.perChannelCal[ channel ].pCalArrays[ i ] ),
+						pGPIBstatus, 20 * TIMEOUT_RW_1SEC );
 			}
 		}
 
 		if( pGlobal->HP8753cal.perChannelCal[ channel ].iCalType != eCALtypeNONE ) {
-			if( pGlobal->HP8753cal.settings.bSourceCoupled )
-				postInfo ( "Save the calibration arrays" );
-			else
-				postInfoWithCount( "Save channel %d calibration arrays", channel+1, 0 );
-		    GPIBasyncWrite(descGPIB_HP8753, "CLES;ESE1;SRE32;", pGPIBstatus,  10 * TIMEOUT_RW_1SEC);
-		    if( waitFor8753_OPC_SRQ( descGPIB_HP8753, "SAVC;", pGPIBstatus, 4 * TIMEOUT_RW_1MIN ) != eRDWT_OK ) {
+			postInfoWithCount( "Save channel %d calibration arrays", channel+1, 0 );
+		    GPIBasyncWrite(descGPIB_HP8753, "ESE1;SRE32;", pGPIBstatus,  10 * TIMEOUT_RW_1SEC);
+		    if( GPIBasyncSRQwrite( descGPIB_HP8753, "SAVC;", NULL_STR,
+		    		pGPIBstatus, 4 * TIMEOUT_RW_1MIN ) != eRDWT_OK ) {
 				*pGPIBstatus = ERR;
 				break;
 			}
 		}
 
 		if( pGlobal->HP8753cal.perChannelCal[ channel ].settings.bbInterplativeCalibration == eInterplativeCalibration ) {
-			if( pGlobal->HP8753cal.settings.bSourceCoupled )
-				postInfo ( "Enable interpolative correction" );
-			else
-				postInfoWithCount( "Enable channel %d interpolative correction", channel+1, 0 );
+			postInfoWithCount( "Enable channel %d interpolative correction", channel+1, 0 );
 			GPIBasyncWrite(descGPIB_HP8753, "CORION;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
 		}
-
-		// Continuous Sweep
-		if( !pGlobal->HP8753cal.perChannelCal[channel].settings.bSweepHold ) {
-			if( pGlobal->HP8753cal.settings.bSourceCoupled )
-				postInfo ( "Start sweeping" );
-			else
-				postInfoWithCount( "Start sweeping channel %d", channel+1, 0 );
-			GPIBasyncWrite( descGPIB_HP8753, "CONT;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
-		}
-
-		// if coupled we need to do this only for channel one
-		if( pGlobal->HP8753cal.settings.bSourceCoupled )
-			break;
 	}
 
+    // Re-enable sweeping if it was on previously
+    for( channel = eCH_ONE; channel < eNUM_CH; channel++ ) {
+        setHP8753channel( descGPIB_HP8753, channel, pGPIBstatus );
+        if( !pGlobal->HP8753cal.perChannelCal[ channel ].settings.bSweepHold ) {
+            if( pGlobal->HP8753cal.settings.bSourceCoupled )
+            	postInfo( "Resume sweeping" );
+            else
+            	postInfoWithCount( "Resume sweeping channel %d", channel+1, 0 );
+            GPIBasyncWrite(descGPIB_HP8753, "CONT;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+        }
+        // Sweep on one means a sweep on the other if coupled
+        if( pGlobal->HP8753cal.settings.bSourceCoupled )
+        	break;
+    }
+
 	// if the source is coupled, then we did not change channel
-	if ( !pGlobal->HP8753cal.settings.bSourceCoupled && pGlobal->HP8753cal.settings.bActiveChannel != channel )
+	if ( pGlobal->HP8753cal.settings.bActiveChannel != channel )
 		setHP8753channel( descGPIB_HP8753, pGlobal->HP8753cal.settings.bActiveChannel, pGPIBstatus );
 
-	waitFor8753_OPC_SRQ( descGPIB_HP8753, "WAIT;", pGPIBstatus, 6 * TIMEOUT_RW_1MIN );
+	// We need to wait for a clean sweep  ... the 8753 is not useful until it does sweep in any case
+	GPIBasyncSRQwrite( descGPIB_HP8753, "WAIT;", NULL_STR,  pGPIBstatus, 6 * TIMEOUT_RW_1MIN );
 
 	// beep
 	GPIBasyncWrite( descGPIB_HP8753, "MENUOFF;EMIB", pGPIBstatus, 10 * TIMEOUT_RW_1SEC );

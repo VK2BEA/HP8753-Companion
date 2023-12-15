@@ -98,7 +98,7 @@ getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	// Sweep
 	setHP8753channel( descGPIB_HP8753, eCH_TWO, pGPIBstatus );
 	// Depending upon the settings, a sweep may take a long time
-	if( waitFor8753_OPC_SRQ( descGPIB_HP8753, "WAIT;", pGPIBstatus, 10 * TIMEOUT_RW_1MIN ) != eRDWT_OK ) {
+	if( GPIBasyncSRQwrite( descGPIB_HP8753, "S21;SMIC;SING;", NULL_STR, pGPIBstatus, 10 * TIMEOUT_RW_1MIN ) != eRDWT_OK ) {
 		*pGPIBstatus = ERR;
 		goto err;
 	}
@@ -120,15 +120,13 @@ getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	getSparam( descGPIB_HP8753, pGlobal, &pGlobal->HP8753.S2P.S11, &pGlobal->HP8753.S2P.nPoints, pGPIBstatus );
 
 	// Set channel 1 to measure S22 and sweep
-	postInfo("Set for S12 + S22");
+	postInfo("Set for S22 + S12");
 	// Depending upon the settings, a sweep may take a long time
-	GPIBasyncWrite( descGPIB_HP8753, "S22;SMIC;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
-	if( waitFor8753_OPC_SRQ( descGPIB_HP8753, "SING;", pGPIBstatus, 10 * TIMEOUT_RW_1MIN ) != eRDWT_OK ) {
+	if( GPIBasyncSRQwrite( descGPIB_HP8753, "S22;SMIC;SING;", NULL_STR, pGPIBstatus, 10 * TIMEOUT_RW_1MIN ) != eRDWT_OK ) {
         *pGPIBstatus = ERR;
         goto err;
     }
-
-	// collect S22 data
+	// collect S12 data
 	postInfo("Read S22 data");
 	getSparam( descGPIB_HP8753, pGlobal, &pGlobal->HP8753.S2P.S22, &pGlobal->HP8753.S2P.nPoints, pGPIBstatus );
 
@@ -141,11 +139,10 @@ getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	// Return the analyzer to the previous configuration by sending back the learn string
 	GPIBasyncWrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
 	// Includes the 4 byte header with size in bytes (big endian)
-	GPIBasyncWriteBinary( descGPIB_HP8753,
-			learnString,
-			GUINT16_FROM_BE(*(guint16 *)(learnString+2)) + 4, pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
+	GPIBasyncSRQwrite( descGPIB_HP8753, learnString, lengthFORM1data(learnString),
+			pGPIBstatus, 10 * TIMEOUT_RW_1MIN  );
+
     enableSRQonOPC( descGPIB_HP8753, pGPIBstatus ); // learn string wipes out ESR and SRQ enables
-	waitFor8753_OPC_SRQ( descGPIB_HP8753, "WAIT;", pGPIBstatus, 6 * TIMEOUT_RW_1MIN );
 
 	g_free( learnString );
 

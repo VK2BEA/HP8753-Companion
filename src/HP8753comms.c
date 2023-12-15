@@ -64,45 +64,67 @@ enableSRQonOPC( gint descGPIB_HP8753, gint *pGPIBstatus ) {
     if (GPIBfailed(*pGPIBstatus))
         return eRDWT_PREVIOUS_ERROR;
 
-    return GPIBasyncWrite(descGPIB_HP8753, "CLES;ESE1;SRE32;", pGPIBstatus,  10 * TIMEOUT_RW_1SEC);
+    return GPIBasyncWrite(descGPIB_HP8753, "ESE1;SRE32;", pGPIBstatus,  10 * TIMEOUT_RW_1SEC);
 }
-/*!     \brief  Wait for SRQ for OPC
+/*!     \brief  Write string preceeding with OPC or binary adding OPC;NOOP;, then wait for SRQ
  *
  * The OPC bit in the Event Status Register mask (B0) is set to
  * trigger an SRQ (since the ESE bit (B5) in the Status Register Enable mask is set).
  * After a command that sets the OPC, wait for the event without tying up the GPIB.
  *
- * \param  descGPIB_HP8753  GPIB descriptor for HP8753 device
- * \param  sCMd             pointer to command to send (OPC permitted)
- * \param  pGPIBstatus      pointer to GPIB status
+ * \param descGPIB_HP8753  GPIB descriptor for HP8753 device
+ * \param pData             ointer to command to send (OPC permitted) or binary data
+ * \param nBytes			number of bytes or -1 for NULL terminated string
+ * \param pGPIBstatus       pointer to GPIB status
  * \param timeoutSecs		timout period to wait
  * \return TRUE on success or ERROR on problem
  */
 tGPIBReadWriteStatus
-waitFor8753_OPC_SRQ( gint descGPIB_HP8753, gchar *sCmd, gint *pGPIBstatus, gdouble timeoutSecs ) {
+GPIBasyncSRQwrite( gint descGPIB_HP8753, void *pData,
+		gint nBytes, gint *pGPIBstatus, gdouble timeoutSecs ) {
 
 #define SRQ_EVENT       1
 #define TIMEOUT_EVENT   0
 #define THIRTY_MS 0.030
 
+	gchar *pPayload = NULL;
+
     tGPIBReadWriteStatus rtn = eRDWT_CONTINUE;
     gint currentTimeoutDevice, currentTimeoutController;
     gdouble waitTime = 0.0;
+    gint GPIBcontrollerIndex = 0;
+    gint nTotalBytes = 0;
 
-    GPIBasyncWrite(descGPIB_HP8753, "OPC;", pGPIBstatus,  10 * TIMEOUT_RW_1SEC);
-    GPIBasyncWrite(descGPIB_HP8753, sCmd, pGPIBstatus,  10 * TIMEOUT_RW_1SEC);
+#define SIZE_OPC_NOOP	9	// # bytes in OPC;NOOP;
 
     if (GPIBfailed(*pGPIBstatus)) {
         return eRDWT_PREVIOUS_ERROR;
     }
 
-    gint GPIBcontrollerIndex;
-    ibask( descGPIB_HP8753, IbaBNA, &GPIBcontrollerIndex);
+    if( nBytes < 0 ) {
+    	pPayload = g_strdup_printf( "OPC;%s", (gchar *)pData );
+    	nTotalBytes = strlen( pPayload );
+    } else {
+    	pPayload = g_malloc( nBytes + SIZE_OPC_NOOP );
+    	memcpy( pPayload, (guchar *)pData, nBytes );
+    	memcpy( pPayload + nBytes, "OPC;NOOP;", SIZE_OPC_NOOP );
+    	nTotalBytes = nBytes + SIZE_OPC_NOOP;
+    }
 
+	if( GPIBasyncWriteBinary( descGPIB_HP8753, pPayload, nTotalBytes,
+							pGPIBstatus, timeoutSecs ) != eRDWT_OK ) {
+	    g_free( pPayload );
+	    return eRDWT_ERROR;
+	} else {
+		g_free( pPayload );
+	}
+
+	// get the controller index
+    ibask( descGPIB_HP8753, IbaBNA, &GPIBcontrollerIndex);
     ibask( descGPIB_HP8753, IbaTMO, &currentTimeoutDevice);
-    ibtmo( descGPIB_HP8753, T100ms);
+    ibtmo( descGPIB_HP8753, T1s);
     ibask( GPIBcontrollerIndex, IbaTMO, &currentTimeoutController);
-    ibtmo( GPIBcontrollerIndex, T30ms);
+    ibtmo( GPIBcontrollerIndex, T30ms);	// just to check if we've been ordered to abandon ship
     DBG( eDEBUG_EXTENSIVE, "Waiting for SRQ" );
     do {
         short waitResult = 0;
@@ -117,14 +139,21 @@ waitFor8753_OPC_SRQ( gint descGPIB_HP8753, gchar *sCmd, gint *pGPIBstatus, gdoub
                 LOG(G_LOG_LEVEL_CRITICAL, "HPIB serial poll fail %04X/%d", *pGPIBstatus, AsyncIberr());
                 rtn = eRDWT_ERROR;
             } else if( status & ST_SRQ ) {
+            	// there is but one condition that asserts the SRQ ... the OPC
+            	// so it's probably not necessary in our setup to read the ESR.
+            	// It also tends to re-enable the SRQ ... which is odd
+#ifndef CLEAR_ESR
                 // We've cleared the SRQ bit in the Status Register by the serial poll
                 // now clear the ESR flag by reading it
-            	gchar sESR[ 10 ] = {0};
+#define ESR_RESPONSE_MAXSIZE	5		// more than enough
+            	gchar sESR[ ESR_RESPONSE_MAXSIZE ] = {0};
             	// For some bazaar reason the HP8753C can raise SRQ again when the ESR?; is written and cleared when is read
             	// so mask it out before that.
-                GPIBasyncWrite(descGPIB_HP8753, "ESR?;", pGPIBstatus,  10 * TIMEOUT_RW_1SEC);
-                GPIBasyncRead( descGPIB_HP8753, sESR, 10, pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
-                if GPIBsucceeded( *pGPIBstatus ) {
+
+            	if( GPIBasyncWrite(descGPIB_HP8753, "ESR?;", pGPIBstatus,
+            								10 * TIMEOUT_RW_1SEC) == eRDWT_OK
+            		&& GPIBasyncRead( descGPIB_HP8753, sESR, ESR_RESPONSE_MAXSIZE, pGPIBstatus,
+            								10 * TIMEOUT_RW_1SEC ) == eRDWT_OK ) {
                 	gint ESR = atoi( sESR );
                 	if( ESR & ESE_OPC ) {
                 		rtn = eRDWT_OK;
@@ -136,6 +165,9 @@ waitFor8753_OPC_SRQ( gint descGPIB_HP8753, gchar *sCmd, gint *pGPIBstatus, gdoub
                 	rtn = eRDWT_ERROR;
                 }
                 // thats it .. we are good to go
+#else
+            	rtn = eRDWT_OK;
+#endif
             }
             // its not the HP8753 ... some other GPIB device is requesting service
         } else { // it''s a 30ms timeout
@@ -147,6 +179,11 @@ waitFor8753_OPC_SRQ( gint descGPIB_HP8753, gchar *sCmd, gint *pGPIBstatus, gdoub
             }
         }
         waitTime += THIRTY_MS;
+        if (waitTime > FIVE_SECONDS && fmod(waitTime, 1.0) < THIRTY_MS) {
+            gchar *sMessage = g_strdup_printf("🟠 Waiting for HP8753 : %ds", (gint) (waitTime));
+            postInfo(sMessage);
+            g_free(sMessage);
+        }
     } while (rtn == eRDWT_CONTINUE && (globalData.flags.bNoGPIBtimeout || waitTime < timeoutSecs));
 
     if( rtn == eRDWT_OK ) {
@@ -155,14 +192,16 @@ waitFor8753_OPC_SRQ( gint descGPIB_HP8753, gchar *sCmd, gint *pGPIBstatus, gdoub
         DBG( eDEBUG_ALWAYS, "SRQ error waiting: %04X/%d", ibsta, iberr );
     }
 
-//    if( rtn == eRDWT_OK )
-//    	GPIBasyncWrite(descGPIB_HP8753, "CLES;", pGPIBstatus,  10 * TIMEOUT_RW_1SEC);
-
     // Return timeouts
     ibtmo( descGPIB_HP8753, currentTimeoutDevice);
     ibtmo( GPIBcontrollerIndex, currentTimeoutDevice);
 
-    return (rtn == eRDWT_CONTINUE ? eRDWT_TIMEOUT : rtn);
+    if( rtn == eRDWT_CONTINUE ) {
+        *pGPIBstatus |= ERR_TIMEOUT;
+        return (eRDWT_TIMEOUT);
+    } else {
+        return (rtn);
+    }
 }
 
 
@@ -345,7 +384,7 @@ setHP8753channel( gint descGPIB_HP8753, eChannel channel, gint *pGPIBstatus ) {
 	gchar qString[ QUERY_SIZE ];
 
 	g_snprintf( qString, QUERY_SIZE, "CHAN%d;", channel+1);
-	waitFor8753_OPC_SRQ( descGPIB_HP8753, qString, pGPIBstatus, 15 * TIMEOUT_RW_1SEC );
+	GPIBasyncSRQwrite( descGPIB_HP8753, qString, NULL_STR, pGPIBstatus, 15 * TIMEOUT_RW_1SEC );
 	return ( GPIBfailed(*pGPIBstatus) ? ERROR : 0);
 }
 
@@ -445,8 +484,8 @@ get8753firmwareVersion(gint descGPIB_HP8753, gchar **psProduct, gint *pGPIBstatu
 	gchar sManufacturer[MAX_IDN_SIZE + 1] = {0};
 	gchar sProduct[MAX_IDN_SIZE + 1] = {0};
 
-	GPIBasyncWrite(descGPIB_HP8753, "IDN?;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
-	GPIBasyncRead(descGPIB_HP8753, &ASCIIanswer, MAX_IDN_SIZE, pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+	GPIBasyncWrite(descGPIB_HP8753, "IDN?;", pGPIBstatus, 20 * TIMEOUT_RW_1SEC);
+	GPIBasyncRead(descGPIB_HP8753, &ASCIIanswer, MAX_IDN_SIZE, pGPIBstatus, 20 * TIMEOUT_RW_1SEC);
 
 	if( GPIBsucceeded( *pGPIBstatus ) ) {
 		LOG( G_LOG_LEVEL_INFO, "IDN returns \"%s\"", ASCIIanswer );
@@ -1068,7 +1107,6 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 #define LS_PAYLOAD_SIZE_INDEX	2
 	// We can restore the current state after examining changes
     enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
-    waitFor8753_OPC_SRQ( descGPIB_HP8753, "NOOP;", pGPIBstatus, 2.0 );
 
 	// If we have communication problems exit
 	if( GPIBfailed(*pGPIBstatus) )
@@ -1173,7 +1211,7 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 		}
 	}
 
-    waitFor8753_OPC_SRQ( descGPIB_HP8753, "NOOP;", pGPIBstatus, 2.0 );
+    GPIBasyncSRQwrite( descGPIB_HP8753, "NOOP;", NULL_STR, pGPIBstatus, 2.0 * TIMEOUT_RW_1SEC );
 
 	// If we have communication problems exit
 	if( GPIBfailed(*pGPIBstatus) )
@@ -1185,13 +1223,14 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 	postInfo("Returning state of HP8753");
 	GPIBasyncWrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
 	// Includes the 4 byte header with size in bytes (big endian)
-	GPIBasyncWriteBinary( descGPIB_HP8753, currentStateLS,
-			GUINT16_FROM_BE(*(guint16 *)(currentStateLS+LS_PAYLOAD_SIZE_INDEX)) + 4, pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
+	GPIBasyncSRQwrite( descGPIB_HP8753, currentStateLS,
+			lengthFORM1data( currentStateLS ),
+			pGPIBstatus, 10 * TIMEOUT_RW_1MIN );
+
 	// If the calibration needs to be interpolated, the processing of the learn string can be over a minute
 	// A long sweep (narrow IFBW) can take 5 min for both channels
 	// Re-applying learn string wipes out SRQ enable
     enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
-    waitFor8753_OPC_SRQ( descGPIB_HP8753, "NOOP;", pGPIBstatus, 5 * TIMEOUT_RW_1MIN );
 
 	postInfo("");
 	if( GPIBsucceeded(*pGPIBstatus) )

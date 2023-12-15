@@ -27,11 +27,13 @@ tGPIBReadWriteStatus GPIBasyncWriteOneOfN( gint, const void *, gint, gint *, gdo
 tGPIBReadWriteStatus GPIBasyncRead( gint , void *, glong , gint *, gdouble );
 tGPIBReadWriteStatus GPIBasyncWrite( gint , const void *, gint *, gdouble );
 tGPIBReadWriteStatus GPIBasyncWriteBinary( gint, const void *, gint , gint *, gdouble  );
-tGPIBReadWriteStatus waitFor8753_OPC_SRQ( gint , gchar *, gint *, gdouble );
+tGPIBReadWriteStatus GPIBasyncSRQwrite( gint , void *, gint, gint *, gdouble );
 tGPIBReadWriteStatus enableSRQonOPC( gint , gint * );
 
-#define GPIBfailed(x) (((x) & ERR) == ERR)
-#define GPIBsucceeded(x) (((x) & ERR) != ERR)
+#define NULL_STR	-1
+#define ERR_TIMEOUT (0x1000)
+#define GPIBfailed(x) (((x) & (ERR | ERR_TIMEOUT)) != 0)
+#define GPIBsucceeded(x) (((x) & (ERR | ERR_TIMEOUT)) == 0)
 
 #define TIMEOUT_RW_1SEC   1.0
 #define TIMEOUT_RW_1MIN  60.0

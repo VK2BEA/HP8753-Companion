@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.22-5"
+   #define VERSION "1.23-2"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -585,6 +585,7 @@ extern const gchar *formatSmithOrPolarSymbols[][2];
 extern const gchar *sweepSymbols[];
 extern const gint numOfCalArrays[];
 
+#define lengthFORM1data(x) (GUINT16_FROM_BE(*(guint16 *)((x)+2)) + 4)
 #define DISCOVERED_LS_INDEXES	0
 extern tLearnStringIndexes learnStringIndexes[];
 

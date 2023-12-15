@@ -280,7 +280,12 @@ on_activate (GApplication *app, gpointer udata)
 			pGlobal->HP8753.analyzedLSindexes.version % 100 );
 	gtk_label_set_label( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Lbl_Firmware"),
 			pGlobal->HP8753.analyzedLSindexes.version != 0 ? sFWlabel : "Firmware unknown");
+
+	gchar *sWindowTitle = g_strdup_printf( "HP %s Vector Network Analyzer",
+			pGlobal->HP8753.sProduct ? pGlobal->HP8753.sProduct : "8753" );;
+	gtk_window_set_title( GTK_WINDOW(wApplicationWindow), sWindowTitle );
 	g_free( sFWlabel );
+	g_free( sWindowTitle );
 
 
 	// Get cal and trace profiles from sqlite3 database

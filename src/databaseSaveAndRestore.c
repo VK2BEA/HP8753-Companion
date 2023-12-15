@@ -983,8 +983,7 @@ saveCalibrationAndSetup(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 		//learn
 		if( channel == eCH_ONE ) {
 			if (sqlite3_bind_blob(stmt, ++queryIndex, pGlobal->HP8753cal.pHP8753C_learn,
-					GUINT16_FROM_BE( *(guint16* )(pGlobal->HP8753cal.pHP8753C_learn + 2))
-							+ 4, SQLITE_STATIC) != SQLITE_OK)
+					lengthFORM1data( pGlobal->HP8753cal.pHP8753C_learn ), SQLITE_STATIC) != SQLITE_OK)
 				goto err;
 		} else {
 			++queryIndex;
@@ -1021,7 +1020,7 @@ saveCalibrationAndSetup(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 		for (int i = 0; i < MAX_CAL_ARRAYS; i++) {
 			gint length;
 			if( i < numOfCalArrays[pGlobal->HP8753cal.perChannelCal[channel].iCalType] )
-				length = GUINT16_FROM_BE( *(guint16* )(pGlobal->HP8753cal.perChannelCal[channel].pCalArrays[i] + 2)) + 4;
+				length = lengthFORM1data( pGlobal->HP8753cal.perChannelCal[channel].pCalArrays[i] );
 			else
 				length = 0;
 			if (sqlite3_bind_blob(stmt, ++queryIndex, pGlobal->HP8753cal.perChannelCal[channel].pCalArrays[i], length,

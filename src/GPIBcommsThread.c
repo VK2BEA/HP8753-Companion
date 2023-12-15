@@ -199,7 +199,7 @@ GPIBasyncWriteBinary(gint GPIBdescriptor, const void *sData, gint length, gint *
             rtn = eRDWT_CONTINUE;
             waitTime += THIRTY_MS;
             if (waitTime > FIVE_SECONDS && fmod(waitTime, 1.0) < THIRTY_MS) {
-                gchar *sMessage = g_strdup_printf("Waiting for HP8753: %ds", (gint) (waitTime));
+                gchar *sMessage = g_strdup_printf("🔵 Waiting for HP8753: %ds", (gint) (waitTime));
                 postInfo(sMessage);
                 g_free(sMessage);
             }
@@ -221,7 +221,6 @@ GPIBasyncWriteBinary(gint GPIBdescriptor, const void *sData, gint length, gint *
 
     if (rtn != eRDWT_OK)
         ibstop(GPIBdescriptor);
-    ;
 
     *pGPIBstatus = AsyncIbsta();
 
@@ -236,7 +235,12 @@ GPIBasyncWriteBinary(gint GPIBdescriptor, const void *sData, gint length, gint *
                     AsyncIberr());
     }
     ibtmo(GPIBdescriptor, currentTimeout);
-    return (rtn == eRDWT_CONTINUE ? eRDWT_TIMEOUT : rtn);
+    if( rtn == eRDWT_CONTINUE ) {
+        *pGPIBstatus |= ERR_TIMEOUT;
+        return (eRDWT_TIMEOUT);
+    } else {
+        return (rtn);
+    }
 }
 
 /*!     \brief  Write (async) string to the GPIB device
@@ -322,7 +326,7 @@ GPIBasyncRead(gint GPIBdescriptor, void *readBuffer, long maxBytes, gint *pGPIBs
             rtn = eRDWT_CONTINUE;
             waitTime += THIRTY_MS;
             if (waitTime > FIVE_SECONDS && fmod(waitTime, 1.0) < THIRTY_MS) {
-                gchar *sMessage = g_strdup_printf("Waiting for HP8753: %ds", (gint) (waitTime));
+                gchar *sMessage = g_strdup_printf("🟢 Waiting for HP8753: %ds", (gint) (waitTime));
                 postInfo(sMessage);
                 g_free(sMessage);
             }
@@ -344,7 +348,6 @@ GPIBasyncRead(gint GPIBdescriptor, void *readBuffer, long maxBytes, gint *pGPIBs
 
     if (rtn != eRDWT_OK)
         ibstop(GPIBdescriptor);
-    ;
 
     *pGPIBstatus = AsyncIbsta();
 
@@ -359,7 +362,12 @@ GPIBasyncRead(gint GPIBdescriptor, void *readBuffer, long maxBytes, gint *pGPIBs
                     AsyncIberr());
     }
     ibtmo(GPIBdescriptor, currentTimeout);
-    return (rtn == eRDWT_CONTINUE ? eRDWT_TIMEOUT : rtn);
+    if( rtn == eRDWT_CONTINUE ) {
+        *pGPIBstatus |= ERR_TIMEOUT;
+        return (eRDWT_TIMEOUT);
+    } else {
+        return (rtn);
+    }
 }
 
 /*!     \brief  Read configuration value from the GPIB device
@@ -636,6 +644,7 @@ threadGPIB(gpointer _pGlobal) {
             // Get learn string and calibration arrays
             // If the channels are uncoupled, there are two sets of calibration arrays
             case TG_RETRIEVE_SETUPandCAL_from_HP8753:
+                GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                 if (get8753setupAndCal(descGPIB_HP8753, pGlobal, &GPIBstatus) == OK
                         && GPIBsucceeded(GPIBstatus)) {
                     postInfo("Saving HP8753C setup to database");
@@ -652,13 +661,14 @@ threadGPIB(gpointer _pGlobal) {
                     usleep(ms(250));
                 } else {
                     // beep
-                    GPIBasyncWrite(descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus,
+                    GPIBasyncWrite(descGPIB_HP8753, "MENUOFF;EMIB;CLES;", &GPIBstatus,
                             10 * TIMEOUT_RW_1SEC);
                 }
                 // local
                 IBLOC(descGPIB_HP8753, datum, GPIBstatus);
                 break;
             case TG_SEND_SETUPandCAL_to_HP8753:
+                GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                 // We have already obtained the data from the database
                 // now send it to the network analyzer
 
@@ -681,7 +691,7 @@ threadGPIB(gpointer _pGlobal) {
                     usleep(ms(250));
                 } else {
                     // beep
-                    GPIBasyncWrite(descGPIB_HP8753, "MENUOFF;EMIB;", &GPIBstatus,
+                    GPIBasyncWrite(descGPIB_HP8753, "MENUOFF;EMIB;CLES;", &GPIBstatus,
                             10 * TIMEOUT_RW_1SEC);
                 }
                 // local
@@ -689,14 +699,23 @@ threadGPIB(gpointer _pGlobal) {
                 break;
 
             case TG_RETRIEVE_TRACE_from_HP8753:
+                GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                 // Clear the drawing areas
                 clearHP8753traces(&pGlobal->HP8753);
                 postDataToMainLoop(TM_REFRESH_TRACE, eCH_ONE);
                 postDataToMainLoop(TM_REFRESH_TRACE, (void*) eCH_TWO);
 
                 postInfo("Determine channel configuration");
-                pGlobal->HP8753.flags.bDualChannel = getHP8753switchOnOrOff(descGPIB_HP8753, "DUAC",
-                        &GPIBstatus);
+                {
+                    gint dualChannel = getHP8753switchOnOrOff(descGPIB_HP8753, "DUAC",
+                            &GPIBstatus);
+                    if (GPIBfailed(GPIBstatus) || dualChannel == ERROR ) {
+                        postError("HP8753 not responding .. is it ready?");
+                        break;
+                    } else {
+                        pGlobal->HP8753.flags.bDualChannel = dualChannel;
+                    }
+                }
                 pGlobal->HP8753.flags.bSplitChannels = getHP8753switchOnOrOff(descGPIB_HP8753,
                         "SPLD", &GPIBstatus);
                 pGlobal->HP8753.flags.bSourceCoupled = getHP8753switchOnOrOff(descGPIB_HP8753,
@@ -800,6 +819,7 @@ threadGPIB(gpointer _pGlobal) {
                 break;
 
             case TG_MEASURE_and_RETRIEVe_S2P_from_HP8753:
+                GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                 postInfo("Measure and retrieve S2P");
                 // This can take some time
                 GPIBstatus = ibtmo(descGPIB_HP8753, T30s);
@@ -818,13 +838,13 @@ threadGPIB(gpointer _pGlobal) {
                     usleep(ms(250));
                 } else {
                     // beep
-                    GPIBasyncWrite(descGPIB_HP8753, "EMIB;", &GPIBstatus, 1.0);
+                    GPIBasyncWrite(descGPIB_HP8753, "EMIB;CLES;", &GPIBstatus, 1.0);
                 }
                 // local
-                IBLOC(descGPIB_HP8753, datum, GPIBstatus)
-                ;
+                IBLOC(descGPIB_HP8753, datum, GPIBstatus);
                 break;
             case TG_ANALYZE_LEARN_STRING:
+                GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                 postInfo("Discovering Learn String indexes");
 
                 if (analyze8753learnString(descGPIB_HP8753, &pGlobal->HP8753.analyzedLSindexes,
@@ -843,16 +863,16 @@ threadGPIB(gpointer _pGlobal) {
                     usleep(ms(250));
                 } else {
                     // beep
-                    GPIBasyncWrite(descGPIB_HP8753, "EMIB;", &GPIBstatus, 1.0);
+                    GPIBasyncWrite(descGPIB_HP8753, "EMIB;CLES;", &GPIBstatus, 1.0);
                 }
                 // local
                 IBLOC(descGPIB_HP8753, datum, GPIBstatus);
                 break;
             case TG_UTILITY:
+                GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                 // see what's changed in the learn string after making some change on the HP8753
                 //... for diagnostic reasons only
                 {
-                    gint LSsize = 0;
                     guchar *LearnString = NULL;
                     gboolean bDifferent = FALSE;
                     if( pHP8753C_learn == NULL && get8753learnString(descGPIB_HP8753, &pHP8753C_learn, &GPIBstatus) !=  OK ) {
@@ -863,8 +883,7 @@ threadGPIB(gpointer _pGlobal) {
                         g_printerr( "Cannot get learn string from HP8753\n" );
                         break;
                     }
-                    LSsize = GUINT16_FROM_BE(*((guint* )(LearnString + 2)));
-                    for (int i = 0; i < LSsize; i++) {
+                    for (int i = 0; i < lengthFORM1data( LearnString ); i++) {
                         if (pHP8753C_learn[i] != LearnString[i]) {
                             g_print("%-4d: 0x%02x  0x%02x\n", i, pHP8753C_learn[i], LearnString[i]);
                             bDifferent = TRUE;
@@ -878,6 +897,7 @@ threadGPIB(gpointer _pGlobal) {
                 }
                 break;
             case TG_SEND_CALKIT_to_HP8753:
+                GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                 postInfo("Send calibration kit");
 
                 if (sendHP8753calibrationKit(descGPIB_HP8753, pGlobal, &GPIBstatus) == 0) {
@@ -896,7 +916,7 @@ threadGPIB(gpointer _pGlobal) {
                     GPIBstatus = ibtmo(descGPIB_HP8753, T1s);
                 }
 
-                GPIBasyncWrite(descGPIB_HP8753, "EMIB;", &GPIBstatus, 1.0);
+                GPIBasyncWrite(descGPIB_HP8753, "EMIB;CLES;", &GPIBstatus, 1.0);
                 IBLOC(descGPIB_HP8753, datum, GPIBstatus);
                 break;
             case TG_ABORT:
@@ -906,6 +926,7 @@ threadGPIB(gpointer _pGlobal) {
                     ibask( descGPIB_HP8753, IbaBNA, &boardIndex);
                     ibsic( boardIndex );
                     GPIBstatus = ibclr(descGPIB_HP8753);
+                    GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                     IBLOC(descGPIB_HP8753, datum, GPIBstatus);
                 }
                 break;
@@ -917,9 +938,9 @@ threadGPIB(gpointer _pGlobal) {
         // restore timeout
         ibtmo(descGPIB_HP8753, timeoutHP8753C);
 
-        if (GPIBfailed(GPIBstatus))
+        if (GPIBfailed(GPIBstatus)) {
             postError("GPIB error or timeout");
-
+        }
         postMessageToMainLoop(TM_COMPLETE_GPIB, NULL);
 
         g_free(message->sMessage);
