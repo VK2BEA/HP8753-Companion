@@ -943,8 +943,9 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 	do {
 		gint offset = strlen(sHPGL);
 		int n;
-		GPIBasyncRead(descGPIB_HP8753, sHPGL+offset, MAX_HPGL_PLOT_CHUNK-offset,
-				pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+		if( GPIBasyncRead(descGPIB_HP8753, sHPGL+offset, MAX_HPGL_PLOT_CHUNK-offset,
+				pGPIBstatus, 10 * TIMEOUT_RW_1SEC) != eRDWT_OK )
+			break;
 		sHPGL[ AsyncIbcnt()+offset ] = 0;
 		if( GPIBsucceeded(*pGPIBstatus) ) {
 			gchar **tokens =  g_strsplit ( sHPGL, ";", -1 );

@@ -256,6 +256,9 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 
 	// the restored learn string will set the active channel but if the source is uncoupled
 	// we need to restore cal arrays for both channels
+	if( GPIBfailed( *pGPIBstatus ) )
+	    return TRUE;
+
 	for(channel = eCH_ONE; channel < eNUM_CH; channel++ ) {
 		setHP8753channel( descGPIB_HP8753, channel, pGPIBstatus );
 		postInfoWithCount( "Send channel %d calibration type", channel+1, 0 );
@@ -295,6 +298,8 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 			postInfoWithCount( "Enable channel %d interpolative correction", channel+1, 0 );
 			GPIBasyncWrite(descGPIB_HP8753, "CORION;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
 		}
+		if( GPIBfailed( *pGPIBstatus ) )
+		    return TRUE;
 	}
 
     // Re-enable sweeping if it was on previously
