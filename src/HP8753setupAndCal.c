@@ -268,7 +268,9 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 		for(int i=0, j=0; i < strlen( optCalType[ pGlobal->HP8753cal.perChannelCal[ channel ].iCalType ].code ); i++ )
 			if( optCalType[ pGlobal->HP8753cal.perChannelCal[channel].iCalType ].code[ i ] != '?' )
 				ts[ j++ ] = optCalType[ pGlobal->HP8753cal.perChannelCal[ channel ].iCalType ].code[ i ];
-		GPIBasyncWrite( descGPIB_HP8753, ts, pGPIBstatus, 10 * TIMEOUT_RW_1SEC  );
+		// If the channels are coupled, then the cal on / cal off is also coupled
+		if( channel == eCH_ONE || !pGlobal->HP8753cal.settings.bSourceCoupled )
+			GPIBasyncWrite( descGPIB_HP8753, ts, pGPIBstatus, 10 * TIMEOUT_RW_1SEC  );
 		g_free( ts );
 
 		// Send the cal arrays
