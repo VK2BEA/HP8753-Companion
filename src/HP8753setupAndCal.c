@@ -65,7 +65,7 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 	postInfo("Determine channel configuration");
 	// See of we have a coupled source. If uncoupled, we will need to get both sets of calibration correction arrays.
 	pGlobal->HP8753cal.settings.bSourceCoupled  = getHP8753switchOnOrOff( descGPIB_HP8753, "COUC", pGPIBstatus );
-
+	pGlobal->HP8753cal.settings.bDualChannel  = getHP8753switchOnOrOff( descGPIB_HP8753, "DUAC", pGPIBstatus );
 	// Initialize the calibration structure before we set them from the current states
 	for( channel = eCH_ONE; channel < eNUM_CH; channel++ ) {
 		for (i = 0; i < MAX_CAL_ARRAYS; i++) {
@@ -235,7 +235,10 @@ err:
 gint
 send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )  {
 	gchar sCommand[ MAX_OUTPCAL_LEN ];
+	gdouble sweepTime[ eNUM_CH ] = {0};
 	eChannel channel = eCH_ONE;
+	gdouble totalSweepTime;
+	gdouble bUncertainSweepTime = FALSE;
 	int i;
 
 	enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
@@ -300,6 +303,9 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 			postInfoWithCount( "Enable channel %d interpolative correction", channel+1, 0 );
 			GPIBasyncWrite(descGPIB_HP8753, "CORION;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
 		}
+		// Find the sweep time
+		askHP8753C_dbl(descGPIB_HP8753, "SWET", &sweepTime[ channel ], pGPIBstatus);
+
 		if( GPIBfailed( *pGPIBstatus ) )
 		    return TRUE;
 	}
@@ -320,11 +326,43 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
     }
 
 	// if the source is coupled, then we did not change channel
-	if ( pGlobal->HP8753cal.settings.bActiveChannel != channel )
+	if ( pGlobal->HP8753cal.settings.bActiveChannel != channel ) {
 		setHP8753channel( descGPIB_HP8753, pGlobal->HP8753cal.settings.bActiveChannel, pGPIBstatus );
+		channel = pGlobal->HP8753cal.settings.bActiveChannel;
+	}
+
+	// Estimate the time to do a complete sweep of
+	// if its long (more than 10 seconds ... add this to the status indicator// active channel sweep time
+	bUncertainSweepTime = FALSE;
+	totalSweepTime = sweepTime[ channel ];
+
+	// We have at least the active channel
+	// If calibration correction is applied the HP8753 has to do a scan of the opposing port also
+	if( pGlobal->HP8753cal.perChannelCal[ channel ].iCalType != eCALtypeNONE )
+		totalSweepTime += sweepTime[ channel ];
+
+	if ( pGlobal->HP8753cal.settings.bDualChannel ) {
+		channel = (channel == eCH_ONE ? eCH_TWO : eCH_ONE);
+		if( !pGlobal->HP8753cal.settings.bSourceCoupled ) {	// uncoupled
+			totalSweepTime += sweepTime[ channel ];
+			if( pGlobal->HP8753cal.perChannelCal[ channel ].iCalType != eCALtypeNONE )
+				totalSweepTime += sweepTime[ channel ];
+		} else if( pGlobal->HP8753cal.perChannelCal[ channel ].iCalType == eCALtypeNONE ) {
+			// If the sources are coupled, the scan time may increase if there is no calibration.
+			// This is because one channel may be measuring Port 1 and the other Port2
+			// if we measure S11 + S22 or S12 + S21 or S11 + S21 or S22 + S12 ( on either channel)
+			bUncertainSweepTime = TRUE;
+			totalSweepTime += sweepTime[ channel ];
+		}
+	}
 
 	// We need to wait for a clean sweep  ... the 8753 is not useful until it does sweep in any case
-	GPIBasyncSRQwrite( descGPIB_HP8753, "WAIT;", NULL_STR,  pGPIBstatus, 6 * TIMEOUT_RW_1MIN );
+	if( totalSweepTime < 5.0 )
+		totalSweepTime = 10.0;
+
+	// Show estimated sweep time in the status line unless we have some doubt as to it's accuracy.
+	GPIBasyncSRQwrite( descGPIB_HP8753, "WAIT;", bUncertainSweepTime ? NULL_STR : WAIT_STR,
+			pGPIBstatus, (gint) (totalSweepTime * TIMEOUT_SAFETY_FACTOR) );
 
 	// beep
 	GPIBasyncWrite( descGPIB_HP8753, "MENUOFF;EMIB", pGPIBstatus, 10 * TIMEOUT_RW_1SEC );

@@ -180,7 +180,12 @@ GPIBasyncSRQwrite( gint descGPIB_HP8753, void *pData,
         }
         waitTime += THIRTY_MS;
         if (waitTime > FIVE_SECONDS && fmod(waitTime, 1.0) < THIRTY_MS) {
-            gchar *sMessage = g_strdup_printf("🟠 Waiting for HP8753 : %ds", (gint) (waitTime));
+        	gchar *sMessage;
+        	if( nBytes == WAIT_STR && timeoutSecs > 15 ) {	// this means we have a "WAIT;" message .. so show the estimated time
+        		sMessage = g_strdup_printf("🟠 Waiting for HP8753 : %ds / %.0lfs", (gint) (waitTime), (double)timeoutSecs / TIMEOUT_SAFETY_FACTOR );
+        	} else {
+        		sMessage = g_strdup_printf("🟠 Waiting for HP8753 : %ds", (gint) (waitTime));
+        	}
             postInfo(sMessage);
             g_free(sMessage);
         }

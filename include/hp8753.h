@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.23-2"
+   #define VERSION "1.24-1"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -311,6 +311,7 @@ typedef struct {
 	struct {
 	    guint16 bSourceCoupled			: 1;
 	    guint16 bActiveChannel			: 1;
+	    guint16 bDualChannel			: 1;
 	} settings;
 
 	struct {

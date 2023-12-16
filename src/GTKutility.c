@@ -43,12 +43,19 @@ showCalInfo( tHP8753cal *pChannelCal, tGlobal *pGlobal ) {
 	gchar *sUnitPrefix;
 	gchar *sString;
 	eChannel channel;
+	gint i;
 
-	for( channel = eCH_ONE; channel < eNUM_CH; channel++ ) {
+	for( i=0, channel = pChannelCal->settings.bActiveChannel; i < eNUM_CH;
+					i++, channel = (channel == eCH_ONE ? eCH_TWO : eCH_ONE ) ) {
 		if( channel == eCH_ONE )
 			wTBcalInfo = gtk_text_view_get_buffer( GTK_TEXT_VIEW(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_TextView_CalInfoCh1")));
 		else
 			wTBcalInfo = gtk_text_view_get_buffer( GTK_TEXT_VIEW(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_TextView_CalInfoCh2")));
+
+		if( !pChannelCal->settings.bDualChannel && channel != pChannelCal->settings.bActiveChannel ) {
+			gtk_text_buffer_set_text( wTBcalInfo, "", 0);
+			continue;
+		}
 
 		tSweepType sweepType = pChannelCal->perChannelCal[ channel ].sweepType;
 		switch ( sweepType ) {

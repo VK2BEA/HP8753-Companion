@@ -394,7 +394,7 @@ const gint numOfCalArrays[] = { 0, 	// None
         1,	// Response
         2,	// Response & Isolation
         3,	// S11 1-port
-        3,	// S11 1-port
+        3,	// S22 1-port
         12,	// Full 2-port
         12, // One path 2-port
         12  // TRL*/LRM* 2-port
