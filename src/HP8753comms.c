@@ -1217,6 +1217,8 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 		}
 	}
 
+	// The PRES commands above will have wiped out the SRQ enable ...
+	enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
     GPIBasyncSRQwrite( descGPIB_HP8753, "NOOP;", NULL_STR, pGPIBstatus, 2.0 * TIMEOUT_RW_1SEC );
 
 	// If we have communication problems exit
