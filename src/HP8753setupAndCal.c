@@ -241,7 +241,7 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	eChannel channel = eCH_ONE;
 	gdouble totalSweepTime;
 	gdouble bUncertainSweepTime = FALSE;
-	int i;
+	int i, nchannels;
 
 	enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
 	GPIBasyncWrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
@@ -262,9 +262,9 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	// we need to restore cal arrays for both channels
 	if( GPIBfailed( *pGPIBstatus ) )
 	    return TRUE;
-
-	for( i = 0, channel = pGlobal->HP8753cal.settings.bActiveChannel; i < eNUM_CH;
-			i++, channel = (channel + 1) % eNUM_CH ) {
+	GPIBasyncWrite( descGPIB_HP8753, "MENUOFF;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC  );
+	for( nchannels = 0, channel = pGlobal->HP8753cal.settings.bActiveChannel; nchannels < eNUM_CH;
+			nchannels++, channel = (channel + 1) % eNUM_CH ) {
 		if( channel != pGlobal->HP8753cal.settings.bActiveChannel )
 			setHP8753channel( descGPIB_HP8753, channel, pGPIBstatus );
 		postInfoWithCount( "Send channel %d calibration type", channel+1, 0 );
@@ -275,7 +275,7 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 			if( optCalType[ pGlobal->HP8753cal.perChannelCal[channel].iCalType ].code[ i ] != '?' )
 				ts[ j++ ] = optCalType[ pGlobal->HP8753cal.perChannelCal[ channel ].iCalType ].code[ i ];
 		// If the channels are coupled, then the cal on / cal off is also coupled
-		if( i == 0 || !pGlobal->HP8753cal.settings.bSourceCoupled ) {
+		if( nchannels == 0 || !pGlobal->HP8753cal.settings.bSourceCoupled ) {
 			GPIBasyncWrite( descGPIB_HP8753, "CALN", pGPIBstatus, 10 * TIMEOUT_RW_1SEC  );
 			GPIBasyncWrite( descGPIB_HP8753, ts, pGPIBstatus, 10 * TIMEOUT_RW_1SEC  );
 		}
