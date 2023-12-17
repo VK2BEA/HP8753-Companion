@@ -338,21 +338,51 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 
 	// We have at least the active channel
 	// If calibration correction is applied the HP8753 has to do a scan of the opposing port also
-	if( pGlobal->HP8753cal.perChannelCal[ channel ].iCalType != eCALtypeNONE )
+	switch ( pGlobal->HP8753cal.perChannelCal[ channel ].iCalType ) {
+	case eCALtypeNONE:
+	case eCALtypeS11onePort:
+	case eCALtypeS22onePort:
+	case eCALtypeRESPONSE:
+	case eCALtypeRESPONSEandISOLATION:
+		break;
+	case eCALtypeFullTwoPort:
+	case eCALtype1pathTwoPort:
+	case eCALtypeTRL_LRM_TwoPort:
 		totalSweepTime += sweepTime[ channel ];
+		break;
+	default:
+		break;
+	}
 
 	if ( pGlobal->HP8753cal.settings.bDualChannel ) {
 		channel = (channel == eCH_ONE ? eCH_TWO : eCH_ONE);
 		if( !pGlobal->HP8753cal.settings.bSourceCoupled ) {	// uncoupled
 			totalSweepTime += sweepTime[ channel ];
-			if( pGlobal->HP8753cal.perChannelCal[ channel ].iCalType != eCALtypeNONE )
+			switch ( pGlobal->HP8753cal.perChannelCal[ channel ].iCalType ) {
+			case eCALtypeFullTwoPort:
+			case eCALtype1pathTwoPort:
+			case eCALtypeTRL_LRM_TwoPort:
 				totalSweepTime += sweepTime[ channel ];
-		} else if( pGlobal->HP8753cal.perChannelCal[ channel ].iCalType == eCALtypeNONE ) {
-			// If the sources are coupled, the scan time may increase if there is no calibration.
+				break;
+			default:
+				break;
+			}
+		} else {
+			// If the sources are coupled, the scan time may still increase if there is no calibration.
 			// This is because one channel may be measuring Port 1 and the other Port2
 			// if we measure S11 + S22 or S12 + S21 or S11 + S21 or S22 + S12 ( on either channel)
-			bUncertainSweepTime = TRUE;
-			totalSweepTime += sweepTime[ channel ];
+			switch ( pGlobal->HP8753cal.perChannelCal[ channel ].iCalType ) {
+			case eCALtypeNONE:
+			case eCALtypeS11onePort:
+			case eCALtypeS22onePort:
+			case eCALtypeRESPONSE:
+			case eCALtypeRESPONSEandISOLATION:
+				bUncertainSweepTime = TRUE;
+				totalSweepTime += sweepTime[ channel ];
+				break;
+			default:
+				break;
+			}
 		}
 	}
 
