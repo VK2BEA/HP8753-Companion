@@ -187,6 +187,8 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 		pGlobal->HP8753cal.perChannelCal[ channel ].settings.bValid = TRUE;
 	}
 
+	if( channel != pGlobal->HP8753cal.settings.bActiveChannel )
+		setHP8753channel( descGPIB_HP8753, pGlobal->HP8753cal.settings.bActiveChannel, pGPIBstatus );
 	// Request modified learn string (without interpolative correction and with hold)
 	// so that when we restore we do so efficiently.
 	// We will re-enable cal after loading learn string.
@@ -248,7 +250,6 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 
 	GPIBasyncSRQwrite( descGPIB_HP8753, (gchar *)pGlobal->HP8753cal.pHP8753C_learn, LSsize,
 			pGPIBstatus, 10 * TIMEOUT_RW_1MIN );
-
 	// Restoring the setup seems to reset the ESR and SRQ enable ... so do it here
 	enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
 
@@ -262,8 +263,10 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	if( GPIBfailed( *pGPIBstatus ) )
 	    return TRUE;
 
-	for(channel = eCH_ONE; channel < eNUM_CH; channel++ ) {
-		setHP8753channel( descGPIB_HP8753, channel, pGPIBstatus );
+	for( i = 0, channel = pGlobal->HP8753cal.settings.bActiveChannel; i < eNUM_CH;
+			i++, channel = (channel + 1) % eNUM_CH ) {
+		if( channel != pGlobal->HP8753cal.settings.bActiveChannel )
+			setHP8753channel( descGPIB_HP8753, channel, pGPIBstatus );
 		postInfoWithCount( "Send channel %d calibration type", channel+1, 0 );
 
 		// Set the cal type (need to remove the ? from the string)
@@ -272,8 +275,10 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 			if( optCalType[ pGlobal->HP8753cal.perChannelCal[channel].iCalType ].code[ i ] != '?' )
 				ts[ j++ ] = optCalType[ pGlobal->HP8753cal.perChannelCal[ channel ].iCalType ].code[ i ];
 		// If the channels are coupled, then the cal on / cal off is also coupled
-		if( channel == eCH_ONE || !pGlobal->HP8753cal.settings.bSourceCoupled )
+		if( i == 0 || !pGlobal->HP8753cal.settings.bSourceCoupled ) {
+			GPIBasyncWrite( descGPIB_HP8753, "CALN", pGPIBstatus, 10 * TIMEOUT_RW_1SEC  );
 			GPIBasyncWrite( descGPIB_HP8753, ts, pGPIBstatus, 10 * TIMEOUT_RW_1SEC  );
+		}
 		g_free( ts );
 
 		// Send the cal arrays
