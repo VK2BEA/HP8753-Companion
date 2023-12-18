@@ -52,6 +52,7 @@ showCalInfo( tHP8753cal *pChannelCal, tGlobal *pGlobal ) {
 		else
 			wTBcalInfo = gtk_text_view_get_buffer( GTK_TEXT_VIEW(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_TextView_CalInfoCh2")));
 
+		// Only show the acive channel if there is only one channel shown (and the sources are coupled)
 		if(!pChannelCal->settings.bDualChannel &&
 			pChannelCal->settings.bSourceCoupled && channel != pChannelCal->settings.bActiveChannel ) {
 			gtk_text_buffer_set_text( wTBcalInfo, "", 0);

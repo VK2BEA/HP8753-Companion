@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.24-3"
+   #define VERSION "1.25-1"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -238,6 +238,7 @@ typedef struct {
 } tChannel;
 
 typedef enum { eCH_ONE = 0, eCH_SINGLE = 0, eCH_TWO = 1, eNUM_CH = 2, eCH_BOTH = 2 } eChannel;
+#define otherChannel(x)	((x+1) % eNUM_CH)
 typedef enum { eProjectName = 0, eCalibrationName = 1, eTraceName = 2 } tRMCtarget;
 typedef enum { eRename = 0, eMove = 1, eCopy = 2 } tRMCpurpose;
 
@@ -328,6 +329,7 @@ typedef struct {
 		    guint16 bbInterplativeCalibration	: 2;
 		    guint16 bValid						: 1;
 		    guint16 bAveraging					: 1;
+		    guint16 bUseOtherChannelCalArrays	: 1;
 		} settings;
 	} perChannelCal[ eNUM_CH ];
 

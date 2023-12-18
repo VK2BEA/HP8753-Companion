@@ -127,7 +127,7 @@ splashCreate (gpointer *pGlobal)
 	GtkWidget *wVersionLabel = g_hash_table_lookup ( ((tGlobal *)pGlobal)->widgetHashTable, (gconstpointer)"WID_LblVersion");
 	gchar *sVersion;
 	if( wSplash ) {
-		sVersion = g_strdup_printf( "Version %s\t(🔨 %s)", VERSION, __DATE__ );
+		sVersion = g_strdup_printf( "Version %s\t(🔨 %s)", VERSION, __DATE__ ); // Changelog date is used in RPM
 		gtk_label_set_label( GTK_LABEL( wVersionLabel ), sVersion );
 		g_free( sVersion );
     	// this is needed for Wayland to get rid of the warning notice about transient window not attached

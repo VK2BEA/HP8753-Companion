@@ -1018,11 +1018,10 @@ saveCalibrationAndSetup(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 			goto err;
 		// cal01 to cal12
 		for (int i = 0; i < MAX_CAL_ARRAYS; i++) {
-			gint length;
-			if( i < numOfCalArrays[pGlobal->HP8753cal.perChannelCal[channel].iCalType] )
+			gint length = 0;
+			if( i < numOfCalArrays[pGlobal->HP8753cal.perChannelCal[channel].iCalType] &&
+					pGlobal->HP8753cal.perChannelCal[channel].pCalArrays[i] != NULL )
 				length = lengthFORM1data( pGlobal->HP8753cal.perChannelCal[channel].pCalArrays[i] );
-			else
-				length = 0;
 			if (sqlite3_bind_blob(stmt, ++queryIndex, pGlobal->HP8753cal.perChannelCal[channel].pCalArrays[i], length,
 					SQLITE_STATIC) != SQLITE_OK)
 				goto err;
