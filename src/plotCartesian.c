@@ -151,11 +151,8 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 			cairo_set_line_width (cr, pGrid->areaWidth / 1000.0 * 0.5);
 			cairo_stroke (cr);
 		}
-		if( channel == eCH_ONE )
-		    showStimulusInformation (cr, pGrid, channel, pGlobal);
-		else if( pGrid->overlay.bAny && channel == eCH_TWO )
-			showStimulusInformation (cr, pGrid, channel, pGlobal);
 
+		showStimulusInformation (cr, pGrid, channel, pGlobal);
 		setTraceColor( cr, pGrid->overlay.bAny, channel );
 
 		// y-axis labels
