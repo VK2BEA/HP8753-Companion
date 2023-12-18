@@ -52,7 +52,8 @@ showCalInfo( tHP8753cal *pChannelCal, tGlobal *pGlobal ) {
 		else
 			wTBcalInfo = gtk_text_view_get_buffer( GTK_TEXT_VIEW(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_TextView_CalInfoCh2")));
 
-		if( !pChannelCal->settings.bDualChannel && channel != pChannelCal->settings.bActiveChannel ) {
+		if(!pChannelCal->settings.bDualChannel &&
+			pChannelCal->settings.bSourceCoupled && channel != pChannelCal->settings.bActiveChannel ) {
 			gtk_text_buffer_set_text( wTBcalInfo, "", 0);
 			continue;
 		}
@@ -93,8 +94,9 @@ showCalInfo( tHP8753cal *pChannelCal, tGlobal *pGlobal ) {
 		gtk_text_buffer_set_text( wTBcalInfo, "", 0);
 		if( pChannelCal->perChannelCal[ channel ].settings.bValid ) {
 
-			g_snprintf( sBuffer, BUFFER_SIZE_500, "<span color='darkblue'>%s</span>\n",
-					optCalType[ pChannelCal->perChannelCal[ channel ].iCalType ].desc);
+			g_snprintf( sBuffer, BUFFER_SIZE_500, "<span color='darkblue'>%s</span>  %s\n",
+					optCalType[ pChannelCal->perChannelCal[ channel ].iCalType ].desc,
+					pChannelCal->settings.bSourceCoupled ? "" : "⛓️‍");
 			gtk_text_buffer_get_end_iter( wTBcalInfo, &iter );
 			gtk_text_buffer_insert_markup( wTBcalInfo, &iter, sBuffer, -1 );
 
