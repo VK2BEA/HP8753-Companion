@@ -199,7 +199,7 @@ GPIBasyncWriteBinary(gint GPIBdescriptor, const void *sData, gint length, gint *
             rtn = eRDWT_CONTINUE;
             waitTime += THIRTY_MS;
             if (waitTime > FIVE_SECONDS && fmod(waitTime, 1.0) < THIRTY_MS) {
-                gchar *sMessage = g_strdup_printf("🔵 Waiting for HP8753: %ds", (gint) (waitTime));
+                gchar *sMessage = g_strdup_printf("✍🏻 Waiting for HP8753: %ds", (gint) (waitTime));
                 postInfo(sMessage);
                 g_free(sMessage);
             }
@@ -235,6 +235,10 @@ GPIBasyncWriteBinary(gint GPIBdescriptor, const void *sData, gint length, gint *
                     AsyncIberr());
     }
     ibtmo(GPIBdescriptor, currentTimeout);
+
+    if ( waitTime > FIVE_SECONDS )
+    	postInfo("");
+
     if( rtn == eRDWT_CONTINUE ) {
         *pGPIBstatus |= ERR_TIMEOUT;
         return (eRDWT_TIMEOUT);
@@ -326,7 +330,7 @@ GPIBasyncRead(gint GPIBdescriptor, void *readBuffer, long maxBytes, gint *pGPIBs
             rtn = eRDWT_CONTINUE;
             waitTime += THIRTY_MS;
             if (waitTime > FIVE_SECONDS && fmod(waitTime, 1.0) < THIRTY_MS) {
-                gchar *sMessage = g_strdup_printf("🟢 Waiting for HP8753: %ds", (gint) (waitTime));
+                gchar *sMessage = g_strdup_printf("👀 Waiting for HP8753: %ds", (gint) (waitTime));
                 postInfo(sMessage);
                 g_free(sMessage);
             }
@@ -361,6 +365,10 @@ GPIBasyncRead(gint GPIBdescriptor, void *readBuffer, long maxBytes, gint *pGPIBs
             LOG(G_LOG_LEVEL_CRITICAL, "GPIB async read status/error: %04X/%d", *pGPIBstatus,
                     AsyncIberr());
     }
+
+    if ( waitTime > FIVE_SECONDS )
+    	postInfo("");
+
     ibtmo(GPIBdescriptor, currentTimeout);
     if( rtn == eRDWT_CONTINUE ) {
         *pGPIBstatus |= ERR_TIMEOUT;
@@ -668,7 +676,6 @@ threadGPIB(gpointer _pGlobal) {
                 IBLOC(descGPIB_HP8753, datum, GPIBstatus);
                 break;
             case TG_SEND_SETUPandCAL_to_HP8753:
-                GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                 // We have already obtained the data from the database
                 // now send it to the network analyzer
 

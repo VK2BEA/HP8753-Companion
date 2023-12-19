@@ -347,7 +347,8 @@ inventorySavedSetupsAndCal(tGlobal *pGlobal) {
 			"   a.IFbandwidth, b.IFbandwidth, a.CWfrequency, b.CWfrequency,"
 			"   a.sweepType, b.sweepType, a.npoints, b.npoints, a.CalType, "
 			"   b.CalType, a.perChannelCalSettings, b.perChannelCalSettings, a.calSettings "
-			" FROM HP8753C_CALIBRATION a LEFT JOIN HP8753C_CALIBRATION b ON a.name=b.name"
+			" FROM HP8753C_CALIBRATION a LEFT JOIN HP8753C_CALIBRATION b "
+			" ON a.project=b.project AND a.name=b.name"
 			" WHERE a.channel=0 AND b.channel=1;", -1, &stmt, NULL) != SQLITE_OK) {
 		postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
 		return ERROR;

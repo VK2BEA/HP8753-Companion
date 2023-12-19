@@ -52,8 +52,16 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 	gdouble nPoints = 0;
 	gint i, nchannel;
 
+	// clear the status registers and preset the HP8753
+	*pGPIBstatus = ibclr( descGPIB_HP8753 );
+	GPIBasyncWrite(descGPIB_HP8753, "CLE;", pGPIBstatus, 20 * TIMEOUT_RW_1SEC);
+	GPIBasyncSRQwrite(descGPIB_HP8753, "ESE1;SRE32;NOOP;", NULL_STR, pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+
+	// abort if we can't get this far
+	if( GPIBfailed( *pGPIBstatus ))
+		return( FALSE );
+
 	postInfo("Retrieve learn string");
-	enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
 	// Request Learn string (probably don't need to set the format as the LS is always in 'form1')
 	GPIBasyncWrite(descGPIB_HP8753, "FORM1;", pGPIBstatus, 	10 * TIMEOUT_RW_1SEC);
 	if ( get8753learnString( descGPIB_HP8753, &pGlobal->HP8753cal.pHP8753C_learn, pGPIBstatus ))
@@ -269,7 +277,15 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	gdouble bUncertainSweepTime = FALSE;
 	int i, nchannel;
 
-	enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
+	// clear the status registers and preset the HP8753
+	*pGPIBstatus = ibclr( descGPIB_HP8753 );
+	GPIBasyncWrite(descGPIB_HP8753, "CLE;", pGPIBstatus, 20 * TIMEOUT_RW_1SEC);
+	GPIBasyncSRQwrite(descGPIB_HP8753, "PRES;ESE1;SRE32;NOOP;", NULL_STR, pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+
+	// abort if we can't get this far
+	if( GPIBfailed( *pGPIBstatus ))
+		return( FALSE );
+
 	GPIBasyncWrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
 	// Includes the 4 byte header with size in bytes (big endian)
 	gint LSsize = GUINT16_FROM_BE(*(guint16 *)(pGlobal->HP8753cal.pHP8753C_learn+2)) + 4;
