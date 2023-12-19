@@ -54,7 +54,8 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 
 	// clear the status registers and preset the HP8753
 	*pGPIBstatus = ibclr( descGPIB_HP8753 );
-	GPIBasyncWrite(descGPIB_HP8753, "CLE;", pGPIBstatus, 20 * TIMEOUT_RW_1SEC);
+	GPIBasyncWrite(descGPIB_HP8753, "CLS;", pGPIBstatus, 20 * TIMEOUT_RW_1SEC);
+	usleep( ms(20) );
 	GPIBasyncSRQwrite(descGPIB_HP8753, "ESE1;SRE32;NOOP;", NULL_STR, pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
 
 	// abort if we can't get this far
@@ -279,7 +280,8 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 
 	// clear the status registers and preset the HP8753
 	*pGPIBstatus = ibclr( descGPIB_HP8753 );
-	GPIBasyncWrite(descGPIB_HP8753, "CLE;", pGPIBstatus, 20 * TIMEOUT_RW_1SEC);
+    GPIBasyncWrite(descGPIB_HP8753, "CLS;", pGPIBstatus, 20 * TIMEOUT_RW_1SEC);
+    usleep( ms(20) );
 	GPIBasyncSRQwrite(descGPIB_HP8753, "PRES;ESE1;SRE32;NOOP;", NULL_STR, pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
 
 	// abort if we can't get this far
