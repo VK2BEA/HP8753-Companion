@@ -29,8 +29,8 @@
 
 #include "messageEvent.h"
 
-#define QUERY_SIZE	50
-#define ANSWER_SIZE	50
+#define QUERY_SIZE	100
+#define ANSWER_SIZE	100
 
 // Index to HP8753 learn string for items that we cannot
 // get with conventional queries.
@@ -182,9 +182,9 @@ GPIBasyncSRQwrite( gint descGPIB_HP8753, void *pData,
         if (waitTime > FIVE_SECONDS && fmod(waitTime, 1.0) < THIRTY_MS) {
         	gchar *sMessage;
         	if( nBytes == WAIT_STR && timeoutSecs > 15 ) {	// this means we have a "WAIT;" message .. so show the estimated time
-        		sMessage = g_strdup_printf("🟠 Waiting for HP8753 : %ds / %.0lfs", (gint) (waitTime), (double)timeoutSecs / TIMEOUT_SAFETY_FACTOR );
+        		sMessage = g_strdup_printf("🟠 Waiting for HP8753 🇸 : %ds / %.0lfs", (gint) (waitTime), (double)timeoutSecs / TIMEOUT_SAFETY_FACTOR );
         	} else {
-        		sMessage = g_strdup_printf("🟠 Waiting for HP8753 : %ds", (gint) (waitTime));
+        		sMessage = g_strdup_printf("🟠 Waiting for HP8753 🇸 : %ds", (gint) (waitTime));
         	}
             postInfo(sMessage);
             g_free(sMessage);
