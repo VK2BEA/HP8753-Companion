@@ -939,6 +939,9 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 
 	for( gint i=0; i < 4; i++ ) {
 		GPIBasyncRead(descGPIB_HP8753, sHPGL, MAX_HPGL_PLOT_CHUNK, pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+		if( GPIBsucceeded( *pGPIBstatus ) && pGlobal->flags.bbDebug == 6 ) {
+		    g_printerr( "%.*s", AsyncIbcnt(), sHPGL );
+		}
 	}
 	// This is the HPGL that is significant
 	// The number of characters is dependent on the number of points and number of traces (including memory traces)
@@ -953,6 +956,9 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 			break;
 		sHPGL[ AsyncIbcnt()+offset ] = 0;
 		if( GPIBsucceeded(*pGPIBstatus) ) {
+	        if( pGlobal->flags.bbDebug == 6 )
+	            g_printerr( "%.*s", AsyncIbcnt(), sHPGL+offset );
+
 			gchar **tokens =  g_strsplit ( sHPGL, ";", -1 );
 			gint max=g_strv_length(tokens);
 			// the last string may be partial, so stuff it into
@@ -966,10 +972,7 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 			strcpy( sHPGL, tokens[max-1] );
 			g_strfreev(tokens);
 		}
-#define MSG_SIZE    100
-        gchar sMsg[ MSG_SIZE ];
-        g_snprintf( sMsg, MSG_SIZE, "Received %d HPGL instructions", nTokens);
-        postInfo( sMsg );
+        postInfoWithCount( "Received %d HPGL instructions", nTokens, 0 );
 	} while ( (*pGPIBstatus & END) != END && GPIBsucceeded(*pGPIBstatus)  );
 	// the last command must be parsed
 	if( GPIBsucceeded(*pGPIBstatus) ) {
