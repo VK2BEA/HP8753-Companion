@@ -211,6 +211,11 @@ setNotePageColorButton (tGlobal *pGlobal, gboolean bHiResOrHPGL ) {
  */
 void
 CB_NC_BtnResetColors( GtkButton *wButton, tGlobal *pGlobal ) {
+    GtkComboBox *wComboColorElement;
+    GtkColorChooser *wColorChooser;
+    const gchar *sID;
+    gint ID;
+
     for( int i=0; i < NUM_HPGL_PENS; i++ ) {
         HPGLpens[ i ] = HPGLpensFactory[ i ];
     }
@@ -221,5 +226,18 @@ CB_NC_BtnResetColors( GtkButton *wButton, tGlobal *pGlobal ) {
                             (gconstpointer )"WID_DrawingArea_Plot_A")));
     gtk_widget_queue_draw( GTK_WIDGET( g_hash_table_lookup(pGlobal->widgetHashTable,
                             (gconstpointer )"WID_DrawingArea_Plot_B")));
+
+    // Reset the colors on the notebook page
+    wComboColorElement = GTK_COMBO_BOX(g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_CB_HiResColor"));
+    wColorChooser =  g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_CP_HiResColor");
+    sID = gtk_combo_box_get_active_id( wComboColorElement );
+    ID = sID != NULL ? atoi( sID ) : 0;
+    gtk_color_chooser_set_rgba( wColorChooser, &plotElementColors[ ID ]);
+
+    wComboColorElement = GTK_COMBO_BOX(g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_CB_HPGLcolor"));
+    wColorChooser =  g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_CP_HPGLcolor");
+    sID = gtk_combo_box_get_active_id( wComboColorElement );
+    ID = sID != NULL ? atoi( sID ) : 0;
+    gtk_color_chooser_set_rgba( wColorChooser, &HPGLpens[ ID ]);
 }
 
