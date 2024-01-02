@@ -14,6 +14,15 @@ typedef enum { CHPGL_LINE2PT=0, CHPGL_LINE=1, CHPGL_PEN=2, CHPGL_LINETYPE=3,
 #define HPGL_LINE_TYPE		('L'<<8|'T')	// LT (line type)
 #define HPGL_VELOCITY		('V'<<8|'S')	// VS (Velocity Select)
 
+#define HPGL_SCALING_PTS    ('I'<<8|'P')    // IP (Scaling Points)
+#define HPGL_SCALING        ('S'<<8|'C')    // SC (Scaling)
+
+#define HPGL_INPUT_MASK     ('I'<<8|'M')    // IM (Input Mask)
+#define HPGL_DEFAULT        ('D'<<8|'F')    // DF (Default)
+#define HPGL_PAGE_FEED      ('P'<<8|'G')    // PG (Page Feed)
+
+#define HPGL_LINE_TERMINATOR_CHARACTER '\003'
+
 // Scaling SC
 //     - establishes a user-unit coordinate system by mapping
 //       user-defined coordinate values onto the scaling points P1 and P2
@@ -30,4 +39,4 @@ typedef struct {
 	} tCoord;
 #define QUANTIZE(x, y) ((gint)(((gdouble)(x)/(y))+1) * y)
 
-gint parseHPGL( gchar *sHPGL, tGlobal *pGlobal );
+gboolean parseHPGL( gchar *sHPGL, tGlobal *pGlobal );

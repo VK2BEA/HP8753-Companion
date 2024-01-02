@@ -922,6 +922,7 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 	gint nTokens = 0;
 	gboolean bFullPagePlot = TRUE;
 	gint plotQuadrant = 0;
+    gboolean bPresumedEnd = FALSE;
 
 	pGlobal->HP8753.flags.bHPGLdataValid = FALSE;
 
@@ -934,20 +935,15 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 	    plotQuadrant = findHP8753option( descGPIB_HP8753, optPlotQuadrant, sizeof(optPlotQuadrant) / sizeof(HP8753C_option), pGPIBstatus);
 	}
 	GPIBasyncWrite(descGPIB_HP8753, "SCAPFULL;FULP;PTEXT ON;OUTPPLOT;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
-	// read HPGL header (;;;;DF;IM;)(IP250,279,10250,7479;)(SC0 ,4095 ,0 ,4212 ;)(;PU;)
-	// This is always the same .. so we don't need to process it
-
-	for( gint i=0; i < 4; i++ ) {
-		GPIBasyncRead(descGPIB_HP8753, sHPGL, MAX_HPGL_PLOT_CHUNK, pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
-		if( GPIBsucceeded( *pGPIBstatus ) && pGlobal->flags.bbDebug == 6 ) {
-		    g_printerr( "%.*s", AsyncIbcnt(), sHPGL );
-		}
-	}
-	// This is the HPGL that is significant
 	// The number of characters is dependent on the number of points and number of traces (including memory traces)
-	// that are enabled. The GPIB END is asserted at completion and ibcnt will indicate the short count.
+	// that are enabled. The GPIB END is asserted at the end of a line and ibcnt will indicate the actual count.
 	sHPGL[0] = 0;	// we start with no remainder from a previous call
 	parseHPGL( NULL, pGlobal );
+	// We do a number of reads to obtain the HPGL...
+	// The number of reads is different on the c and the d models so we cannot
+	// assume to know what this is. We could just read until a timeout but then we always have
+	// an delay on the last read. The HPGL selects pen 0 (white) as the anti-penultimate command.
+	// we can use this to indicate that no more reads are needed. When parsedd, this give us our 'presumed end'
 	do {
 		gint offset = strlen(sHPGL);
 		int n;
@@ -964,7 +960,7 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 			// the last string may be partial, so stuff it into
 			// the beginning of the next buffer
 			for( n=0 ; n < max-1; n++ ) {
-				parseHPGL( tokens[n], pGlobal );
+			    bPresumedEnd = parseHPGL( tokens[n], pGlobal );
 				nTokens++;
 			}
 			// copy remainder (possibly only a partial) to the buffer to be
@@ -973,7 +969,7 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 			g_strfreev(tokens);
 		}
         postInfoWithCount( "Received %d HPGL instructions", nTokens, 0 );
-	} while ( (*pGPIBstatus & END) != END && GPIBsucceeded(*pGPIBstatus)  );
+	} while ( ((*pGPIBstatus & END) != END || !bPresumedEnd)  && GPIBsucceeded(*pGPIBstatus)  );
 	// the last command must be parsed
 	if( GPIBsucceeded(*pGPIBstatus) ) {
 		parseHPGL( sHPGL, pGlobal );

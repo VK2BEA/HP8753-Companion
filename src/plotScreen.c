@@ -50,7 +50,7 @@
  * \param  sHPGL	pointer to HPGL snippet
  * \return 0 (OK) or -1 (ERROR)
  */
-gint
+gboolean
 parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 	static gboolean bPenDown = FALSE;
 	static tCoord posn = {0};
@@ -75,6 +75,15 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 	        CHPGL_LINE2PT, {77, 384}, {77, 444 },
             CHPGL_LINE, 3, {65, 426}, {77, 444}, {88, 426}
 	};
+	static gint scaleX = HPGL_MAX_X;
+	static gint scaleY = HPGL_MAX_Y;
+    static gint scalePtX = HPGL_P1P2_X;
+    static gint scalePtY = HPGL_P1P2_Y;
+	gint temp1=0, temp2=0;
+
+	// selecting pen 0 (white) indicates end of plot
+	gboolean bPresumedEnd = FALSE;
+
 	// number of bytes used in the malloced memory
 	guint HPGLserialCount;
 	int nArgs;
@@ -126,7 +135,7 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 		// I don't think this should occur with HPGL ... but there you have it
 		if( nArgs == 3 ) {
 			*(guint *)(pGlobal->HP8753.plotHPGL) = HPGLserialCount;
-			parseHPGL( (gchar *)secondHPGLcmd, pGlobal );
+			bPresumedEnd |= parseHPGL( (gchar *)secondHPGLcmd, pGlobal );
 			HPGLserialCount = *(guint *)(pGlobal->HP8753.plotHPGL);
 		}
 		g_free( secondHPGLcmd );
@@ -165,7 +174,7 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 		}
 
 		// some labels from the 8753C have 003 characters .. remove them
-		if( sHPGL[ 2 + strLength - 1 ] == '\003' )
+		if( sHPGL[ 2 + strLength - 1 ] == HPGL_LINE_TERMINATOR_CHARACTER )
 			sHPGL[ 2 + strLength - 1 ] = 0;
 		// allocate more space if needed
 		pGlobal->HP8753.plotHPGL = g_realloc( pGlobal->HP8753.plotHPGL,
@@ -252,9 +261,24 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 		HPGLserialCount += sizeof(eHPGL);
 		*(gchar *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = (gchar)colour;
 		HPGLserialCount += sizeof( gchar );
+		if( colour == 0 )
+		    bPresumedEnd = TRUE;
 		break;
-	case HPGL_VELOCITY:
-		break;
+	case HPGL_SCALING_PTS:
+        sscanf(sHPGL+2, "%d,%d,%d,%d", &temp1, &scalePtX, &temp2, &scalePtY);
+        scalePtX -= temp1;
+        scalePtY -= temp2;
+        break;
+	    break;
+	case HPGL_SCALING:
+	    sscanf(sHPGL+2, "%d,%d,%d,%d", &temp1, &scaleX, &temp2, &scaleY);
+	    scaleX -= temp1;
+	    scaleY -= temp2;
+	    break;
+    case HPGL_VELOCITY:
+    case HPGL_INPUT_MASK:
+	case HPGL_DEFAULT:
+	case HPGL_PAGE_FEED:
 	default:
 		break;
 	}
@@ -263,7 +287,7 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 	if( pGlobal->HP8753.plotHPGL )
 		*(guint *)(pGlobal->HP8753.plotHPGL) = HPGLserialCount;
 
-	return 0;
+	return bPresumedEnd;
 }
 
 /*!     \brief  Display the 8753 screen image

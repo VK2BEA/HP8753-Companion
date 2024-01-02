@@ -903,6 +903,9 @@ threadGPIB(gpointer _pGlobal) {
                     g_free( LearnString );
                 }
                 break;
+            case TG_EXPERIMENT:
+
+                break;
             case TG_SEND_CALKIT_to_HP8753:
                 GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                 postInfo("Send calibration kit");

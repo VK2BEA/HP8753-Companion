@@ -44,6 +44,7 @@ enum _threadmessage
 	TG_MEASURE_and_RETRIEVe_S2P_from_HP8753,	// S2P
 	TG_ANALYZE_LEARN_STRING,			// get learn string and find the indexes to setup data
 	TG_UTILITY,
+	TG_EXPERIMENT,
 	TG_ABORT,
 	TG_END								// end thread
 };

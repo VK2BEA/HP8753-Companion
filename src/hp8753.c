@@ -83,6 +83,8 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
       case GDK_KEY_F11:
           if( modifier == GDK_SHIFT_MASK )
               postDataToGPIBThread( TG_UTILITY, NULL );
+          else if( modifier == GDK_MOD1_MASK )
+              postDataToGPIBThread( TG_EXPERIMENT, NULL );
     	  break;
       default:
           return FALSE;     // pass the event on to the underlying widgets
