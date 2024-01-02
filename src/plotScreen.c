@@ -75,19 +75,22 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 	        CHPGL_LINE2PT, {77, 384}, {77, 444 },
             CHPGL_LINE, 3, {65, 426}, {77, 444}, {88, 426}
 	};
+
 	static gint scaleX = HPGL_MAX_X;
 	static gint scaleY = HPGL_MAX_Y;
     static gint scalePtX = HPGL_P1P2_X;
     static gint scalePtY = HPGL_P1P2_Y;
+
+    static gboolean bOUTPUT_COMPLETE_LABEL = FALSE;
 	gint temp1=0, temp2=0;
 
 	// selecting pen 0 (white) indicates end of plot
-	gboolean bPresumedEnd = FALSE;
+	static gboolean bPresumedEnd = FALSE;
 
 	// number of bytes used in the malloced memory
 	guint HPGLserialCount;
-	int nArgs;
-	int strLength;
+	gint nArgs;
+	gint strLength;
 
 	// Initialize the serialized & compiled HPGL plot
 	if( sHPGL == NULL ) {
@@ -100,6 +103,7 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 		nPointsInLine = 0;
 		currentLine = NULL;
 
+		bPresumedEnd = FALSE;
 		// assume the pen is up
 		bPenDown = FALSE;
 		return 0;
@@ -172,6 +176,22 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
                 break;
             }
 		}
+#if 0
+		// 8753D adds a note "COPY OUTPUT COMPLETED 1 Jan 2024"
+#define HLD_LBL_XPOS_COMPLETE   330
+#define HLD_LBL_YPOS_COMPLETE   3444
+#define HLD_LBL_XPOS_COMPLETEDATE   2192
+#define HLD_LBL_YPOS_COMPLETEDATE   4148
+		if( posn.x == HLD_LBL_XPOS_COMPLETE && posn.y == HLD_LBL_YPOS_COMPLETE
+		        && g_str_has_prefix( sHPGL, "LBCOPY OUTPUT COMPLETED\003" ) ) {
+		    bOUTPUT_COMPLETE_LABEL = TRUE;
+		    break;
+		} else if( posn.x == HLD_LBL_XPOS_COMPLETEDATE && posn.y == HLD_LBL_YPOS_COMPLETEDATE ) {
+		    break;
+		} else {
+		    bOUTPUT_COMPLETE_LABEL = FALSE;
+		}
+#endif
 
 		// some labels from the 8753C have 003 characters .. remove them
 		if( sHPGL[ 2 + strLength - 1 ] == HPGL_LINE_TERMINATOR_CHARACTER )
@@ -261,7 +281,7 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 		HPGLserialCount += sizeof(eHPGL);
 		*(gchar *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = (gchar)colour;
 		HPGLserialCount += sizeof( gchar );
-		if( colour == 0 )
+		if( colour == 0 && posn.x == 0 )
 		    bPresumedEnd = TRUE;
 		break;
 	case HPGL_SCALING_PTS:

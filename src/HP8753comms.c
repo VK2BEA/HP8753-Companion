@@ -931,7 +931,7 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 	// reset it after plot acquired
 	bFullPagePlot = askOption( descGPIB_HP8753, "FULP?;", pGPIBstatus );
 
-	if( !bFullPagePlot ) {
+	if( bFullPagePlot == TRUE) {
 	    plotQuadrant = findHP8753option( descGPIB_HP8753, optPlotQuadrant, sizeof(optPlotQuadrant) / sizeof(HP8753C_option), pGPIBstatus);
 	}
 	GPIBasyncWrite(descGPIB_HP8753, "SCAPFULL;FULP;PTEXT ON;OUTPPLOT;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
@@ -948,7 +948,7 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 		gint offset = strlen(sHPGL);
 		int n;
 		if( GPIBasyncRead(descGPIB_HP8753, sHPGL+offset, MAX_HPGL_PLOT_CHUNK-offset,
-				pGPIBstatus, 10 * TIMEOUT_RW_1SEC) != eRDWT_OK )
+				pGPIBstatus, 1 * TIMEOUT_RW_1SEC) != eRDWT_OK )
 			break;
 		sHPGL[ AsyncIbcnt()+offset ] = 0;
 		if( GPIBsucceeded(*pGPIBstatus) ) {
