@@ -952,8 +952,6 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 			break;
 		sHPGL[ AsyncIbcnt()+offset ] = 0;
 		if( GPIBsucceeded(*pGPIBstatus) ) {
-	        if( pGlobal->flags.bbDebug == 6 )
-	            g_printerr( "%.*s", AsyncIbcnt(), sHPGL+offset );
 
 			gchar **tokens =  g_strsplit ( sHPGL, ";", -1 );
 			gint max=g_strv_length(tokens);
@@ -984,10 +982,10 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 	// Restore plot quadrant .. if it was previously set
 	if( !bFullPagePlot && plotQuadrant < sizeof(optPlotQuadrant) / sizeof(HP8753C_option) ) {
 		gchar *plotQuadrantCmd = g_strdup_printf( "%.4s;", optPlotQuadrant[ plotQuadrant ].code );
-	    GPIBasyncWrite(descGPIB_HP8753, plotQuadrantCmd, pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+	    GPIBasyncWrite(descGPIB_HP8753, plotQuadrantCmd, pGPIBstatus, 5 * TIMEOUT_RW_1SEC);
 	    g_free( plotQuadrantCmd );
 	}
-
+	GPIBasyncWrite(descGPIB_HP8753, "KEY34;", pGPIBstatus, 5 * TIMEOUT_RW_1SEC);
 	return ( GPIBfailed(*pGPIBstatus) );
 }
 
@@ -1118,17 +1116,21 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 		goto err;
 
 	postInfo("Process Learn String for ...");
+	DBG( eDEBUG_TESTING, "%s: Get current learn string", __FUNCTION__);
 	if ( get8753learnString( descGPIB_HP8753, &currentStateLS, pGPIBstatus ) )
 		goto err;
 	// Preset state
+	DBG( eDEBUG_TESTING, "%s: Preset", __FUNCTION__);
 	GPIBasyncWrite(descGPIB_HP8753, "PRES;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+    DBG( eDEBUG_TESTING, "%s: Get preset learn string", __FUNCTION__);
 	if ( get8753learnString( descGPIB_HP8753, &baselineLS, pGPIBstatus ) )
 		goto err;
 
+	DBG( eDEBUG_TESTING, "%s: Determine active channel", __FUNCTION__);
 	postInfo("active channel");
 	LSsize = GUINT16_FROM_BE(*(guint16 *)(baselineLS+LS_PAYLOAD_SIZE_INDEX));
 // Active channel
-	GPIBasyncWrite(descGPIB_HP8753, "PRES;S21;CHAN2;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+	GPIBasyncWrite(descGPIB_HP8753, "PRES;CHAN2;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
 	if ( get8753learnString( descGPIB_HP8753, &modifiedLS, pGPIBstatus ) )
 			goto err;
 #define LS_ACTIVE_CHAN1	0x01
@@ -1136,9 +1138,11 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 	for( i=START_OF_LS_PAYLOAD; i < LSsize; i++ ) {
 		if( baselineLS[i] == LS_ACTIVE_CHAN1 && modifiedLS[i] == LS_ACTIVE_CHAN2 ) {
 			pLSindexes->iActiveChannel = i;
+			DBG( eDEBUG_TESTING, "%s: Active channel @ %d", __FUNCTION__, i);
 		}
 	}
 
+	DBG( eDEBUG_TESTING, "%s: Determine enabled markers", __FUNCTION__);
 	postInfo("enabled markers");
 	// Markers and active marker
 	GPIBasyncWrite(descGPIB_HP8753, "PRES;MARK1;MARK4;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
@@ -1151,13 +1155,16 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 	for( i=START_OF_LS_PAYLOAD, channel=eCH_ONE, channelFn2=eCH_ONE;
 			i < LSsize && (channel <= eCH_TWO || channelFn2 <= eCH_TWO); i++ ) {
 		if( baselineLS[i] == LS_NO_MARKERS && modifiedLS[i] == LS_MARKERS_1AND4 ) {
+            DBG( eDEBUG_TESTING, "%s: Enabled markers - ch %d @ %d", __FUNCTION__, channel, i);
 			pLSindexes->iMarkersOn[ channel++ ] = i;
 		}
 		if( baselineLS[i] == LS_NO_ACTIVE_MKRS && modifiedLS[i] == LS_ACTIVE_MKR_4 ) {
+            DBG( eDEBUG_TESTING, "%s: Active marker - ch %d @ %d", __FUNCTION__, channelFn2, i);
 			pLSindexes->iMarkerActive[ channelFn2++ ] = i;
 		}
 	}
 
+	DBG( eDEBUG_TESTING, "%s: Determine enabled delta marker", __FUNCTION__);
 	postInfo("enabled delta marker");
 	// Delta Marker
 	GPIBasyncWrite(descGPIB_HP8753, "PRES;DELR4;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
@@ -1167,10 +1174,12 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 #define	LS_DELTA_MKR4	0x10
 	for( i=START_OF_LS_PAYLOAD, channel=eCH_ONE; i < LSsize && channel <= eCH_TWO; i++ ) {
 		if( baselineLS[i] == LS_NO_DELTA_MKR && modifiedLS[i] == LS_DELTA_MKR4 ) {
+            DBG( eDEBUG_TESTING, "%s: Enabled delta marker - ch %d @ %d", __FUNCTION__, channel, i);
 			pLSindexes->iMarkerDelta[ channel++ ] = i;
 		}
 	}
 
+	DBG( eDEBUG_TESTING, "%s: Determine start/stop or center", __FUNCTION__);
 	postInfo("start/stop or center/span");
 #define LS_START_STOP	0x01
 #define	LS_CENTER_SPAN	0x00
@@ -1181,10 +1190,12 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 			goto err;
 	for( i=START_OF_LS_PAYLOAD, channel=eCH_ONE; i < LSsize && channel <= eCH_TWO; i++ ) {
 		if( baselineLS[i] == LS_START_STOP && modifiedLS[i] == LS_CENTER_SPAN ) {
+            DBG( eDEBUG_TESTING, "%s: start/stop or center - ch %d @ %d", __FUNCTION__, channel, i);
 			pLSindexes->iStartStop[ channel++ ] = i;
 		}
 	}
 
+	DBG( eDEBUG_TESTING, "%s: Determine polar/smith marker", __FUNCTION__);
 	postInfo("polar/smith marker");
 #define LS_POLMKR_AngAmp	0x10
 #define LS_POLMKR_RI		0x40
@@ -1196,13 +1207,16 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 	for( i=START_OF_LS_PAYLOAD, channel=eCH_ONE, channelFn2=eCH_ONE;
 			i < LSsize && (channel <= eCH_TWO || channelFn2 <= eCH_TWO); i++ ) {
 		if( baselineLS[i] == LS_POLMKR_AngAmp && modifiedLS[i] == LS_POLMKR_RI ) {
+            DBG( eDEBUG_TESTING, "%s: polar mkr type - ch %d @ %d", __FUNCTION__, channel, i);
 			pLSindexes->iPolarMkrType[ channel++ ] = i;
 		}
 		if( baselineLS[i] == LS_SMIMKR_RI && modifiedLS[i] == LS_SMIMKR_GB ) {
 			pLSindexes->iSmithMkrType[ channelFn2++ ] = i;
+            DBG( eDEBUG_TESTING, "%s: Smith mkr type - ch %d @ %d", __FUNCTION__, channel, i);
 		}
 	}
 
+	DBG( eDEBUG_TESTING, "%s: enabled segments", __FUNCTION__);
 	postInfo("enabled segments");
 #define LS_NO_SEGMENTS	0x00
 #define	LS_ONE_SEGMENT	0x03
@@ -1212,6 +1226,7 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 			goto err;
 	for( i=START_OF_LS_PAYLOAD, channel=eCH_ONE; i < LSsize && channel <= eCH_TWO; i++ ) {
 		if( baselineLS[i] == LS_NO_SEGMENTS && modifiedLS[i] == LS_ONE_SEGMENT ) {
+		    DBG( eDEBUG_TESTING, "%s: enabled segments - ch %d @ %d", __FUNCTION__, channel, i);
 			pLSindexes->iNumSegments[ channel++ ] = i;
 		}
 	}
@@ -1227,18 +1242,18 @@ analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindexes, g
 	// tie this data to the firmware version
 	pLSindexes->version = get8753firmwareVersion(descGPIB_HP8753, NULL, pGPIBstatus);
 
+	DBG( eDEBUG_TESTING, "%s: Restore state of analyzer", __FUNCTION__);
 	postInfo("Returning state of HP8753");
 	GPIBasyncWrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
 	// Includes the 4 byte header with size in bytes (big endian)
-	GPIBasyncSRQwrite( descGPIB_HP8753, currentStateLS,
-			lengthFORM1data( currentStateLS ),
-			pGPIBstatus, 10 * TIMEOUT_RW_1MIN );
+	GPIBasyncSRQwrite( descGPIB_HP8753, currentStateLS, lengthFORM1data( currentStateLS ), pGPIBstatus, 10 * TIMEOUT_RW_1MIN );
 
 	// If the calibration needs to be interpolated, the processing of the learn string can be over a minute
 	// A long sweep (narrow IFBW) can take 5 min for both channels
 	// Re-applying learn string wipes out SRQ enable
     enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
 
+    DBG( eDEBUG_TESTING, "%s: Learn string analyzed", __FUNCTION__);
 	postInfo("");
 	if( GPIBsucceeded(*pGPIBstatus) )
 		bCompleteWithoutError = TRUE;

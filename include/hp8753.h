@@ -32,6 +32,7 @@ enum _debug
         eDEBUG_ALWAYS    = 0,
         eDEBUG_INFO      = 1,
         eDEBUG_MINOR     = 3,
+        eDEBUG_TESTING   = 4,
         eDEBUG_EXTENSIVE = 5,
         eDEBUG_MAXIMUM   = 7
 };
