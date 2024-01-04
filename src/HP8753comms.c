@@ -934,7 +934,7 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 	if( bFullPagePlot == TRUE) {
 	    plotQuadrant = findHP8753option( descGPIB_HP8753, optPlotQuadrant, sizeof(optPlotQuadrant) / sizeof(HP8753C_option), pGPIBstatus);
 	}
-	GPIBasyncWrite(descGPIB_HP8753, "SCAPFULL;FULP;PTEXT ON;OUTPPLOT;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+	GPIBasyncWrite(descGPIB_HP8753, "SCAPFULL;FULP;KEY34;PTEXT ON;OUTPPLOT;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
 	// The number of characters is dependent on the number of points and number of traces (including memory traces)
 	// that are enabled. The GPIB END is asserted at the end of a line and ibcnt will indicate the actual count.
 	sHPGL[0] = 0;	// we start with no remainder from a previous call
@@ -952,7 +952,8 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
 			break;
 		sHPGL[ AsyncIbcnt()+offset ] = 0;
 		if( GPIBsucceeded(*pGPIBstatus) ) {
-
+            if( pGlobal->flags.bbDebug == 6 )
+                g_printerr( "%.*s", AsyncIbcnt(), sHPGL+offset );
 			gchar **tokens =  g_strsplit ( sHPGL, ";", -1 );
 			gint max=g_strv_length(tokens);
 			// the last string may be partial, so stuff it into

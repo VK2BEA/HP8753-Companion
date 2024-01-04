@@ -258,6 +258,14 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
 		break;
 	case HPGL_SELECT_PEN:
 		sscanf(sHPGL+2, "%d", &colour);
+		// bizarrely there is, occasionally, a pen change while the pen is down..
+		// so close the current line (so the old color will be used when it is stroked)
+		// and start a new line from the current point
+		if( bPenDown ) {
+            bPresumedEnd |= parseHPGL( "PU", pGlobal );
+            HPGLserialCount = *(guint *)(pGlobal->HP8753.plotHPGL);
+            bPresumedEnd |= parseHPGL( "PD", pGlobal );
+		}
 		pGlobal->HP8753.plotHPGL = g_realloc( pGlobal->HP8753.plotHPGL,
 				QUANTIZE( HPGLserialCount + sizeof(eHPGL) + sizeof(gchar), 1000 ) );
 		*(eHPGL *)(pGlobal->HP8753.plotHPGL + HPGLserialCount) = CHPGL_PEN;

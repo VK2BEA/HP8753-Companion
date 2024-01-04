@@ -789,9 +789,11 @@ threadGPIB(gpointer _pGlobal) {
                 }
 
                 // Display the new data
-                postDataToMainLoop(TM_REFRESH_TRACE, eCH_ONE);
+                if( !pGlobal->HP8753.flags.bShowHPGLplot )
+                    postDataToMainLoop(TM_REFRESH_TRACE, eCH_ONE);
 
-                if (pGlobal->HP8753.flags.bDualChannel && pGlobal->HP8753.flags.bSplitChannels)
+                if (pGlobal->HP8753.flags.bDualChannel && pGlobal->HP8753.flags.bSplitChannels
+                        && !pGlobal->HP8753.flags.bShowHPGLplot )
                     postDataToMainLoop(TM_REFRESH_TRACE, (void*) eCH_TWO);
 
                 if (pGlobal->HP8753.channels[ pGlobal->HP8753.activeChannel ].chFlags.bSweepHold == FALSE) {
