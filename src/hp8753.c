@@ -161,14 +161,17 @@ splashDestroy (gpointer *pGlobal)
 
 static gint     optDebug = 0;
 static gboolean bOptQuiet = 0;
+static gboolean bOptLogo = 0;
 static gboolean bOptNoGPIBtimeout = 0;
 
 static gchar    **argsRemainder = NULL;
 
 static const GOptionEntry optionEntries[] =
 {
-  { "debug",           'b', 0, G_OPTION_ARG_INT,
+  { "debug",           'd', 0, G_OPTION_ARG_INT,
           &optDebug, "Print diagnostic messages in journal (0-7)", NULL },
+  { "logo",            'l', 0, G_OPTION_ARG_NONE,
+          &bOptLogo, "Show HP logo on plots", NULL },
   { "quiet",           'q', 0, G_OPTION_ARG_NONE,
           &bOptQuiet, "No GUI sounds", NULL },
   { "noGPIBtimeout",   't', 0, G_OPTION_ARG_NONE,
@@ -281,6 +284,9 @@ on_activate (GApplication *app, gpointer udata)
 
 	// debug level
 	pGlobal->flags.bbDebug = optDebug < 8 ? optDebug : 7;
+
+    // add HP logo
+    pGlobal->flags.bHPlogo = bOptLogo;
 
 	gchar *sFWlabel = g_strdup_printf( "Firmware %d.%d", pGlobal->HP8753.analyzedLSindexes.version/100,
 			pGlobal->HP8753.analyzedLSindexes.version % 100 );

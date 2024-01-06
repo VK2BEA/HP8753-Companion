@@ -779,6 +779,11 @@ showTitleAndTime( cairo_t *cr, tGridParameters *pGrid, gchar *sTitle, gchar *sTi
 		cairo_select_font_face(cr, LABEL_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
 		setCairoFontSize(cr, pGrid->fontSize * 1.3); // initially 10 pixels
 
+		if( globalData.flags.bHPlogo ) {
+            cairo_move_to( cr, pGrid->leftGridPosn - pGrid->gridHeight / NVGRIDS * 0.60,
+                    pGrid->areaHeight-(pGrid->lineSpacing * 1.45));
+            cairo_renderHewlettPackardLogo(cr, TRUE, FALSE, 1.0, pGrid->gridHeight / NVGRIDS * 0.30 );
+		}
 		cairo_move_to(cr, pGrid->leftGridPosn, pGrid->areaHeight-(pGrid->lineSpacing * 1.3) );
 		cairo_show_text (cr, sTitle);
 

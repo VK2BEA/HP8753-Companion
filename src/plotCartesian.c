@@ -99,8 +99,8 @@ plotCartesianGrid (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGloba
 		if( maxYlabelWidth + pGrid->textMargin  > pGrid->leftGridPosn   ) {
 			yLabelScale = (pGrid->leftGridPosn - pGrid->textMargin) / maxYlabelWidth;
 		}
-		// Draw grid pattern
 
+		// Draw grid pattern
 		// Don't redraw if we will draw over (when overlaying)
 		if( channel == eCH_TWO || !pGrid->overlay.bCartesian ) {
 			switch ( pChannel->sweepType ) {

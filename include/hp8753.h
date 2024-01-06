@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.25-4"
+   #define VERSION "1.25-5"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -368,6 +368,7 @@ typedef struct {
 	    guint16 bProject                : 1;
 	    guint16 bNoGPIBtimeout			: 1;
 	    guint16 bDoNotRetrieveHPGLdata  : 1;
+        guint16 bHPlogo                 : 1;
 	} flags;
 
 	tRMCtarget RMCdialogTarget;
@@ -513,6 +514,7 @@ void        CB_EditableCalibrationProfileName( GtkEditable *, tGlobal * );
 void        CB_EditableProjectName( GtkEditable *, tGlobal * );
 void        CB_EditableTraceProfileName( GtkEditable *, tGlobal * );
 void        CB_Radio_Calibration ( GtkRadioButton *, tGlobal * );
+void        cairo_renderHewlettPackardLogo(cairo_t *, gboolean, gboolean, gdouble, gdouble);
 gint        checkMessageQueue(GAsyncQueue *);
 void        clearHP8753traces ( tHP8753 * );
 tHP8753cal* cloneCalibrationProfile( tHP8753cal *, gchar * );
