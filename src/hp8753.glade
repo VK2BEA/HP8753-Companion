@@ -2295,7 +2295,9 @@ segments (in list frequency sweep)</property>
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="valign">center</property>
+                        <property name="margin-top">7</property>
                         <property name="homogeneous">True</property>
+                        <property name="baseline-position">top</property>
                         <child>
                           <object class="GtkButton">
                             <property name="label" translatable="yes">Reset</property>
@@ -2334,7 +2336,7 @@ segments (in list frequency sweep)</property>
                         </child>
                       </object>
                       <packing>
-                        <property name="expand">True</property>
+                        <property name="expand">False</property>
                         <property name="fill">True</property>
                         <property name="position">2</property>
                       </packing>
