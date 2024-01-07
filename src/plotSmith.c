@@ -625,6 +625,8 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 				if (bValidSample) {
 					cairo_arc( cr, gammaReal, gammaImag, UNIT_CIRCLE * gammaScale/50.0, 0.0, 2 * G_PI );
 					cairo_stroke(cr);
+                    cairo_arc( cr, gammaReal, gammaImag, UNIT_CIRCLE * gammaScale/210.0, 0.0, 2 * G_PI );
+                    cairo_fill(cr);
 				}
 
 				// return to the initial transform

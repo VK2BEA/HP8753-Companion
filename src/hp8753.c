@@ -54,6 +54,7 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
 	GdkModifierType modmask;
 	guint modifier = 0;
 	tGlobal *pGlobal = (tGlobal *)user_data;
+	GtkWidget *wControls;
 
     modmask = gtk_accelerator_get_default_mod_mask ();
     modifier = event->state & modmask;
@@ -80,6 +81,10 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
     		  postInfo( "Normal GPIB timeouts" );
     	  }
     	  break;
+      case GDK_KEY_F10:
+          wControls = GTK_WIDGET( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Controls") );
+          gtk_widget_set_visible( wControls, modifier != GDK_SHIFT_MASK );
+          break;
       case GDK_KEY_F11:
           if( modifier == GDK_SHIFT_MASK )
               postDataToGPIBThread( TG_UTILITY, NULL );

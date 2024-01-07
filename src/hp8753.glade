@@ -724,7 +724,7 @@ limitations under the License.&lt;/span&gt;</property>
           </packing>
         </child>
         <child>
-          <object class="GtkBox" id="Controls">
+          <object class="GtkBox" id="WID_Controls">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="halign">start</property>

@@ -336,6 +336,8 @@ plotCartesianTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlob
 					cairo_new_path( cr );
 					cairo_arc( cr, x * sweepScale, y * levelScale, pGrid->areaWidth / 1000.0 * 6.4, 0.0, 2 * G_PI );
 					cairo_stroke(cr);
+                    cairo_arc( cr, x * sweepScale, y * levelScale, pGrid->areaWidth / 1000.0 * 1.5, 0.0, 2 * G_PI );
+                    cairo_fill(cr);
 				}
 
 

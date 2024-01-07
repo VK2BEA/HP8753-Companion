@@ -975,13 +975,11 @@ gboolean CB_DrawingArea_A_Draw (GtkWidget *widget, cairo_t *cr, tGlobal *pGlobal
     guint areaHeight  = gtk_widget_get_allocated_height (widget);
 
 //  gtk_render_background ( gtk_widget_get_style_context (widget), cr, 0, 0, areaWidth, areaHeight );
-
     if( pGlobal->HP8753.channels[ eCH_ONE ].chFlags.bValidData ||
     		(pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid)) {
 		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0 );
 		cairo_paint( cr );
     }
-
     return plotA ( areaWidth,  areaHeight, 0, cr, pGlobal);
 }
 
