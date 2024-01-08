@@ -212,6 +212,8 @@ plotCartesianTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlob
 	gint xl, xu, npoints, seg;
 	gchar *sLabel = 0, sNote[ BUFFER_SIZE_100 ], *sPrefix="";
 	tChannel *pChannel = &pGlobal->HP8753.channels[channel];
+    GdkRGBA solidCursorRGBA = plotElementColors[ eColorLiveMkrCursor ];
+    solidCursorRGBA.alpha = 1.0;
 
 	npoints = pChannel->nPoints;
 	// where in the grid the reference line is (0 to 10)
@@ -325,19 +327,21 @@ plotCartesianTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlob
 					y = LIN_INTERP( yl, yu, (x-xl));
 					bValidSample = TRUE;
 				}
-				gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorLiveMkrCursor ] );
-				cairo_set_line_width (cr, pGrid->areaWidth / 1000.0 * 3.0);
 
+				cairo_set_line_width (cr, pGrid->areaWidth / 1000.0 * 3.0);
+				gdk_cairo_set_source_rgba (cr, &solidCursorRGBA);
 				cairo_move_to( cr, x * sweepScale, -(refPos * perDiv * levelScale));
 				cairo_rel_line_to( cr, 0, -(gdouble)pGrid->gridHeight/NVGRIDS/8);
 				cairo_stroke(cr);
 
 				if( bValidSample ) {
-					cairo_new_path( cr );
-					cairo_arc( cr, x * sweepScale, y * levelScale, pGrid->areaWidth / 1000.0 * 6.4, 0.0, 2 * G_PI );
-					cairo_stroke(cr);
+				    // dot in the middle of live marker
                     cairo_arc( cr, x * sweepScale, y * levelScale, pGrid->areaWidth / 1000.0 * 1.5, 0.0, 2 * G_PI );
                     cairo_fill(cr);
+                    // circle arount live market
+	                gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorLiveMkrCursor ] );
+                    cairo_arc( cr, x * sweepScale, y * levelScale, pGrid->areaWidth / 1000.0 * 6.4, 0.0, 2 * G_PI );
+                    cairo_stroke(cr);
 				}
 
 

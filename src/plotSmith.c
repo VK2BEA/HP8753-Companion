@@ -472,6 +472,8 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 	gboolean bValidSample = FALSE;
 
 	tChannel *pChannel = &pGlobal->HP8753.channels[channel];
+    GdkRGBA solidCursorRGBA = plotElementColors[ eColorLiveMkrCursor ];
+    solidCursorRGBA.alpha = 1.0;
 
 	// gamma for full scale
 
@@ -625,6 +627,7 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 				if (bValidSample) {
 					cairo_arc( cr, gammaReal, gammaImag, UNIT_CIRCLE * gammaScale/50.0, 0.0, 2 * G_PI );
 					cairo_stroke(cr);
+	                gdk_cairo_set_source_rgba (cr, &solidCursorRGBA );
                     cairo_arc( cr, gammaReal, gammaImag, UNIT_CIRCLE * gammaScale/210.0, 0.0, 2 * G_PI );
                     cairo_fill(cr);
 				}
@@ -670,7 +673,7 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 					}
 				}
 
-				gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorLiveMkrCursor ] );
+				gdk_cairo_set_source_rgba (cr, &solidCursorRGBA );
 				cairo_set_line_width (cr, pGrid->areaWidth / 1000.0 * 3.0);
 				// the actual xMouse position must be rescaled and translated
 				// because 0,0 is at the center of the smith chart

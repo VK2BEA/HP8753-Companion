@@ -195,14 +195,14 @@ centreJustifiedCairoTextWithClear(cairo_t *cr, gchar *label, gdouble x, gdouble 
 	cairo_text_extents (cr, label, &extents);
 
 	cairo_save( cr );
-    gdk_cairo_set_source_rgba (cr, &white );
-    cairo_new_path( cr );
-	cairo_rectangle( cr, x - (extents.width + extents.x_bearing)/2,
-			y - (extents.height + extents.y_bearing)*3/2, (extents.width + extents.x_bearing),
-			extents.height + extents.y_bearing );
-	cairo_stroke_preserve(cr);
-	cairo_fill( cr );
-	cairo_restore( cr );
+        gdk_cairo_set_source_rgba (cr, &white );
+        cairo_new_path( cr );
+        cairo_rectangle( cr, x - (extents.width + extents.x_bearing)/2,
+                y - (extents.height + extents.y_bearing)*3/2, (extents.width + extents.x_bearing),
+                extents.height + extents.y_bearing );
+        cairo_stroke_preserve(cr);
+        cairo_fill( cr );
+    cairo_restore( cr );
 
 	cairo_move_to(cr, x - (extents.width + extents.x_bearing)/2,
 			y - (extents.height + extents.y_bearing)*3/2);

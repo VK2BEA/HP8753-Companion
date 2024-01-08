@@ -2179,6 +2179,7 @@ segments (in list frequency sweep)</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <property name="halign">end</property>
+                                    <property name="use-alpha">True</property>
                                     <property name="rgba">rgb(0,0,0)</property>
                                     <signal name="color-activated" handler="CB_HighResColor" swapped="no"/>
                                     <signal name="color-set" handler="CB_ColorBtn_HighResColor" swapped="no"/>
@@ -2263,6 +2264,7 @@ segments (in list frequency sweep)</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">True</property>
                                     <property name="halign">end</property>
+                                    <property name="use-alpha">True</property>
                                     <property name="rgba">rgb(0,0,0)</property>
                                     <signal name="color-set" handler="CB_ColorBtn_HPGLcolor" swapped="no"/>
                                   </object>
