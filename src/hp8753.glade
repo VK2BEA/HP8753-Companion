@@ -1670,9 +1670,6 @@ result in a faster completion of 'Get Trace'</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">False</property>
-                        <property name="tooltip-text" translatable="yes">It takes several seconds to retrieve the HPGL screen plot.
-If the screen image is not required, cheking this box will
-result in a faster completion of 'Get Trace'</property>
                         <property name="active">True</property>
                         <property name="draw-indicator">True</property>
                         <signal name="toggled" handler="CB_ChkBtn_ShowHPlogo" swapped="no"/>
