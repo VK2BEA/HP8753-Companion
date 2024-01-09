@@ -31,43 +31,37 @@
  *		converted to native byte order.
  *
  *		This uses glib-2 for convenience.
+ *
+ *		Algorith from page 13-48 8510C Network Analyzer System Operating and Programming Manual 08510-90281 May 2001
+ *		... but the exponent doesn't give sensible answers
  */
 
 #include <glib-2.0/glib.h>
 #include <math.h>
 
-static gdouble exponents[ 0x100 ];	// third byte is index to exponent
-
-void
-initializeFORM1exponentTable( void )
-{
-	gint i;
-	for (i=0x00, exponents[0x00] = 2.0e-15; i < 0x7F; i++ )
-		exponents[i+1] =  2 * exponents[i];
-
-	for (i=0x7F, exponents[0x80] = 2.0e-143; i <0xFF; i++ )
-		exponents[i+1] =  2 * exponents[i];
-}
-
 #define TOPBITofBYTE 0x80
+#define LOWER_8BITS 0xFF
 void
-FORM1toDouble( guint8 *form1, gdouble *real, gdouble *imag, gboolean bDBnotLinear )
+FORM1toDouble( gint16 *form1, gdouble *real, gdouble *imag, gboolean bDBnotLinear )
 {
-	double exp;
+    gdouble dExp;
 
-	if( (form1[5] & TOPBITofBYTE) == 0 )
-		exp = pow( 2.0, (double)((int)(form1[5]))-15.0 );
-	else
-		exp = pow( 2.0, (double)((int)(form1[5]))-271.0 );
+    // big endien .. so the lower 8 bits of the 16 bit
+      gint16 iExp = GINT16_FROM_BE( form1[2] ) & LOWER_8BITS;
 
-	*real = GINT16_FROM_BE( form1[2] ) * exp;
-	*imag = GINT16_FROM_BE( form1[0] ) * exp;
+    // big endien .. so the lower 8 bits of the 16 bit
+    if( (iExp & TOPBITofBYTE) == 0 )
+        dExp = pow( 2.0, (double)( iExp - 15 ));
+    else
+        dExp = pow( 2.0, (double)(~(iExp ^ LOWER_8BITS) + 1) - 15.0 );
 
-	if( bDBnotLinear ) {
-		*real = 20.0 * log10( *real );
-		*real = 20.0 * log10( *imag );
-	}
-	// *real = GINT16_FROM_BE( form1[2] ) * exponents[ form1[5] ];
-	// *imag = GINT16_FROM_BE( form1[0] ) * exponents[ form1[5] ];
+    *real = GINT16_FROM_BE( form1[1] ) * dExp;
+    *imag = GINT16_FROM_BE( form1[0] ) * dExp;
+
+    if( bDBnotLinear ) {
+        *real = 20.0 * log10( *real );
+        *real = 20.0 * log10( *imag );
+    }
 }
+
 

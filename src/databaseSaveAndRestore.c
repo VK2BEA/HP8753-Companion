@@ -1587,13 +1587,6 @@ recoverProgramOptions(tGlobal *pGlobal) {
 			pGlobal->flags.bNoGPIBtimeout = bNoGPIBtimeout;
 
 			setUseGPIBcardNoAndPID(pGlobal, pGlobal->flags.bGPIB_UseCardNoAndPID );
-			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_UseGPIB_ID" )), pGlobal->flags.bGPIB_UseCardNoAndPID);
-			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_SmithSpline" )), pGlobal->flags.bSmithSpline);
-			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_ShowDateTime" )), pGlobal->flags.bShowDateTime);
-			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_SmithGBnotRX" )), pGlobal->flags.bAdmitanceSmith);
-			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_DeltaMarkerAbsolute" )), !pGlobal->flags.bDeltaMarkerZero);
-			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_UserCalKit" )), pGlobal->flags.bSaveUserKit);
-			gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_DoNotRetrieveHPGL" )), pGlobal->flags.bDoNotRetrieveHPGLdata);
 			// No longer using sGPIBcontrollerName
 			queryIndex++;
 
@@ -1663,6 +1656,16 @@ recoverProgramOptions(tGlobal *pGlobal) {
 
 		sqlite3_finalize(stmt);
 	}
+
+    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_UseGPIB_ID" )), pGlobal->flags.bGPIB_UseCardNoAndPID);
+    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_SmithSpline" )), pGlobal->flags.bSmithSpline);
+    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_ShowDateTime" )), pGlobal->flags.bShowDateTime);
+    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_SmithGBnotRX" )), pGlobal->flags.bAdmitanceSmith);
+    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_DeltaMarkerAbsolute" )), !pGlobal->flags.bDeltaMarkerZero);
+    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_UserCalKit" )), pGlobal->flags.bSaveUserKit);
+    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_DoNotRetrieveHPGL" )), pGlobal->flags.bDoNotRetrieveHPGLdata);
+    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_ShowHPlogo" )), pGlobal->flags.bHPlogo);
+
 	return bOptionsRecovered ? TRUE : FALSE;;
 }
 

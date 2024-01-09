@@ -115,3 +115,19 @@ CB_ChkBtn_Spline (GtkCheckButton *wButton, tGlobal *pGlobal)
 			(gconstpointer)"WID_DrawingArea_Plot_B")));
 }
 
+/*!     \brief  Show HP logo on Channel 1 plot
+ *
+ * Callback when the "Show HP logo" GtkButton on the "Options" notebook page is pressed
+ *
+ * \param  wButton      pointer to analyze learn string button widget
+ * \param  tGlobal      pointer global data
+ */
+void
+CB_ChkBtn_ShowHPlogo (GtkCheckButton *wButton, tGlobal *pGlobal)
+{
+    pGlobal->flags.bHPlogo = gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( wButton ) );
+    gtk_widget_queue_draw(GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable,
+            (gconstpointer)"WID_DrawingArea_Plot_A")));
+    gtk_widget_queue_draw(GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable,
+            (gconstpointer)"WID_DrawingArea_Plot_B")));
+}

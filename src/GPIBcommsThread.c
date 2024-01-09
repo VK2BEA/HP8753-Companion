@@ -904,9 +904,34 @@ threadGPIB(gpointer _pGlobal) {
                         g_print("\n");
                     g_free( LearnString );
                 }
+                IBLOC(descGPIB_HP8753, datum, GPIBstatus);
                 break;
             case TG_EXPERIMENT:
+                gint OUTPFORMsize = 0;
+                guint16 OUTPFORMheaderAndSize[2];
+                guint8 *pOUTPFORM = 0;
+                gdouble real, imag;
 
+                void
+                FORM1toDouble( guint8 *, gdouble *, gdouble *, gboolean );
+
+                GPIBasyncWrite(descGPIB_HP8753, "FORM1;OUTPFORM;", &GPIBstatus, 1.0);
+                GPIBasyncRead(descGPIB_HP8753, &OUTPFORMheaderAndSize, HEADER_SIZE, &GPIBstatus,
+                        10 * TIMEOUT_RW_1SEC);
+                // Convert from big endian to local (Intel LE)
+                OUTPFORMsize = GUINT16_FROM_BE(OUTPFORMheaderAndSize[1]);
+                pOUTPFORM = g_malloc( OUTPFORMsize );
+                // read learn string into malloced space (not clobbering header and size)
+                GPIBasyncRead(descGPIB_HP8753, pOUTPFORM, OUTPFORMsize, &GPIBstatus,
+                        10 * TIMEOUT_RW_1SEC);
+
+                for( gint n=0; n < OUTPFORMsize / 6; n++ ) {
+                    FORM1toDouble( pOUTPFORM + (n * 6), &real, &imag, FALSE );
+                    g_printerr( "%20.8lf\n", real );
+                }
+
+                g_free( pOUTPFORM );
+                IBLOC(descGPIB_HP8753, datum, GPIBstatus);
                 break;
             case TG_SEND_CALKIT_to_HP8753:
                 GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);

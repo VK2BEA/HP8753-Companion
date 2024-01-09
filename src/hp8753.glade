@@ -1571,7 +1571,7 @@ acquired trace.</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkBox">
+                  <object class="GtkBox" id="Tab_options">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="margin-bottom">4</property>
@@ -1665,6 +1665,25 @@ result in a faster completion of 'Get Trace'</property>
                       </packing>
                     </child>
                     <child>
+                      <object class="GtkCheckButton" id="WID_ChkBtn_ShowHPlogo">
+                        <property name="label" translatable="yes">Show HP logo on plot</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="tooltip-text" translatable="yes">It takes several seconds to retrieve the HPGL screen plot.
+If the screen image is not required, cheking this box will
+result in a faster completion of 'Get Trace'</property>
+                        <property name="active">True</property>
+                        <property name="draw-indicator">True</property>
+                        <signal name="toggled" handler="CB_ChkBtn_ShowHPlogo" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">5</property>
+                      </packing>
+                    </child>
+                    <child>
                       <object class="GtkBox">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
@@ -1713,7 +1732,7 @@ segments (in list frequency sweep)</property>
                       <packing>
                         <property name="expand">False</property>
                         <property name="fill">True</property>
-                        <property name="position">5</property>
+                        <property name="position">6</property>
                       </packing>
                     </child>
                   </object>
