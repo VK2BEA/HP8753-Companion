@@ -52,6 +52,7 @@ gboolean selectLearningStringIndexes( tGlobal *pGlobal );
 gint setHP8753channel( gint descGPIB_HP8753, eChannel channel, gint *pGPIBstatus );
 
 gint getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );
+gint getHP3753_S1P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );
 
 #define MAX_OUTPCAL_LEN	15
 

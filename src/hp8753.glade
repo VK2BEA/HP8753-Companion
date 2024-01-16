@@ -630,6 +630,8 @@ limitations under the License.&lt;/span&gt;</property>
   </object>
   <object class="GtkApplicationWindow" id="WID_hp8753c_main">
     <property name="can-focus">False</property>
+    <property name="hexpand">True</property>
+    <property name="vexpand">True</property>
     <property name="gravity">static</property>
     <signal name="realize" handler="CB_hp8753c_main_Realize" swapped="no"/>
     <child>
@@ -641,7 +643,6 @@ limitations under the License.&lt;/span&gt;</property>
         <property name="vexpand">True</property>
         <child>
           <object class="GtkAspectFrame" id="WID_Frame_Plot_B">
-            <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="margin-start">4</property>
             <property name="margin-end">4</property>
@@ -661,6 +662,8 @@ limitations under the License.&lt;/span&gt;</property>
                 <property name="margin-end">4</property>
                 <property name="margin-top">4</property>
                 <property name="margin-bottom">4</property>
+                <property name="hexpand">True</property>
+                <property name="vexpand">True</property>
                 <signal name="button-press-event" handler="CB_DrawingArea_Plot_B_MouseButton" swapped="no"/>
                 <signal name="draw" handler="CB_DrawingArea_B_Draw" swapped="no"/>
                 <signal name="enter-notify-event" handler="CB_DrawingArea_B_MouseAction" swapped="no"/>
@@ -696,6 +699,8 @@ limitations under the License.&lt;/span&gt;</property>
                 <property name="margin-end">4</property>
                 <property name="margin-top">4</property>
                 <property name="margin-bottom">4</property>
+                <property name="hexpand">True</property>
+                <property name="vexpand">True</property>
                 <signal name="button-press-event" handler="CB_DrawingArea_Plot_A_MouseButton" swapped="no"/>
                 <signal name="draw" handler="CB_DrawingArea_A_Draw" swapped="no"/>
                 <signal name="enter-notify-event" handler="CB_DrawingArea_A_MouseAction" swapped="no"/>

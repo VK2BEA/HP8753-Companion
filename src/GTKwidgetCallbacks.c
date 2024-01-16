@@ -267,13 +267,62 @@ CB_DrawingArea_Plot_B_Realize (GtkDrawingArea * wDrawingAreaB, tGlobal *pGlobal)
 
 #define MIN_WIDGET_SIZE 1
 void
-hide_Frame_Plot_B (tGlobal *pGlobal)
+visibilityFramePlot_B (tGlobal *pGlobal, gboolean bVisible)
 {
 	GtkWidget *wApplication = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_hp8753c_main");
 	GtkWidget *wFramePlotB = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frame_Plot_B");
+	GtkWidget *wFramePlotA = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frame_Plot_A");
+	gboolean bWasVisible = gtk_widget_get_visible( wFramePlotB );
 
-	gtk_widget_hide( wFramePlotB );
-   	gtk_window_resize( GTK_WINDOW(wApplication), MIN_WIDGET_SIZE, MIN_WIDGET_SIZE);
+    gint widthA;
+    gint widthB;
+    gint widthApp, heightApp;
+
+    // What's the size of Frame A
+    GtkAllocation* alloc = g_new(GtkAllocation, 1);
+    gtk_widget_get_allocation(wFramePlotA, alloc);
+    widthA = alloc->width;
+    gtk_widget_get_allocation(wFramePlotB, alloc);
+    widthB = alloc->width;;
+    g_free(alloc);
+
+    // What's the size of the monitor
+    GdkRectangle screenArea = {0};
+    gdk_monitor_get_workarea(
+        gdk_display_get_primary_monitor( gdk_display_get_default()), &screenArea);
+    // What's the size of the app window
+    gtk_window_get_size( GTK_WINDOW(wApplication), &widthApp, &heightApp );
+
+    // Are are hiding plot B?
+	if( !bVisible ) {
+        gtk_widget_hide( wFramePlotB );
+	    if( bWasVisible ) {
+#define PADDING 4
+	        // Dual going to a single
+            gtk_window_resize( GTK_WINDOW(wApplication), widthApp-widthB-PADDING, heightApp);
+	    }
+	} else {
+	    gtk_widget_show( wFramePlotB );
+	    // WidthA and WidthB are the same & because B is not visible
+	    // It will does not give a width with gtk_widget_get_allocation
+	    if( !bWasVisible ) {
+            if( widthApp+widthA > screenArea.width  )
+                gtk_window_resize( GTK_WINDOW(wApplication), screenArea.width, heightApp);
+            else
+                gtk_window_resize( GTK_WINDOW(wApplication), widthApp+widthA, heightApp);
+        }
+	}
+/*
+	GdkWindow *gdk_window = gtk_widget_get_window(GTK_WIDGET(wFramePlotB));
+	GdkDisplay *gdk_display = gtk_widget_get_display ( GTK_WIDGET(wFramePlotB) );
+	GdkMonitor *gdk_monitor = gdk_display_get_monitor_at_window( gdk_display, gdk_window );
+
+	GdkRectangle workarea = {0};
+	gdk_monitor_get_workarea(
+	    gdk_display_get_primary_monitor( gdk_display_get_default()), &workarea);
+
+	gtk_widget_set_size_request( wApplication, workarea.width, -1 );
+*/
 }
 
 void
@@ -282,7 +331,7 @@ CB_hp8753c_main_Realize (GtkApplicationWindow * wApplicationWindow, tGlobal *pGl
     cssItalic = gtk_css_provider_new ();
     gtk_css_provider_load_from_data( cssItalic, " entry { font-style: italic; } textview { font-style: italic; } ", -1, NULL);
 
-	hide_Frame_Plot_B( pGlobal );
+	visibilityFramePlot_B( pGlobal, FALSE );
 }
 
 void
@@ -1014,9 +1063,9 @@ CB_RadioBtn_ScreenPlot (GtkRadioButton *wRadioBtn, tGlobal *pGlobal) {
             || !pGlobal->HP8753.flags.bSplitChannels
             || !pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bValidData
             || ( pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid ) ) {
-        hide_Frame_Plot_B( pGlobal );
+        visibilityFramePlot_B( pGlobal, FALSE );
     } else {
-        gtk_widget_show( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer) "WID_Frame_Plot_B"));
+        visibilityFramePlot_B( pGlobal, TRUE);
         gtk_widget_queue_draw( GTK_WIDGET( g_hash_table_lookup(pGlobal->widgetHashTable,
                                     (gconstpointer )"WID_DrawingArea_Plot_B")));
     }

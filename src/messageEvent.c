@@ -140,16 +140,16 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 						|| !pGlobal->HP8753.flags.bSplitChannels
 						|| !pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bValidData
 						|| ( pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid ) ) {
-					hide_Frame_Plot_B( pGlobal );
+					visibilityFramePlot_B( pGlobal, FALSE );
 				}
 			} else {
 				if ( pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bValidData &&
 						! ( pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid ) ) {
-					gtk_widget_show( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer) "WID_Frame_Plot_B"));
+				    visibilityFramePlot_B( pGlobal, TRUE);
 					gtk_widget_queue_draw( GTK_WIDGET( g_hash_table_lookup(pGlobal->widgetHashTable,
 											(gconstpointer )"WID_DrawingArea_Plot_B")));
 				} else {
-					hide_Frame_Plot_B( pGlobal );
+					visibilityFramePlot_B( pGlobal, FALSE );
 				}
 			}
 			gtk_label_set_label ( GTK_LABEL( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_LblTraceTime")),

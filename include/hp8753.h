@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.25-6"
+   #define VERSION "1.26-1"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -157,10 +157,15 @@ typedef struct {
 	gdouble startFreq, stopFreq;
 } tSegment;
 
+// This must match the positions in optMeasurementType
+#define S11_MEAS  0
+#define S22_MEAS  3
+
 typedef struct {
 	gdouble *freq;
 	tComplex *S11, *S21, *S22, *S12;
 	gint nPoints;
+	enum { S2P, S1P_S11, S1P_S22 } SnPtype;
 }tS2P;
 
 typedef enum {
@@ -536,7 +541,6 @@ void        flipCairoText( cairo_t * );
 gint        getTimeStamp( gchar ** );
 void        freeCalListItem ( gpointer );
 void        freeTraceListItem ( gpointer );
-void        hide_Frame_Plot_B ( tGlobal * );
 void        initializeFORM1exponentTable ( void );
 gint        inventoryProjects ( tGlobal * );
 gint        inventorySavedCalibrationKits ( tGlobal * );
@@ -577,6 +581,7 @@ gint        smithHighResPDF( tGlobal *, gchar *, eChannel );
 gint        splineInterpolate( gint, tComplex [], gdouble, tComplex * );
 gpointer    threadGPIB (gpointer);
 void        updateCalComboBox( gpointer , gpointer );
+void        visibilityFramePlot_B ( tGlobal *, gboolean );
 
 extern tGlobal globalData;
 

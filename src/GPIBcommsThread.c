@@ -833,8 +833,7 @@ threadGPIB(gpointer _pGlobal) {
                 // This can take some time
                 GPIBstatus = ibtmo(descGPIB_HP8753, T30s);
 
-                if (getHP3753_S2P(descGPIB_HP8753, pGlobal, &GPIBstatus) == OK
-                        && GPIBsucceeded(GPIBstatus)) {
+                if ( getHP3753_S2P(descGPIB_HP8753, pGlobal, &GPIBstatus) == OK ) {
                     postInfo("Saving S2P to file");
                     postDataToMainLoop(TM_SAVE_S2P, message->data);
                     message->data = NULL;
@@ -852,6 +851,32 @@ threadGPIB(gpointer _pGlobal) {
                 // local
                 IBLOC(descGPIB_HP8753, datum, GPIBstatus);
                 break;
+
+            case TG_MEASURE_and_RETRIEVe_S1P_from_HP8753:
+                GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
+                postInfo("Measure and retrieve S1P");
+                // This can take some time
+                GPIBstatus = ibtmo(descGPIB_HP8753, T30s);
+
+                if ( getHP3753_S2P(descGPIB_HP8753, pGlobal, &GPIBstatus) == OK ) {
+                    postInfo("Saving S1P to file");
+                    postDataToMainLoop(TM_SAVE_S2P, message->data);
+                    message->data = NULL;
+                }
+
+                ibtmo(descGPIB_HP8753, T1s);
+                // clear errors
+                if (GPIBfailed(GPIBstatus)) {
+                    GPIBstatus = ibclr(descGPIB_HP8753);
+                    usleep(ms(250));
+                } else {
+                    // beep
+                    GPIBasyncWrite(descGPIB_HP8753, "EMIB;CLES;", &GPIBstatus, 1.0);
+                }
+                // local
+                IBLOC(descGPIB_HP8753, datum, GPIBstatus);
+                break;
+
             case TG_ANALYZE_LEARN_STRING:
                 GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                 postInfo("Discovering Learn String indexes");
