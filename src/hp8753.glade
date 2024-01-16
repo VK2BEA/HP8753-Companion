@@ -639,8 +639,6 @@ limitations under the License.&lt;/span&gt;</property>
       <object class="GtkGrid">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="hexpand">True</property>
-        <property name="vexpand">True</property>
         <child>
           <object class="GtkAspectFrame" id="WID_Frame_Plot_B">
             <property name="can-focus">False</property>
@@ -648,8 +646,6 @@ limitations under the License.&lt;/span&gt;</property>
             <property name="margin-end">4</property>
             <property name="margin-top">4</property>
             <property name="margin-bottom">4</property>
-            <property name="hexpand">True</property>
-            <property name="vexpand">True</property>
             <property name="label-xalign">0</property>
             <property name="shadow-type">in</property>
             <child>
@@ -685,8 +681,6 @@ limitations under the License.&lt;/span&gt;</property>
             <property name="margin-end">4</property>
             <property name="margin-top">4</property>
             <property name="margin-bottom">4</property>
-            <property name="hexpand">True</property>
-            <property name="vexpand">True</property>
             <property name="label-xalign">0</property>
             <property name="shadow-type">in</property>
             <child>

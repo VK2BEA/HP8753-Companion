@@ -272,57 +272,54 @@ visibilityFramePlot_B (tGlobal *pGlobal, gboolean bVisible)
 	GtkWidget *wApplication = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_hp8753c_main");
 	GtkWidget *wFramePlotB = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frame_Plot_B");
 	GtkWidget *wFramePlotA = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frame_Plot_A");
-	gboolean bWasVisible = gtk_widget_get_visible( wFramePlotB );
+	GtkWidget *wDrawingAreaPlotA = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DrawingArea_Plot_A");
 
-    gint widthA;
-    gint widthB;
+    gint widthA, heightA;
+    gint frameWidth;
     gint widthApp, heightApp;
+    GdkRectangle screenArea = {0};
+
+    static gint widthExtra = 0;
+    static gint __attribute__((unused)) heightExtra = 0;
+    static gboolean bFirst = TRUE;
+    static gint framePadding;
+
+#define PADDING 4
 
     // What's the size of Frame A
     GtkAllocation* alloc = g_new(GtkAllocation, 1);
-    gtk_widget_get_allocation(wFramePlotA, alloc);
+    gtk_widget_get_allocation(wDrawingAreaPlotA, alloc);
     widthA = alloc->width;
-    gtk_widget_get_allocation(wFramePlotB, alloc);
-    widthB = alloc->width;;
+    heightA = alloc->height;
+    gtk_widget_get_allocation(wFramePlotA, alloc);
+    frameWidth = alloc->width;
     g_free(alloc);
 
     // What's the size of the monitor
-    GdkRectangle screenArea = {0};
     gdk_monitor_get_workarea(
         gdk_display_get_primary_monitor( gdk_display_get_default()), &screenArea);
     // What's the size of the app window
     gtk_window_get_size( GTK_WINDOW(wApplication), &widthApp, &heightApp );
 
+    // On first pass we note the additional hight and width (that remain fixed)
+    // so that we can later determing the size of the whole application window
+    if( bFirst ) {
+        widthExtra = widthApp - widthA;
+        heightExtra = heightApp - heightA;
+        bFirst = FALSE;
+        framePadding = frameWidth - widthA;
+    }
     // Are are hiding plot B?
 	if( !bVisible ) {
         gtk_widget_hide( wFramePlotB );
-	    if( bWasVisible ) {
-#define PADDING 4
-	        // Dual going to a single
-            gtk_window_resize( GTK_WINDOW(wApplication), widthApp-widthB-PADDING, heightApp);
-	    }
+	    gtk_window_resize( GTK_WINDOW(wApplication), widthA+widthExtra, heightA+heightExtra);
 	} else {
 	    gtk_widget_show( wFramePlotB );
 	    // WidthA and WidthB are the same & because B is not visible
-	    // It will does not give a width with gtk_widget_get_allocation
-	    if( !bWasVisible ) {
-            if( widthApp+widthA > screenArea.width  )
-                gtk_window_resize( GTK_WINDOW(wApplication), screenArea.width, heightApp);
-            else
-                gtk_window_resize( GTK_WINDOW(wApplication), widthApp+widthA, heightApp);
-        }
+	    //       it will does not give a width with gtk_widget_get_allocation
+	    // We must account for frame B width and the frame padding
+	    gtk_window_resize( GTK_WINDOW(wApplication), (2 * widthA) + framePadding + (2 * PADDING) + widthExtra, heightA+heightExtra);
 	}
-/*
-	GdkWindow *gdk_window = gtk_widget_get_window(GTK_WIDGET(wFramePlotB));
-	GdkDisplay *gdk_display = gtk_widget_get_display ( GTK_WIDGET(wFramePlotB) );
-	GdkMonitor *gdk_monitor = gdk_display_get_monitor_at_window( gdk_display, gdk_window );
-
-	GdkRectangle workarea = {0};
-	gdk_monitor_get_workarea(
-	    gdk_display_get_primary_monitor( gdk_display_get_default()), &workarea);
-
-	gtk_widget_set_size_request( wApplication, workarea.width, -1 );
-*/
 }
 
 void
