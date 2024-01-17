@@ -45,6 +45,7 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 	messageEventData *message;
 
 	tGlobal *pGlobal = &globalData;
+	FILE *fSXP;
 
 	GtkLabel *wLabel = GTK_LABEL(
 			g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_Lbl_Status"));
@@ -105,26 +106,56 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 
 		case TM_SAVE_S2P:
 			sensitiseControlsInUse( pGlobal, TRUE );
-			FILE *fS2P;
-			if( (fS2P = fopen( message->data, "w" )) == NULL ) {
+			if( (fSXP = fopen( message->data, "w" )) == NULL ) {
 				gchar *sError = g_strdup_printf( "Cannot write: %s", (gchar *)message->data);
 				postError( sError );
 				g_free( sError );
 			} else {
-				fprintf( fS2P,
+				fprintf( fSXP,
 						"! 2-port S-paramater data, multiple frequency points\n"
 						"! from HP8753 Network analyzer\n"
 						"# MHz S RI R 50.0\n"
 						"! freq\tReS11\tImS11\tReS21\tImS21\tReS12\tImS12\tReS22\tImS22\n" );
 				for( int i=0; i < pGlobal->HP8753.S2P.nPoints; i++ ) {
-					fprintf( fS2P, "%lf\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\n",
+					fprintf( fSXP, "%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\t%.16lg\n",
 							pGlobal->HP8753.S2P.freq[i]/1.0e6,
 							pGlobal->HP8753.S2P.S11[i].r, pGlobal->HP8753.S2P.S11[i].i,
 							pGlobal->HP8753.S2P.S21[i].r, pGlobal->HP8753.S2P.S21[i].i,
 							pGlobal->HP8753.S2P.S12[i].r, pGlobal->HP8753.S2P.S12[i].i,
 							pGlobal->HP8753.S2P.S22[i].r, pGlobal->HP8753.S2P.S22[i].i );
 				}
-				fclose( fS2P );
+				fclose( fSXP );
+				postInfo( "S2P saved" );
+			}
+			g_free( message->data );
+			break;
+		case TM_SAVE_S1P:
+			sensitiseControlsInUse( pGlobal, TRUE );
+			if( (fSXP = fopen( message->data, "w" )) == NULL ) {
+				gchar *sError = g_strdup_printf( "Cannot write: %s", (gchar *)message->data);
+				postError( sError );
+				g_free( sError );
+			} else {
+				fprintf( fSXP,
+						"! 1-port S-paramater data, multiple frequency points\n"
+						"! from HP8753 Network analyzer\n"
+						"# MHz S RI R 50.0\n" );
+				if( pGlobal->HP8753.S2P.SnPtype == S1P_S11 ) {
+					fprintf( fSXP, "! freq\tReS11\tImS11\n" 	);
+					for( int i=0; i < pGlobal->HP8753.S2P.nPoints; i++ ) {
+						fprintf( fSXP, "%.16lg\t%.16lg\t%.16lg\n",
+								pGlobal->HP8753.S2P.freq[i]/1.0e6,
+								pGlobal->HP8753.S2P.S11[i].r, pGlobal->HP8753.S2P.S11[i].i );
+					}
+				} else {
+					fprintf( fSXP, "! freq\tReS22\tImS22\n" 	);
+					for( int i=0; i < pGlobal->HP8753.S2P.nPoints; i++ ) {
+						fprintf( fSXP, "%.16g\t%.16lg\t%.16lg\n",
+								pGlobal->HP8753.S2P.freq[i]/1.0e6,
+								pGlobal->HP8753.S2P.S22[i].r, pGlobal->HP8753.S2P.S22[i].i );
+					}
+				}
+				fclose( fSXP );
 				postInfo( "S2P saved" );
 			}
 			g_free( message->data );

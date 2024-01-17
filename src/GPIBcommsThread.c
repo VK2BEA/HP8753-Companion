@@ -827,7 +827,7 @@ threadGPIB(gpointer _pGlobal) {
                 IBLOC(descGPIB_HP8753, datum, GPIBstatus);
                 break;
 
-            case TG_MEASURE_and_RETRIEVe_S2P_from_HP8753:
+            case TG_MEASURE_and_RETRIEVE_S2P_from_HP8753:
                 GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                 postInfo("Measure and retrieve S2P");
                 // This can take some time
@@ -852,15 +852,15 @@ threadGPIB(gpointer _pGlobal) {
                 IBLOC(descGPIB_HP8753, datum, GPIBstatus);
                 break;
 
-            case TG_MEASURE_and_RETRIEVe_S1P_from_HP8753:
+            case TG_MEASURE_and_RETRIEVE_S1P_from_HP8753:
                 GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                 postInfo("Measure and retrieve S1P");
                 // This can take some time
                 GPIBstatus = ibtmo(descGPIB_HP8753, T30s);
 
-                if ( getHP3753_S2P(descGPIB_HP8753, pGlobal, &GPIBstatus) == OK ) {
+                if ( getHP3753_S1P(descGPIB_HP8753, pGlobal, &GPIBstatus) == OK ) {
                     postInfo("Saving S1P to file");
-                    postDataToMainLoop(TM_SAVE_S2P, message->data);
+                    postDataToMainLoop(TM_SAVE_S1P, message->data);
                     message->data = NULL;
                 }
 

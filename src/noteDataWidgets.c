@@ -27,9 +27,9 @@
 
 #include "messageEvent.h"
 
-/*!     \brief  Write the S2P file
+/*!     \brief  Write the S2P or S1P file
  *
- * Determine the filename to use for the S2P data file and
+ * Determine the filename to use for the SXP data file and
  * send a message to the HP8753 comms thread to make the measurements.
  * On completion, a message to the main thread will write the data to the file.
  *
@@ -37,7 +37,7 @@
  * \param  pGlobal	pointer to data
  */
 void
-CB_BtnS2P (GtkButton *wButton, tGlobal *pGlobal)
+BtnSXP (GtkButton *wButton, tGlobal *pGlobal, gboolean S2PnotS1P )
 {
     GtkWidget *dialog;
     GtkFileChooser *chooser;
@@ -46,7 +46,9 @@ CB_BtnS2P (GtkButton *wButton, tGlobal *pGlobal)
     gchar *sFilename = NULL;
     GtkFileFilter *filter;
 
-	dialog = gtk_file_chooser_dialog_new ("Acquire S-paramater data and save to S2P file",
+	dialog = gtk_file_chooser_dialog_new (
+	        S2PnotS1P ? "Acquire S-paramater data and save to S2P file"
+	                : "Acquire S-paramater data and save to S1P file",
 					NULL,
 					GTK_FILE_CHOOSER_ACTION_SAVE,
 					"_Cancel", GTK_RESPONSE_CANCEL,
@@ -54,8 +56,8 @@ CB_BtnS2P (GtkButton *wButton, tGlobal *pGlobal)
 					NULL);
 	chooser = GTK_FILE_CHOOSER (dialog);
 	filter = gtk_file_filter_new ();
-    gtk_file_filter_set_name ( filter, ".s2p" );
-    gtk_file_filter_add_pattern (filter, "*.[sS][12][pP]");
+    gtk_file_filter_set_name ( filter, S2PnotS1P ? ".s2p" : ".s1p" );
+    gtk_file_filter_add_pattern (filter, S2PnotS1P ? "*.[sS][2][pP]" :  "*.[sS][1][pP]");
 	gtk_file_chooser_add_filter ( chooser, filter );
 	//gtk_file_chooser_set_filter ( chooser, filter );
     filter = gtk_file_filter_new ();
@@ -68,7 +70,8 @@ CB_BtnS2P (GtkButton *wButton, tGlobal *pGlobal)
 	if( lastFilename )
 		sFilename = g_strdup( lastFilename);
 	else
-		sFilename = g_date_time_format( now, "HP8753C.%d%b%y.%H%M%S.s2p");
+		sFilename = g_date_time_format( now,
+		        S2PnotS1P ? "HP8753C.%d%b%y.%H%M%S.s2p" : "HP8753C.%d%b%y.%H%M%S.s1p");
 	gtk_file_chooser_set_current_name (chooser, sFilename);
 
 	if( pGlobal->sLastDirectory )
@@ -84,24 +87,58 @@ CB_BtnS2P (GtkButton *wButton, tGlobal *pGlobal)
 
 		GString *sFilename = g_string_new( filename );
 		g_free( filename );	// don't need this
-		extPos = g_strrstr( sFilename->str, ".s2p" );
+		extPos = g_strrstr( sFilename->str, S2PnotS1P ? ".s2p" : ".s1p" );
 		if( !extPos )
-			g_string_append( sFilename, ".s2p");
+			g_string_append( sFilename, S2PnotS1P ? ".s2p" : ".s1p" );
 
 		g_free( lastFilename );
 		lastFilename = g_strdup(sFilename->str);
 
 		sensitiseControlsInUse( pGlobal, FALSE );
 #if GLIB_CHECK_VERSION(2,76,0)
-		postDataToGPIBThread (TG_MEASURE_and_RETRIEVe_S2P_from_HP8753, g_string_free_and_steal (sFilename));
+		postDataToGPIBThread (
+		        S2PnotS1P ? TG_MEASURE_and_RETRIEVE_S2P_from_HP8753 : TG_MEASURE_and_RETRIEVE_S1P_from_HP8753,
+		                g_string_free_and_steal (sFilename));
 #else
-		postDataToGPIBThread (TG_MEASURE_and_RETRIEVe_S2P_from_HP8753, g_string_free (sFilename, FALSE));
+		postDataToGPIBThread (
+		        S2PnotS1P ? TG_MEASURE_and_RETRIEVE_S2P_from_HP8753 : TG_MEASURE_and_RETRIEVE_S1P_from_HP8753,
+		                g_string_free (sFilename, FALSE));
 #endif
 		// sFilename->str is freed by thread
 	}
 
 	g_free( sFilename );
 	gtk_widget_destroy (dialog);
+}
+
+/*!     \brief  Write the S2P file
+ *
+ * Determine the filename to use for the S2P data file and
+ * send a message to the HP8753 comms thread to make the measurements.
+ * On completion, a message to the main thread will write the data to the file.
+ *
+ * \param  wButton  file pointer to the open, writable file
+ * \param  pGlobal  pointer to data
+ */
+void
+CB_BtnS2P (GtkButton *wButton, tGlobal *pGlobal)
+{
+    BtnSXP (wButton, pGlobal, TRUE);
+}
+
+/*!     \brief  Write the S1P file
+ *
+ * Determine the filename to use for the S1P data file and
+ * send a message to the HP8753 comms thread to make the measurements.
+ * On completion, a message to the main thread will write the data to the file.
+ *
+ * \param  wButton  file pointer to the open, writable file
+ * \param  pGlobal  pointer to data
+ */
+void
+CB_BtnS1P (GtkButton *wButton, tGlobal *pGlobal)
+{
+    BtnSXP (wButton, pGlobal, FALSE);
 }
 
 

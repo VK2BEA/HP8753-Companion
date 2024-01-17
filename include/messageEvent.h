@@ -34,15 +34,15 @@ enum _threadmessage
 	TM_REFRESH_TRACE,					// redraw trace(s)
 	TM_SAVE_SETUPandCAL,				// save calibration and setup to database
 	TM_SAVE_LEARN_STRING_ANALYSIS,		// save analyzed learn string indexes
-	TM_SAVE_S2P,						// save calibration and setup to database
-
+	TM_SAVE_S1P,						// save calibration and setup to database
+	TM_SAVE_S2P,
 	TG_SETUP_GPIB,						// configure GPIB
 	TG_RETRIEVE_SETUPandCAL_from_HP8753,// get current calibration and setup
 	TG_SEND_SETUPandCAL_to_HP8753,		// restore calbration and setup
 	TG_SEND_CALKIT_to_HP8753,		// restore calbration and setup
 	TG_RETRIEVE_TRACE_from_HP8753,		// get traces
-	TG_MEASURE_and_RETRIEVe_S2P_from_HP8753,	// S2P
-	TG_MEASURE_and_RETRIEVe_S1P_from_HP8753,    // S1P
+	TG_MEASURE_and_RETRIEVE_S2P_from_HP8753,	// S2P
+	TG_MEASURE_and_RETRIEVE_S1P_from_HP8753,    // S1P
 	TG_ANALYZE_LEARN_STRING,			// get learn string and find the indexes to setup data
 	TG_UTILITY,
 	TG_EXPERIMENT,

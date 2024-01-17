@@ -120,7 +120,8 @@ getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	// Derive the frequency points
 	pGlobal->HP8753.S2P.freq = g_realloc(pGlobal->HP8753.S2P.freq, pGlobal->HP8753.S2P.nPoints * sizeof(gdouble) );
 	for ( i = 0; i < pGlobal->HP8753.S2P.nPoints; i++) {
-		pGlobal->HP8753.S2P.freq[i] = sweepStart + (sweepStop - sweepStart) * ((gdouble) i / (gdouble)pGlobal->HP8753.S2P.nPoints);
+		pGlobal->HP8753.S2P.freq[i] = sweepStart
+				+ (sweepStop - sweepStart) * ((gdouble) i / ((gdouble)pGlobal->HP8753.S2P.nPoints - 1));
 	}
 	// Next sweep on channel 2 will be S12
 	GPIBasyncWrite(descGPIB_HP8753, "S12;SMIC;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
@@ -227,7 +228,8 @@ getHP3753_S1P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
     // Derive the frequency points
     pGlobal->HP8753.S2P.freq = g_realloc(pGlobal->HP8753.S2P.freq, pGlobal->HP8753.S2P.nPoints * sizeof(gdouble) );
     for ( i = 0; i < pGlobal->HP8753.S2P.nPoints; i++) {
-        pGlobal->HP8753.S2P.freq[i] = sweepStart + (sweepStop - sweepStart) * ((gdouble) i / (gdouble)pGlobal->HP8753.S2P.nPoints);
+        pGlobal->HP8753.S2P.freq[i] = sweepStart
+        		+ (sweepStop - sweepStart) * ((gdouble) i / ((gdouble)pGlobal->HP8753.S2P.nPoints - 1));
     }
 
     postInfo("Restore setup");

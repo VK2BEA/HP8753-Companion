@@ -282,11 +282,10 @@ visibilityFramePlot_B (tGlobal *pGlobal, gboolean bVisible)
     static gint widthExtra = 0;
     static gint __attribute__((unused)) heightExtra = 0;
     static gboolean bFirst = TRUE;
-    static gint framePadding;
+    static gint frameThickness;
+    static gint marginLeftFrameB, marginRightFrameB;
 
-#define PADDING 4
-
-    // What's the size of Frame A
+    // What's the size of Drawing Area A
     GtkAllocation* alloc = g_new(GtkAllocation, 1);
     gtk_widget_get_allocation(wDrawingAreaPlotA, alloc);
     widthA = alloc->width;
@@ -304,21 +303,38 @@ visibilityFramePlot_B (tGlobal *pGlobal, gboolean bVisible)
     // On first pass we note the additional hight and width (that remain fixed)
     // so that we can later determing the size of the whole application window
     if( bFirst ) {
-        widthExtra = widthApp - widthA;
+        widthExtra = widthApp - widthA; // left control box & frame A
         heightExtra = heightApp - heightA;
         bFirst = FALSE;
-        framePadding = frameWidth - widthA;
+        frameThickness = frameWidth - widthA;
+        marginLeftFrameB = gtk_widget_get_margin_start( wFramePlotB );
+        marginRightFrameB = gtk_widget_get_margin_end( wFramePlotB );
     }
-    // Are are hiding plot B?
-	if( !bVisible ) {
+
+    // We shrink wrap the app around the drawing areas but we have to go through
+    // a complicated calculation to avoid the app shrinking to it's minimum
+    // Also handle the case when going from a single to dual plots that will be
+    // larger than the screen
+	if( !bVisible ) {   // hiding plot B
         gtk_widget_hide( wFramePlotB );
-	    gtk_window_resize( GTK_WINDOW(wApplication), widthA+widthExtra, heightA+heightExtra);
-	} else {
+	    gtk_window_resize( GTK_WINDOW(wApplication), widthA + widthExtra, heightA + heightExtra);
+	} else {            // showing plot B
+        // WidthA and WidthB are the same & because B is not visible
+        //       it will does not give a width with gtk_widget_get_allocation
+        // We must account for frame B width and the frame margins
+	    gint newWidthApp = widthA + widthExtra // Width of control box and plotA
+                + widthA + frameThickness + marginLeftFrameB + marginRightFrameB;
+	    gint newHeightApp = heightA + heightExtra;
+
 	    gtk_widget_show( wFramePlotB );
-	    // WidthA and WidthB are the same & because B is not visible
-	    //       it will does not give a width with gtk_widget_get_allocation
-	    // We must account for frame B width and the frame padding
-	    gtk_window_resize( GTK_WINDOW(wApplication), (2 * widthA) + framePadding + (2 * PADDING) + widthExtra, heightA+heightExtra);
+	    if( newWidthApp <= screenArea.width ) {
+	        gtk_window_resize( GTK_WINDOW(wApplication), newWidthApp, newHeightApp );
+	    } else {
+	        gint newDrawingAreaWidth = ( screenArea.width - widthExtra
+	                - frameThickness + marginLeftFrameB + marginRightFrameB ) / 2;
+	        gint newHeightApp = (gint)(((gdouble)heightA/widthA) * newDrawingAreaWidth + 0.5 + heightExtra);
+	        gtk_window_resize( GTK_WINDOW(wApplication), screenArea.width, newHeightApp );
+	    }
 	}
 }
 
