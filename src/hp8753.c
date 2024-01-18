@@ -57,7 +57,7 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
 	GtkWidget *wControls;
 
     modmask = gtk_accelerator_get_default_mod_mask ();
-    modifier = event->state & modmask;
+    modifier = event->state & modmask; // GDK_MODIFIER_MASK;
 
    if (event->keyval >= GDK_KEY_F1 && event->keyval <= GDK_KEY_F12) {
 // GDK_CONTROL_MASK GDK_SHIFT_MASK GDK_MOD1_MASK (ALT) GDK_SUPER_MASK
@@ -69,9 +69,35 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
             gtk_show_uri_on_window( NULL, "help:hp8753", gtk_get_current_event_time (), NULL );
 #endif
             break;
+
       case GDK_KEY_F2:
           showRenameMoveCopyDialog( pGlobal );
           break;
+
+      case GDK_KEY_F3:
+          break;
+
+      case GDK_KEY_F9:
+          GtkWidget *wFramePlotB = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frame_Plot_B");
+          wControls = GTK_WIDGET( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Controls") );
+          switch( modifier ) {
+          case GDK_SHIFT_MASK:
+              gtk_widget_set_visible( wControls, FALSE );
+              break;
+          default:
+              visibilityFramePlot_B (pGlobal, gtk_widget_get_visible(wFramePlotB));
+              gtk_widget_set_visible( wControls, TRUE );
+              break;
+          }
+          break;
+
+      case GDK_KEY_F11:
+          if( modifier == GDK_SHIFT_MASK )
+              postDataToGPIBThread( TG_UTILITY, NULL );
+          else if( modifier == GDK_MOD1_MASK )
+              postDataToGPIBThread( TG_EXPERIMENT, NULL );
+          break;
+
       case GDK_KEY_F12:
     	  if( modifier == GDK_SHIFT_MASK ) {
     		  pGlobal->flags.bNoGPIBtimeout = TRUE;
@@ -81,16 +107,7 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
     		  postInfo( "Normal GPIB timeouts" );
     	  }
     	  break;
-      case GDK_KEY_F10:
-          wControls = GTK_WIDGET( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Controls") );
-          gtk_widget_set_visible( wControls, modifier != GDK_SHIFT_MASK );
-          break;
-      case GDK_KEY_F11:
-          if( modifier == GDK_SHIFT_MASK )
-              postDataToGPIBThread( TG_UTILITY, NULL );
-          else if( modifier == GDK_MOD1_MASK )
-              postDataToGPIBThread( TG_EXPERIMENT, NULL );
-    	  break;
+
       default:
           return FALSE;     // pass the event on to the underlying widgets
     	  break;
@@ -265,7 +282,7 @@ on_activate (GApplication *app, gpointer udata)
     g_list_free_full ( iconList, g_object_unref );
 
     g_signal_connect(G_OBJECT(wApplicationWindow), "key-press-event", G_CALLBACK(keyHandler), pGlobal);
-    gtk_window_set_position(GTK_WINDOW(wApplicationWindow), GTK_WIN_POS_CENTER_ALWAYS);
+    gtk_window_set_position(GTK_WINDOW(wApplicationWindow), GTK_WIN_POS_CENTER);
 	gtk_widget_show(wApplicationWindow);
 	gtk_application_add_window( GTK_APPLICATION(app), GTK_WINDOW(wApplicationWindow) );
 

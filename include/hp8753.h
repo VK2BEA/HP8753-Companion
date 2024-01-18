@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.27-1"
+   #define VERSION "1.27-2"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -581,7 +581,7 @@ gint        smithHighResPDF( tGlobal *, gchar *, eChannel );
 gint        splineInterpolate( gint, tComplex [], gdouble, tComplex * );
 gpointer    threadGPIB (gpointer);
 void        updateCalComboBox( gpointer , gpointer );
-void        visibilityFramePlot_B ( tGlobal *, gboolean );
+void        visibilityFramePlot_B ( tGlobal *, gint );
 
 extern tGlobal globalData;
 

@@ -250,6 +250,14 @@ populateProjectComboBoxWidget( tGlobal * pGlobal ) {
 	return( nProjects );
 }
 
+/*!     \brief  Set events for plot A widget
+ *
+ * Set events so that the plot A widget receives mouse movement and focus signals
+ * realize signal from GtkDrawingArea plot A
+ *
+ * \param wDrawingAreaA GtkDrawingArea widget pointer
+ * \param pGlobal pointer to global data
+ */
 void
 CB_DrawingArea_Plot_A_Realize (GtkDrawingArea * wDrawingAreaA, tGlobal *pGlobal)
 {
@@ -258,6 +266,14 @@ CB_DrawingArea_Plot_A_Realize (GtkDrawingArea * wDrawingAreaA, tGlobal *pGlobal)
 //    g_signal_connect (GTK_WIDGET(wDrawingAreaA), "button-press-event", G_CALLBACK (CB_DrawingArea_Plot_A_MouseButton), (gpointer)&globalData);
 }
 
+/*!     \brief  Set events for plot B widget
+ *
+ * Set events so that the plot A widget receives mouse movement and focus signals
+ * realize signal from GtkDrawingArea plot B
+ *
+ * \param wDrawingAreaB GtkDrawingArea widget pointer
+ * \param pGlobal pointer to global data
+ */
 void
 CB_DrawingArea_Plot_B_Realize (GtkDrawingArea * wDrawingAreaB, tGlobal *pGlobal)
 {
@@ -265,10 +281,20 @@ CB_DrawingArea_Plot_B_Realize (GtkDrawingArea * wDrawingAreaB, tGlobal *pGlobal)
     		GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK);
 }
 
+/*!     \brief  Show or hide plot b
+ *
+ * Show or hide plot b and shrink wrap around the drawing widgets
+ *
+ * \param wDrawingAreaA GtkDrawingArea widget pointer
+ * \param pGlobal  pointer to global data
+ * \param bVisible make or hide plot b
+ */
 #define MIN_WIDGET_SIZE 1
 void
-visibilityFramePlot_B (tGlobal *pGlobal, gboolean bVisible)
+visibilityFramePlot_B (tGlobal *pGlobal, gint visible)
 {
+#define YES_NO_MASK 0x01
+#define REDISPLAY   0x02
 	GtkWidget *wApplication = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_hp8753c_main");
 	GtkWidget *wFramePlotB = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frame_Plot_B");
 	GtkWidget *wFramePlotA = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frame_Plot_A");
@@ -278,6 +304,7 @@ visibilityFramePlot_B (tGlobal *pGlobal, gboolean bVisible)
     gint frameWidth;
     gint widthApp, heightApp;
     GdkRectangle screenArea = {0};
+    gboolean bWasVisible = gtk_widget_get_visible( wFramePlotB );
 
     static gint widthExtra = 0;
     static gint __attribute__((unused)) heightExtra = 0;
@@ -315,7 +342,7 @@ visibilityFramePlot_B (tGlobal *pGlobal, gboolean bVisible)
     // a complicated calculation to avoid the app shrinking to it's minimum
     // Also handle the case when going from a single to dual plots that will be
     // larger than the screen
-	if( !bVisible ) {   // hiding plot B
+	if( !(visible & YES_NO_MASK)) {   // hiding plot B
         gtk_widget_hide( wFramePlotB );
 	    gtk_window_resize( GTK_WINDOW(wApplication), widthA + widthExtra, heightA + heightExtra);
 	} else {            // showing plot B
@@ -327,17 +354,70 @@ visibilityFramePlot_B (tGlobal *pGlobal, gboolean bVisible)
 	    gint newHeightApp = heightA + heightExtra;
 
 	    gtk_widget_show( wFramePlotB );
-	    if( newWidthApp <= screenArea.width ) {
-	        gtk_window_resize( GTK_WINDOW(wApplication), newWidthApp, newHeightApp );
-	    } else {
-	        gint newDrawingAreaWidth = ( screenArea.width - widthExtra
-	                - frameThickness + marginLeftFrameB + marginRightFrameB ) / 2;
-	        gint newHeightApp = (gint)(((gdouble)heightA/widthA) * newDrawingAreaWidth + 0.5 + heightExtra);
-	        gtk_window_resize( GTK_WINDOW(wApplication), screenArea.width, newHeightApp );
+	    if( !bWasVisible || (visible & REDISPLAY)) {
+            if( newWidthApp <= screenArea.width ) {
+                gtk_window_resize( GTK_WINDOW(wApplication), newWidthApp, newHeightApp );
+            } else {
+                gint newDrawingAreaWidth = ( screenArea.width - widthExtra
+                        - frameThickness + marginLeftFrameB + marginRightFrameB ) / 2;
+                gint newHeightApp = (gint)(((gdouble)heightA/widthA) * newDrawingAreaWidth + 0.5 + heightExtra);
+                gtk_window_resize( GTK_WINDOW(wApplication), screenArea.width, newHeightApp );
+            }
 	    }
 	}
 }
 
+
+static gboolean bResize = FALSE;
+/*!     \brief  Notification that the application window has resized or moved
+ *
+ * Notification that the application window has resized or moved
+ *
+ * configure-event signal from GthApplicationWindow WID_hp8753c_main
+ *
+ * \param wApp GtkApplicationWindow widget pointer
+ * \param event the event
+ * \param pGlobal pointer to global data
+ * \return  FALSE (propagate signal)
+ */
+gboolean
+CB_AppConfigureEvent(   GtkWidget* wApp, GdkEventConfigure event,
+        tGlobal *pGlobal) {
+    if (event.type != 0 )
+        bResize = TRUE;
+    return FALSE;
+}
+
+/*!     \brief  Notification that focus has been given to the application
+ *
+ * Notification that the application window has resized or moved
+ *
+ * focus-in-event signal from GtkApplicationWindow WID_hp8753c_main
+ * occurs on mouse button release of GtkApplicationWindow
+ *
+ * \param wApp GtkApplicationWindow widget pointer
+ * \param event the event
+ * \param pGlobal pointer to global data
+ * \return  FALSE (propagate signal)
+ */
+gboolean
+CB_AppFocusIn(GtkWidget* wApp, GdkEventFocus* event, tGlobal *pGlobal){
+    if( bResize ) {
+        GtkWidget *wFramePlotB = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frame_Plot_B");
+        visibilityFramePlot_B (pGlobal, gtk_widget_get_visible(wFramePlotB) | REDISPLAY);
+    }
+    bResize = FALSE;
+    return FALSE;
+}
+
+/*!     \brief  Setup when main widget is created
+ *
+ * Setup when main widget is created (hide plot B initially and create a text style)
+ * realize signal from GtkApplicationWindow
+ *
+ * \param wApplicationWindow GtkApplicationWindow widget pointer
+ * \param pGlobal pointer to global data
+ */
 void
 CB_hp8753c_main_Realize (GtkApplicationWindow * wApplicationWindow, tGlobal *pGlobal)
 {

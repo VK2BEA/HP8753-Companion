@@ -632,7 +632,11 @@ limitations under the License.&lt;/span&gt;</property>
     <property name="can-focus">False</property>
     <property name="hexpand">True</property>
     <property name="vexpand">True</property>
-    <property name="gravity">static</property>
+    <property name="type-hint">dialog</property>
+    <property name="gravity">center</property>
+    <property name="show-menubar">False</property>
+    <signal name="configure-event" handler="CB_AppConfigureEvent" swapped="no"/>
+    <signal name="focus-in-event" handler="CB_AppFocusIn" swapped="no"/>
     <signal name="realize" handler="CB_hp8753c_main_Realize" swapped="no"/>
     <child>
       <!-- n-columns=4 n-rows=1 -->
@@ -642,7 +646,6 @@ limitations under the License.&lt;/span&gt;</property>
         <child>
           <object class="GtkAspectFrame" id="WID_Frame_Plot_B">
             <property name="can-focus">False</property>
-            <property name="margin-start">4</property>
             <property name="margin-end">4</property>
             <property name="margin-top">4</property>
             <property name="margin-bottom">4</property>
@@ -911,9 +914,8 @@ traces from the HP8753.</property>
                                     <property name="popup-fixed-width">False</property>
                                     <signal name="changed" handler="CB_ComboProjectSelect" swapped="no"/>
                                     <child internal-child="entry">
-                                      <object class="GtkEntry" id="WID_EntryProject">
-                                        <property name="can-focus">True</property>
-                                        <signal name="changed" handler="CB_EditableProjectName" swapped="no"/>
+                                      <object class="GtkEntry">
+                                        <property name="can-focus">False</property>
                                       </object>
                                     </child>
                                   </object>
@@ -986,9 +988,8 @@ traces from the HP8753.</property>
                                 <property name="popup-fixed-width">False</property>
                                 <signal name="changed" handler="CB_ComboBoxCalibrationProfileName" swapped="no"/>
                                 <child internal-child="entry">
-                                  <object class="GtkEntry" id="WID_EntryCal">
-                                    <property name="can-focus">True</property>
-                                    <signal name="changed" handler="CB_EditableCalibrationProfileName" swapped="no"/>
+                                  <object class="GtkEntry">
+                                    <property name="can-focus">False</property>
                                   </object>
                                 </child>
                               </object>
@@ -1010,9 +1011,8 @@ traces from the HP8753.</property>
                                 <property name="popup-fixed-width">False</property>
                                 <signal name="changed" handler="CB_ComboBoxTraceProfileName" swapped="no"/>
                                 <child internal-child="entry">
-                                  <object class="GtkEntry" id="WID_EntryTrace">
-                                    <property name="can-focus">True</property>
-                                    <signal name="changed" handler="CB_EditableTraceProfileName" swapped="no"/>
+                                  <object class="GtkEntry">
+                                    <property name="can-focus">False</property>
                                   </object>
                                 </child>
                               </object>
@@ -1444,9 +1444,15 @@ an S2P file.</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel">
+                          <object class="GtkButton" id="WID_S1P">
+                            <property name="label" translatable="yes">Get S1P</property>
                             <property name="visible">True</property>
-                            <property name="can-focus">False</property>
+                            <property name="can-focus">True</property>
+                            <property name="receives-default">True</property>
+                            <property name="tooltip-text" translatable="yes">Sweep HP8753 for S11 or S22 
+(selected mesurement on active channel) 
+and them save to an S1P file.</property>
+                            <signal name="clicked" handler="CB_BtnS1P" swapped="no"/>
                           </object>
                           <packing>
                             <property name="left-attach">1</property>
@@ -1465,7 +1471,7 @@ an S2P file.</property>
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="margin-top">5</property>
-                        <property name="label" translatable="yes">S2P data is obtained from the HP8753
+                        <property name="label" translatable="yes">S2P or S1P data is obtained from the HP8753
 by sweeping for S-paramaters (complex).</property>
                         <attributes>
                           <attribute name="style" value="oblique"/>
