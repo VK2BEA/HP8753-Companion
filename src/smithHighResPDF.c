@@ -294,7 +294,7 @@ drawSmithHRmarkers( void *minst, tGlobal *pGlobal, eChannel channel, gboolean bO
 
 	for( mkrNo = 0, nMkrsShown=0, bActiveShown=FALSE, flagBit = 0x01; mkrNo < MAX_MKRS; mkrNo++, flagBit <<= 1 ) {
 		bFixedMarker = (mkrNo == FIXED_MARKER && pChannel->chFlags.bMkrsDelta && pChannel->deltaMarker == FIXED_MARKER);
-		if( (pChannel->chFlags.bMkrs & flagBit) || bFixedMarker ) {
+		if( (pChannel->chFlags.bbMkrs & flagBit) || bFixedMarker ) {
 			prtStimulus = stimulus = pChannel->numberedMarkers[ mkrNo ].sourceValue;
 			prtValueR = valueR = pChannel->numberedMarkers[ mkrNo ].point.r;
 			prtValueI = valueI = pChannel->numberedMarkers[ mkrNo ].point.i;

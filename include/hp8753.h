@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.27-2"
+   #define VERSION "1.27-3"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -201,7 +201,7 @@ typedef struct {
 	struct {
 		guint32 bSweepHold      : 1;
 		guint32 bValidData      : 1;
-		guint32 bMkrs           : MAX_MKRS;
+		guint32 bbMkrs           : MAX_MKRS;
 		guint32 bMkrsDelta      : 1;
 		guint32 bCenterSpan     : 1;
 		guint32 bBandwidth      : 1;

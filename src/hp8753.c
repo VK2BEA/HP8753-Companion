@@ -389,7 +389,7 @@ clearHP8753traces( tHP8753 *pHP8753 ) {
 
         pHP8753->channels[channel].chFlags.bSweepHold = FALSE;
         pHP8753->channels[channel].chFlags.bValidData = FALSE;
-        pHP8753->channels[channel].chFlags.bMkrs = 0;
+        pHP8753->channels[channel].chFlags.bbMkrs = 0;
         pHP8753->channels[channel].chFlags.bMkrsDelta = FALSE;
         pHP8753->channels[channel].chFlags.bCenterSpan = FALSE;
 	    pHP8753->channels[channel].chFlags.bBandwidth = FALSE;

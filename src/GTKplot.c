@@ -453,7 +453,7 @@ determineGridPosition( cairo_t *cr, tGlobal *pGlobal, eChannel channel, tGridPar
 
 	pGrid->textMargin	= pGrid->fontSize / 2.0;
 
-	if( pGlobal->HP8753.channels[ channel ].chFlags.bMkrs ) {
+	if( pGlobal->HP8753.channels[ channel ].chFlags.bbMkrs ) {
 		pGrid->makerAreaWidth = pGrid->fontSize * 10.0;
 		pGrid->rightGridPosn += pGrid->makerAreaWidth;
 	} else {

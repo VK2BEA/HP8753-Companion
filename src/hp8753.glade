@@ -915,7 +915,8 @@ traces from the HP8753.</property>
                                     <signal name="changed" handler="CB_ComboProjectSelect" swapped="no"/>
                                     <child internal-child="entry">
                                       <object class="GtkEntry">
-                                        <property name="can-focus">False</property>
+                                        <property name="can-focus">True</property>
+                                        <signal name="changed" handler="CB_EditableProjectName" swapped="no"/>
                                       </object>
                                     </child>
                                   </object>
@@ -989,7 +990,8 @@ traces from the HP8753.</property>
                                 <signal name="changed" handler="CB_ComboBoxCalibrationProfileName" swapped="no"/>
                                 <child internal-child="entry">
                                   <object class="GtkEntry">
-                                    <property name="can-focus">False</property>
+                                    <property name="can-focus">True</property>
+                                    <signal name="changed" handler="CB_EditableCalibrationProfileName" swapped="no"/>
                                   </object>
                                 </child>
                               </object>
@@ -1012,7 +1014,8 @@ traces from the HP8753.</property>
                                 <signal name="changed" handler="CB_ComboBoxTraceProfileName" swapped="no"/>
                                 <child internal-child="entry">
                                   <object class="GtkEntry">
-                                    <property name="can-focus">False</property>
+                                    <property name="can-focus">True</property>
+                                    <signal name="changed" handler="CB_EditableTraceProfileName" swapped="no"/>
                                   </object>
                                 </child>
                               </object>

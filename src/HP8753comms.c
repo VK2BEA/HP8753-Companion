@@ -572,7 +572,7 @@ getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIB
 
         // now get the marker source values and response values
         for( mkrNo = 0, flagBit = 0x01; mkrNo < MAX_NUMBERED_MKRS; mkrNo++, flagBit <<= 1 ) {
-            if( pChannel->chFlags.bMkrs & flagBit ) {
+            if( pChannel->chFlags.bbMkrs & flagBit ) {
                 // Select marker (i.e. MARK1;) and then read values
                 g_snprintf( sQuery, QUERY_SIZE, "MARK%d;OUTPMARK;", mkrNo+1);
                 do {
@@ -592,7 +592,7 @@ getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIB
 
         // we need to find the frequency and level of the marker that
         // is used for delta (so we can determine where they all are)
-        if( pChannel->chFlags.bMkrs && pChannel->chFlags.bMkrsDelta ) {
+        if( pChannel->chFlags.bbMkrs && pChannel->chFlags.bMkrsDelta ) {
             postInfo( "Get delta marker data");
             // we need to find the frequency and level of the marker that
             // is used for delta (so we can determine where they all are)
@@ -638,7 +638,7 @@ getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIB
 
         // find out the style of marker to display (smith and polar)
         pChannel->chFlags.bAdmitanceSmith = FALSE;
-        if( pChannel->chFlags.bMkrs ) {
+        if( pChannel->chFlags.bbMkrs ) {
             pChannel->mkrType = eMkrDefault;
             if( pChannel->format == eFMT_SMITH ) {
                 pChannel->mkrType = getHP8753smithMkrType( descGPIB_HP8753, pGPIBstatus);
@@ -651,7 +651,7 @@ getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIB
         }
 
         // if we have markers, see if we have enabled bandwidth
-        if( pChannel->chFlags.bMkrs ) {
+        if( pChannel->chFlags.bbMkrs ) {
             GPIBasyncWrite(descGPIB_HP8753, "WIDT?;",pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
             GPIBasyncRead(descGPIB_HP8753, &complete, 1, pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
             pChannel->chFlags.bBandwidth = (complete == '1');
@@ -1079,7 +1079,7 @@ process8753learnString( gint descGPIB_HP8753, guchar *pHP8753C_learn, tGlobal *p
             if( pHP8753C_learn[ pLSindexes->iMarkerActive[ channel ] ] & testBit )
                 pGlobal->HP8753.channels[ channel ].activeMarker = mkrNo;
         }
-        pGlobal->HP8753.channels[ channel ].chFlags.bMkrs = mkrs;
+        pGlobal->HP8753.channels[ channel ].chFlags.bbMkrs = mkrs;
 
         if( pHP8753C_learn[ pLSindexes->iStartStop[ channel ] ] & 0x01 )
             pGlobal->HP8753.channels[ channel ].chFlags.bCenterSpan = FALSE;
