@@ -366,8 +366,9 @@ visibilityFramePlot_B (tGlobal *pGlobal, gint visible)
             if( newWidthApp <= screenArea.width ) {
                 gtk_window_resize( GTK_WINDOW(wApplication), newWidthApp, newHeightApp );
             } else {
-                gint newDrawingAreaWidth = ( screenArea.width - widthExtra
+                gint newDrawingAreaWidth = ( screenArea.width - (widthExtra - (bControlsVisible ?  0 : widthControls))
                         - frameThickness + marginLeftFrameB + marginRightFrameB ) / 2;
+
                 gint newHeightApp = (gint)(((gdouble)heightA/widthA) * newDrawingAreaWidth + 0.5 + heightExtra);
                 gtk_window_resize( GTK_WINDOW(wApplication), screenArea.width, newHeightApp );
             }
