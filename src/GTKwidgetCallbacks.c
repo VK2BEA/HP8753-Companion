@@ -373,6 +373,9 @@ visibilityFramePlot_B (tGlobal *pGlobal, gint visible)
             }
 	    }
 	}
+	// make sure the resize happens ASAP
+	 while (gtk_events_pending ())
+	   gtk_main_iteration ();
 }
 
 
