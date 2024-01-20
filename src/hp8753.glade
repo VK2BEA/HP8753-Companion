@@ -635,9 +635,10 @@ limitations under the License.&lt;/span&gt;</property>
     <property name="type-hint">dialog</property>
     <property name="gravity">center</property>
     <property name="show-menubar">False</property>
-    <signal name="configure-event" handler="CB_AppConfigureEvent" swapped="no"/>
     <signal name="focus-in-event" handler="CB_AppFocusIn" swapped="no"/>
+    <signal name="focus-out-event" handler="CB_AppFocusOut" swapped="no"/>
     <signal name="realize" handler="CB_hp8753c_main_Realize" swapped="no"/>
+    <signal name="size-allocate" handler="CB_AppSizeAllocate" swapped="no"/>
     <child>
       <!-- n-columns=4 n-rows=1 -->
       <object class="GtkGrid">
@@ -749,7 +750,7 @@ limitations under the License.&lt;/span&gt;</property>
                     <property name="receives-default">True</property>
                     <property name="tooltip-markup" translatable="yes">Retrieve the &lt;span foreground="red"&gt;currently displayed&lt;/span&gt;
 traces from the HP8753.</property>
-                    <signal name="released" handler="CB_BtnGetTrace" swapped="no"/>
+                    <signal name="clicked" handler="CB_BtnGetTrace" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>

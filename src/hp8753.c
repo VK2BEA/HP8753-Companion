@@ -55,6 +55,8 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
 	guint modifier = 0;
 	tGlobal *pGlobal = (tGlobal *)user_data;
 	GtkWidget *wControls;
+	GtkWidget *wFramePlotB;
+	GtkButton *wGetTraceBtn;
 
     modmask = gtk_accelerator_get_default_mod_mask ();
     modifier = event->state & modmask; // GDK_MODIFIER_MASK;
@@ -75,20 +77,26 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
           break;
 
       case GDK_KEY_F3:
+          wGetTraceBtn = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_btn_GetTrace");
+          gtk_button_clicked( wGetTraceBtn );
           break;
 
       case GDK_KEY_F9:
-          GtkWidget *wFramePlotB = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frame_Plot_B");
+          wFramePlotB = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frame_Plot_B");
           wControls = GTK_WIDGET( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Controls") );
+
           switch( modifier ) {
           case GDK_SHIFT_MASK:
+              gtk_widget_set_visible( wControls, TRUE );
+              break;
+          case GDK_SUPER_MASK:
               gtk_widget_set_visible( wControls, FALSE );
               break;
           default:
-              visibilityFramePlot_B (pGlobal, gtk_widget_get_visible(wFramePlotB));
-              gtk_widget_set_visible( wControls, TRUE );
+              gtk_widget_set_visible( wControls, !gtk_widget_get_visible( wControls ) );
               break;
           }
+          visibilityFramePlot_B (pGlobal, gtk_widget_get_visible(wFramePlotB) | 0x02);
           break;
 
       case GDK_KEY_F11:

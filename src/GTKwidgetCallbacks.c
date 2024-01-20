@@ -300,26 +300,29 @@ visibilityFramePlot_B (tGlobal *pGlobal, gint visible)
 	GtkWidget *wFramePlotA = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frame_Plot_A");
 	GtkWidget *wDrawingAreaPlotA = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DrawingArea_Plot_A");
 
+	GtkWidget *wControls = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Controls");
+
     gint widthA, heightA;
     gint frameWidth;
     gint widthApp, heightApp;
     GdkRectangle screenArea = {0};
     gboolean bWasVisible = gtk_widget_get_visible( wFramePlotB );
+    gboolean bControlsVisible = gtk_widget_get_visible( wControls );
 
-    static gint widthExtra = 0;
+    static gint widthExtra = 0, widthControls = 0;
     static gint __attribute__((unused)) heightExtra = 0;
     static gboolean bFirst = TRUE;
     static gint frameThickness;
     static gint marginLeftFrameB, marginRightFrameB;
 
     // What's the size of Drawing Area A
-    GtkAllocation* alloc = g_new(GtkAllocation, 1);
-    gtk_widget_get_allocation(wDrawingAreaPlotA, alloc);
-    widthA = alloc->width;
-    heightA = alloc->height;
-    gtk_widget_get_allocation(wFramePlotA, alloc);
-    frameWidth = alloc->width;
-    g_free(alloc);
+    GtkAllocation alloc = {0};
+    gtk_widget_get_allocation(wDrawingAreaPlotA, &alloc);
+    widthA = alloc.width;
+    heightA = alloc.height;
+    gtk_widget_get_allocation(wFramePlotA, &alloc);
+    frameWidth = alloc.width;
+
 
     // What's the size of the monitor
     gdk_monitor_get_workarea(
@@ -336,6 +339,8 @@ visibilityFramePlot_B (tGlobal *pGlobal, gint visible)
         frameThickness = frameWidth - widthA;
         marginLeftFrameB = gtk_widget_get_margin_start( wFramePlotB );
         marginRightFrameB = gtk_widget_get_margin_end( wFramePlotB );
+        gtk_widget_get_allocation(wControls, &alloc);
+        widthControls = alloc.width;
     }
 
     // We shrink wrap the app around the drawing areas but we have to go through
@@ -344,13 +349,16 @@ visibilityFramePlot_B (tGlobal *pGlobal, gint visible)
     // larger than the screen
 	if( !(visible & YES_NO_MASK)) {   // hiding plot B
         gtk_widget_hide( wFramePlotB );
-	    gtk_window_resize( GTK_WINDOW(wApplication), widthA + widthExtra, heightA + heightExtra);
+	    gtk_window_resize( GTK_WINDOW(wApplication), widthA + widthExtra -
+	            (bControlsVisible ?  0 : widthControls), heightA + heightExtra);
 	} else {            // showing plot B
         // WidthA and WidthB are the same & because B is not visible
         //       it will does not give a width with gtk_widget_get_allocation
         // We must account for frame B width and the frame margins
 	    gint newWidthApp = widthA + widthExtra // Width of control box and plotA
-                + widthA + frameThickness + marginLeftFrameB + marginRightFrameB;
+                + widthA + frameThickness + marginLeftFrameB + marginRightFrameB
+                - (bControlsVisible ?  0 : widthControls);
+
 	    gint newHeightApp = heightA + heightExtra;
 
 	    gtk_widget_show( wFramePlotB );
@@ -368,29 +376,25 @@ visibilityFramePlot_B (tGlobal *pGlobal, gint visible)
 }
 
 
-static gboolean bResize = FALSE;
-/*!     \brief  Notification that the application window has resized or moved
+static gboolean bResize = FALSE, bFocus = FALSE;
+/*!     \brief  Notification that the application window has resized
  *
  * Notification that the application window has resized or moved
  *
- * configure-event signal from GthApplicationWindow WID_hp8753c_main
+ * size-allocate signal from GthApplicationWindow WID_hp8753c_main
  *
  * \param wApp GtkApplicationWindow widget pointer
- * \param event the event
+ * \param pAllocation Allocation structure
  * \param pGlobal pointer to global data
- * \return  FALSE (propagate signal)
  */
-gboolean
-CB_AppConfigureEvent(   GtkWidget* wApp, GdkEventConfigure event,
+void
+CB_AppSizeAllocate(   GtkWidget* wApp, GtkAllocation* pAllocation,
         tGlobal *pGlobal) {
-    if (event.type != 0 )
-        bResize = TRUE;
-    return FALSE;
+        if( !bFocus )
+            bResize = TRUE;
 }
 
 /*!     \brief  Notification that focus has been given to the application
- *
- * Notification that the application window has resized or moved
  *
  * focus-in-event signal from GtkApplicationWindow WID_hp8753c_main
  * occurs on mouse button release of GtkApplicationWindow
@@ -407,6 +411,24 @@ CB_AppFocusIn(GtkWidget* wApp, GdkEventFocus* event, tGlobal *pGlobal){
         visibilityFramePlot_B (pGlobal, gtk_widget_get_visible(wFramePlotB) | REDISPLAY);
     }
     bResize = FALSE;
+    bFocus = TRUE;
+    return FALSE;
+}
+
+/*!     \brief  Notification that focus has been taken from the application
+ *
+ *
+ * focus-out-event signal from GtkApplicationWindow WID_hp8753c_main
+ * occurs on mouse button release of GtkApplicationWindow
+ *
+ * \param wApp GtkApplicationWindow widget pointer
+ * \param event the event
+ * \param pGlobal pointer to global data
+ * \return  FALSE (propagate signal)
+ */
+gboolean
+CB_AppFocusOut(GtkWidget* wApp, GdkEventFocus* event, tGlobal *pGlobal){
+    bFocus = FALSE;
     return FALSE;
 }
 
