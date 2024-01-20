@@ -418,7 +418,7 @@ askOption( gint descGPIB_HP8753, gchar *option, gint *pGPIBstatus ) {
             break;
         }
 
-    DBG(eDEBUG_EXTENSIVE, "Option setting: |%.*s| %s", cnt, result, GPIBfailed( *pGPIBstatus ) ? "(read error)" : "" );
+    DBG(eDEBUG_EXTENSIVE, "Option setting: %s %s %s", option, bOption ? "on":"off", GPIBfailed( *pGPIBstatus ) ? "(read error)" : "" );
 
     return ( bOption );
 }
@@ -1058,6 +1058,8 @@ process8753learnString( gint descGPIB_HP8753, guchar *pHP8753C_learn, tGlobal *p
     pGlobal->HP8753.activeChannel
         = pHP8753C_learn[ pLSindexes->iActiveChannel ] == 0x01 ? 0 : 1;
 
+	DBG( eDEBUG_EXTENSIVE, "%s Active channel %d", __FUNCTION__, pGlobal->HP8753.activeChannel);
+
     for ( eChannel channel = eCH_ONE; channel < eNUM_CH; channel++) {
         unsigned short mkrs = 0;
         gint mkrNo, testBit, flagBit;
@@ -1065,13 +1067,15 @@ process8753learnString( gint descGPIB_HP8753, guchar *pHP8753C_learn, tGlobal *p
         pGlobal->HP8753.channels[ channel ].chFlags.bMkrsDelta = FALSE;
         // from the learning string 0x02 is marker1, 0x04 marker 2 etc to 0x10
         // delta can be from 0x02 (delta marker 1) to 0x20 (delta fixed)
-        for( mkrNo=0, testBit = 0x02, flagBit = 0x01; mkrNo < MAX_MKRS; mkrNo++, testBit <<= 1, flagBit <<= 1 ) {
+        for( mkrNo=0, testBit = 0x02, flagBit = 0x01, mkrs = 0;
+        		mkrNo < MAX_MKRS; mkrNo++, testBit <<= 1, flagBit <<= 1 ) {
             // this doesn't apply to fixed marker
             if( mkrNo < MAX_NUMBERED_MKRS
                     && ( pHP8753C_learn[ pLSindexes->iMarkersOn[ channel ] ] & testBit) )
                 mkrs |= flagBit;
             // max of one deta/delta fixed marker
             if( pHP8753C_learn[ pLSindexes->iMarkerDelta[ channel ] ] & testBit ) {
+            	DBG( eDEBUG_EXTENSIVE, "%s Delta Marker (channel %d) %d", __FUNCTION__, channel+1, mkrNo);
                 pGlobal->HP8753.channels[ channel ].deltaMarker = mkrNo;
                 pGlobal->HP8753.channels[ channel ].chFlags.bMkrsDelta = TRUE;
             }
@@ -1080,13 +1084,18 @@ process8753learnString( gint descGPIB_HP8753, guchar *pHP8753C_learn, tGlobal *p
                 pGlobal->HP8753.channels[ channel ].activeMarker = mkrNo;
         }
         pGlobal->HP8753.channels[ channel ].chFlags.bbMkrs = mkrs;
+        DBG( eDEBUG_EXTENSIVE, "%s Markers channel %d are 0x%0x", __FUNCTION__, channel+1, mkrs);
 
         if( pHP8753C_learn[ pLSindexes->iStartStop[ channel ] ] & 0x01 )
             pGlobal->HP8753.channels[ channel ].chFlags.bCenterSpan = FALSE;
         else
             pGlobal->HP8753.channels[ channel ].chFlags.bCenterSpan = TRUE;
+        DBG( eDEBUG_EXTENSIVE, "%s Center/Span channel %d %s", __FUNCTION__, channel+1,
+        		pGlobal->HP8753.channels[ channel ].chFlags.bCenterSpan ? "yes":"no");
 
         pGlobal->HP8753.channels[ channel ].nSegments = pHP8753C_learn[ pLSindexes->iNumSegments[ channel ] ];
+        DBG( eDEBUG_EXTENSIVE, "%s No. of segments channel %d %d", __FUNCTION__, channel+1,
+        		pGlobal->HP8753.channels[ channel ].nSegments);
     }
     return OK;
 }

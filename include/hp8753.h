@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.27-3"
+   #define VERSION "1.27-4"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -34,6 +34,7 @@ enum _debug
         eDEBUG_MINOR     = 3,
         eDEBUG_TESTING   = 4,
         eDEBUG_EXTENSIVE = 5,
+		eDEBUG_EXTREME   = 6,
         eDEBUG_MAXIMUM   = 7
 };
 #include <gtk/gtk.h>

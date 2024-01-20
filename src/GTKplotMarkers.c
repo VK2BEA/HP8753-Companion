@@ -170,6 +170,10 @@ drawMarkerText( cairo_t *cr,
 	gdouble markerFontSize = pGrid->fontSize * 0.90;
 	gdouble lineSpacing = pGrid->lineSpacing * 0.90;
 
+	// Are there any markers ?
+	if( pGlobal->HP8753.channels[ channel ].chFlags.bbMkrs == 0 )
+	    return;
+
 	cairo_save( cr ); {
     	// reset to original canvas scaling and transformation (0,0 at bottom left)
     	cairo_set_matrix( cr, &pGrid->initialMatrix );

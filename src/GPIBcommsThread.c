@@ -45,7 +45,7 @@ GPIBwriteBinary( gint GPIBdescriptor, const void *sData, gint length, gint *pGPI
 	if( GPIBfailed( *pGPIBstatus ) ) {
 		return ERROR;
 	} else {
-		DBG( eDEBUG_EXTENSIVE, "🖊       : %d bytes", length );
+		DBG( eDEBUG_EXTREME, "🖊       : %d bytes", length );
 		*pGPIBstatus = ibwrt( GPIBdescriptor, sData, length );
 	}
 
@@ -73,7 +73,7 @@ GPIBread( gint GPIBdescriptor, void *sData, gint maxBytes, gint *pGPIBstatus ) {
 		return ERROR;
 	} else {
 		*pGPIBstatus = ibrd( GPIBdescriptor, sData, maxBytes );
-		DBG( eDEBUG_EXTENSIVE, "👓 HP8753: %d (%d max)", ibcnt, maxBytes );
+		DBG( eDEBUG_EXTREME, "👓 HP8753: %d (%d max)", ibcnt, maxBytes );
 	}
 
 	if( GPIBfailed( *pGPIBstatus ) ) {
@@ -95,7 +95,7 @@ GPIBread( gint GPIBdescriptor, void *sData, gint maxBytes, gint *pGPIBstatus ) {
  */
 gint
 GPIBwrite( gint GPIBdescriptor, const void *sData, gint *GPIBstatus ) {
-	DBG( eDEBUG_EXTENSIVE, "🖊 HP8753: %s", sData );
+	DBG( eDEBUG_EXTREME, "🖊 HP8753: %s", sData );
 	return GPIBwriteBinary( GPIBdescriptor, sData, strlen( (gchar *)sData ), GPIBstatus );
 }
 
@@ -112,7 +112,7 @@ GPIBwrite( gint GPIBdescriptor, const void *sData, gint *GPIBstatus ) {
 gint
 GPIBwriteOneOfN( gint GPIBdescriptor, const void *sData, gint number, gint *GPIBstatus ) {
 	gchar *sCmd = g_strdup_printf( sData, number );
-	DBG( eDEBUG_EXTENSIVE, "👉 HP8753: %s", sCmd );
+	DBG( eDEBUG_EXTREME, "👉 HP8753: %s", sCmd );
 	gint rtn = GPIBwrite( GPIBdescriptor, sCmd, GPIBstatus );
 	g_free ( sCmd );
 	return rtn;
@@ -224,7 +224,7 @@ GPIBasyncWriteBinary(gint GPIBdescriptor, const void *sData, gint length, gint *
 
     *pGPIBstatus = AsyncIbsta();
 
-    DBG(eDEBUG_EXTENSIVE, "🖊 HP8753: %d / %d bytes", AsyncIbcnt(), length);
+    DBG(eDEBUG_EXTREME, "🖊 HP8753: %d / %d bytes", AsyncIbcnt(), length);
 
     if ((*pGPIBstatus & CMPL) != CMPL) {
         if (waitTime >= timeoutSecs)
@@ -258,7 +258,7 @@ GPIBasyncWriteBinary(gint GPIBdescriptor, const void *sData, gint length, gint *
  */
 tGPIBReadWriteStatus
 GPIBasyncWrite(gint GPIBdescriptor, const void *sData, gint *pGPIBstatus, gdouble timeoutSecs) {
-    DBG(eDEBUG_EXTENSIVE, "🖊 HP8753: %s", sData);
+    DBG(eDEBUG_EXTREME, "🖊 HP8753: %s", sData);
     return GPIBasyncWriteBinary(GPIBdescriptor, sData, strlen((gchar*) sData), pGPIBstatus,
             timeoutSecs);
 }
@@ -278,7 +278,7 @@ tGPIBReadWriteStatus
 GPIBasyncWriteOneOfN(gint GPIBdescriptor, const void *sData, gint number, gint *GPIBstatus,
         double timeout) {
     gchar *sCmd = g_strdup_printf(sData, number);
-    DBG(eDEBUG_EXTENSIVE, "👉 HP8753: %s", sCmd);
+    DBG(eDEBUG_EXTREME, "👉 HP8753: %s", sCmd);
     tGPIBReadWriteStatus rtnStatus = GPIBasyncWrite(GPIBdescriptor, sCmd, GPIBstatus, timeout);
     g_free(sCmd);
     return rtnStatus;
@@ -355,7 +355,7 @@ GPIBasyncRead(gint GPIBdescriptor, void *readBuffer, long maxBytes, gint *pGPIBs
 
     *pGPIBstatus = AsyncIbsta();
 
-    DBG(eDEBUG_EXTENSIVE, "👓 HP8753: %d bytes (%d max)", AsyncIbcnt(), maxBytes);
+    DBG(eDEBUG_EXTREME, "👓 HP8753: %d bytes (%d max)", AsyncIbcnt(), maxBytes);
 
     if ((*pGPIBstatus & CMPL) != CMPL) {
         if (waitTime >= timeoutSecs)
