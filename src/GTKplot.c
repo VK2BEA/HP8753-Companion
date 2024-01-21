@@ -867,7 +867,8 @@ gboolean plotA (guint areaWidth, guint areaHeight, gdouble margin, cairo_t *cr, 
 
 	flipVertical( cr, &grid );
 
-	if( pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid ) {
+	if( pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid
+			&& pGlobal->HP8753.channels[ eCH_ONE ].chFlags.bValidData ) {
 		// Screenshot from HPGL
 		plotScreen ( cr, areaHeight, areaWidth, pGlobal);
 	} else {
@@ -974,12 +975,10 @@ gboolean CB_DrawingArea_A_Draw (GtkWidget *widget, cairo_t *cr, tGlobal *pGlobal
 	guint areaWidth   = gtk_widget_get_allocated_width (widget);
     guint areaHeight  = gtk_widget_get_allocated_height (widget);
 
-//  gtk_render_background ( gtk_widget_get_style_context (widget), cr, 0, 0, areaWidth, areaHeight );
-    if( pGlobal->HP8753.channels[ eCH_ONE ].chFlags.bValidData ||
-    		(pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid)) {
-		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0 );
-		cairo_paint( cr );
-    }
+    // clear the screen
+	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0 );
+	cairo_paint( cr );
+
     return plotA ( areaWidth,  areaHeight, 0, cr, pGlobal);
 }
 
@@ -1005,12 +1004,16 @@ gboolean plotB (guint areaWidth, guint areaHeight, gdouble margin, cairo_t *cr, 
 
     tGridParameters grid = {.areaWidth = areaWidth, .areaHeight = areaHeight, .margin = margin, 0};
 
-	if( !pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bValidData )
-		return FALSE;
+//	if( !pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bValidData )
+//		return FALSE;
 
 	flipVertical( cr, &grid );
 
 	determineGridPosition( cr, pGlobal, eCH_TWO, &grid );
+	if( !pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bValidData ) {
+		return TRUE;
+	}
+
 	showStatusInformation (cr, &grid, eCH_TWO, pGlobal);
 
 	switch ( pGlobal->HP8753.channels[ eCH_TWO ].format ) {

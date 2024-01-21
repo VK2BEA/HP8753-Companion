@@ -422,6 +422,7 @@ clearHP8753traces( tHP8753 *pHP8753 ) {
     }
     pHP8753->channels[eCH_ONE].measurementType = eMEAS_S11;
     pHP8753->channels[eCH_TWO].measurementType = eMEAS_S21;
+    pHP8753->flags.bHPGLdataValid = FALSE;
 }
 
 

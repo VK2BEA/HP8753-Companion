@@ -169,13 +169,14 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 										(gconstpointer )"WID_DrawingArea_Plot_A")));
 				if ( !globalData.HP8753.flags.bDualChannel
 						|| !pGlobal->HP8753.flags.bSplitChannels
-						|| !pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bValidData
-						|| ( pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid ) ) {
+//						|| !pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bValidData
+						|| ( pGlobal->HP8753.flags.bShowHPGLplot /* && pGlobal->HP8753.flags.bHPGLdataValid */ ) ) {
 					visibilityFramePlot_B( pGlobal, FALSE );
 				}
 			} else {
-				if ( pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bValidData &&
-						! ( pGlobal->HP8753.flags.bShowHPGLplot && pGlobal->HP8753.flags.bHPGLdataValid ) ) {
+				if ( // pGlobal->HP8753.channels[ eCH_TWO ].chFlags.bValidData &&
+						(globalData.HP8753.flags.bDualChannel && pGlobal->HP8753.flags.bSplitChannels) &&
+						! ( pGlobal->HP8753.flags.bShowHPGLplot /* && pGlobal->HP8753.flags.bHPGLdataValid */ ) ) {
 				    visibilityFramePlot_B( pGlobal, TRUE);
 					gtk_widget_queue_draw( GTK_WIDGET( g_hash_table_lookup(pGlobal->widgetHashTable,
 											(gconstpointer )"WID_DrawingArea_Plot_B")));

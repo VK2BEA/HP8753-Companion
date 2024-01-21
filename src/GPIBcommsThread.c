@@ -618,6 +618,7 @@ threadGPIB(gpointer _pGlobal) {
             postError("Cannot obtain HP8753 descriptor");
         } else if (!pingGPIBdevice(descGPIB_HP8753, &GPIBstatus)) {
             postError("HP8753C is not responding");
+            ibtmo(descGPIB_HP8753, T1s);
             GPIBstatus = ibclr(descGPIB_HP8753);
             usleep(ms(250));
         } else {
@@ -709,8 +710,6 @@ threadGPIB(gpointer _pGlobal) {
                 GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                 // Clear the drawing areas
                 clearHP8753traces(&pGlobal->HP8753);
-                postDataToMainLoop(TM_REFRESH_TRACE, eCH_ONE);
-                postDataToMainLoop(TM_REFRESH_TRACE, (void*) eCH_TWO);
 
                 postInfo("Determine channel configuration");
                 {
@@ -718,6 +717,8 @@ threadGPIB(gpointer _pGlobal) {
                             &GPIBstatus);
                     if (GPIBfailed(GPIBstatus) || dualChannel == ERROR ) {
                         postError("HP8753 not responding .. is it ready?");
+                        postDataToMainLoop(TM_REFRESH_TRACE, eCH_ONE);
+                        postDataToMainLoop(TM_REFRESH_TRACE, (void*) eCH_TWO);
                         break;
                     } else {
                         pGlobal->HP8753.flags.bDualChannel = dualChannel;
@@ -729,6 +730,9 @@ threadGPIB(gpointer _pGlobal) {
                         "COUC", &GPIBstatus);
                 pGlobal->HP8753.flags.bMarkersCoupled = getHP8753switchOnOrOff(descGPIB_HP8753,
                         "MARKCOUP", &GPIBstatus);
+
+                postDataToMainLoop(TM_REFRESH_TRACE, eCH_ONE);
+                postDataToMainLoop(TM_REFRESH_TRACE, (void*) eCH_TWO);
 
                 if (GPIBfailed(GPIBstatus)) {
                     postError("Error (ask channel conf.)");
