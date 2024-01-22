@@ -725,7 +725,7 @@ showStimulusInformation (cairo_t *cr, tGridParameters *pGrid, eChannel channel, 
 		case eSWP_CWTIME:
 		case eSWP_PWR:
 			if( pGrid->overlay.bAny && !pGrid->bSourceCoupled )
-				showXaxisLabel ( cr, pChannel->CWfrequency, posXcenter + pGrid->gridWidth * 1.0 / 10.0, posY, pChannel->sweepType, eRight );
+				showXaxisLabel ( cr, pChannel->CWfrequency, posXcenter + pGrid->gridWidth * 1.0 / 10.0, posY, eSWP_LINFREQ, eRight );
 			else
 				showXaxisLabel ( cr, pChannel->CWfrequency, posXcenter, posY, eSWP_LINFREQ, eCenter );
 			break;
