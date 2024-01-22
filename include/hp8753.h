@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.27-5"
+   #define VERSION "1.27-6"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -344,7 +344,7 @@ typedef struct {
 	gchar *sNote;
 	tProjectAndName projectAndName;
 
-	guchar *pHP8753C_learn;
+	guchar *pHP8753_learn;
 	gint    firmwareVersion;
 } tHP8753cal;
 
@@ -586,11 +586,11 @@ void        visibilityFramePlot_B ( tGlobal *, gint );
 
 extern tGlobal globalData;
 
-typedef struct { gchar *code, *desc; } HP8753C_option;
-extern const HP8753C_option optMeasurementType[];
-extern const HP8753C_option optFormat[];
-extern const HP8753C_option optCalType[];
-extern const HP8753C_option optSweepType[];
+typedef struct { gchar *code, *desc; } HP8753_option;
+extern const HP8753_option optMeasurementType[];
+extern const HP8753_option optFormat[];
+extern const HP8753_option optCalType[];
+extern const HP8753_option optSweepType[];
 
 extern const gchar *formatSymbols[];
 extern const gchar *formatSmithOrPolarSymbols[][2];

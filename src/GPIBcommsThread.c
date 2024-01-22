@@ -498,12 +498,12 @@ findGPIBdescriptors(tGlobal *pGlobal, gint *pDescGPIB_HP8753) {
     }
 
     if (*pDescGPIB_HP8753 == ERROR) {
-        postError("Cannot find HP8753C");
+        postError("Cannot find HP8753");
         return ERROR;
     }
 
     if (!pingGPIBdevice(*pDescGPIB_HP8753, &GPIBstatus)) {
-        postError("Cannot contact HP8753C");
+        postError("Cannot contact HP8753");
         return ERROR;
     } else {
         postInfo("Contact with HP8753 established");
@@ -558,13 +558,13 @@ threadGPIB(gpointer _pGlobal) {
 
     gchar *sGPIBversion;
     gint GPIBstatus;
-    gint timeoutHP8753C;   				// previous timeout
+    gint timeoutHP8753;   				// previous timeout
 
     gint descGPIB_HP8753 = ERROR;
     messageEventData *message;
     gboolean bRunning = TRUE;
     gulong __attribute__((unused)) datum = 0;
-    static guchar *pHP8753C_learn = NULL;
+    static guchar *pHP8753_learn = NULL;
 
     // The HP8753 formats numbers like 3.141 not, the continental European way 3,14159
     setlocale(LC_NUMERIC, "C");
@@ -617,13 +617,13 @@ threadGPIB(gpointer _pGlobal) {
         if (descGPIB_HP8753 == INVALID) {
             postError("Cannot obtain HP8753 descriptor");
         } else if (!pingGPIBdevice(descGPIB_HP8753, &GPIBstatus)) {
-            postError("HP8753C is not responding");
+            postError("HP8753 is not responding");
             ibtmo(descGPIB_HP8753, T1s);
             GPIBstatus = ibclr(descGPIB_HP8753);
             usleep(ms(250));
         } else {
             pGlobal->flags.bGPIBcommsActive = TRUE;
-            GPIBstatus = ibask(descGPIB_HP8753, IbaTMO, &timeoutHP8753C); /* Remember old timeout */
+            GPIBstatus = ibask(descGPIB_HP8753, IbaTMO, &timeoutHP8753); /* Remember old timeout */
             ibtmo(descGPIB_HP8753, T30s);
 #ifdef USE_PRECAUTIONARY_DEVICE_IBCLR
 			// send a clear command to HP8753 ..
@@ -635,7 +635,7 @@ threadGPIB(gpointer _pGlobal) {
                         &pGlobal->HP8753.sProduct, &GPIBstatus)) == INVALID) {
                     postError("Cannot query identity - cannot proceed");
                     postMessageToMainLoop(TM_COMPLETE_GPIB, NULL);
-                    ibtmo(descGPIB_HP8753, timeoutHP8753C);
+                    ibtmo(descGPIB_HP8753, timeoutHP8753);
                     continue;
                 }
                 selectLearningStringIndexes(pGlobal);
@@ -645,7 +645,7 @@ threadGPIB(gpointer _pGlobal) {
                 postError("Not an HP8753 - cannot proceed");
                 postMessageToMainLoop(TM_COMPLETE_GPIB, NULL);
                 pGlobal->HP8753.firmwareVersion = 0;
-                ibtmo(descGPIB_HP8753, timeoutHP8753C);
+                ibtmo(descGPIB_HP8753, timeoutHP8753);
                 continue;
             }
 
@@ -656,7 +656,7 @@ threadGPIB(gpointer _pGlobal) {
                 GPIBasyncWrite(descGPIB_HP8753, "CLES;", &GPIBstatus,  10 * TIMEOUT_RW_1SEC);
                 if (get8753setupAndCal(descGPIB_HP8753, pGlobal, &GPIBstatus) == OK
                         && GPIBsucceeded(GPIBstatus)) {
-                    postInfo("Saving HP8753C setup to database");
+                    postInfo("Saving HP8753 setup to database");
                     postDataToMainLoop(TM_SAVE_SETUPandCAL, message->data);
                     message->data = NULL;
                 } else {
@@ -739,12 +739,12 @@ threadGPIB(gpointer _pGlobal) {
                     break;
                 }
 
-                if (get8753learnString(descGPIB_HP8753, &pHP8753C_learn,
+                if (get8753learnString(descGPIB_HP8753, &pHP8753_learn,
                         &GPIBstatus) != 0) {
                     LOG(G_LOG_LEVEL_CRITICAL, "retrieve learn string");
                     break;
                 }
-                process8753learnString(descGPIB_HP8753, pHP8753C_learn, pGlobal, &GPIBstatus);
+                process8753learnString(descGPIB_HP8753, pHP8753_learn, pGlobal, &GPIBstatus);
 
                 // Hold this channel & see if we need to restart later
                 // We stop sweeping so that the trace and markers give the same data
@@ -913,7 +913,7 @@ threadGPIB(gpointer _pGlobal) {
                 {
                     guchar *LearnString = NULL;
                     gboolean bDifferent = FALSE;
-                    if( pHP8753C_learn == NULL && get8753learnString(descGPIB_HP8753, &pHP8753C_learn, &GPIBstatus) !=  OK ) {
+                    if( pHP8753_learn == NULL && get8753learnString(descGPIB_HP8753, &pHP8753_learn, &GPIBstatus) !=  OK ) {
                         g_printerr( "Cannot get learn string from HP8753\n" );
                         break;
                     }
@@ -922,8 +922,8 @@ threadGPIB(gpointer _pGlobal) {
                         break;
                     }
                     for (int i = 0; i < lengthFORM1data( LearnString ); i++) {
-                        if (pHP8753C_learn[i] != LearnString[i]) {
-                            g_print("%-4d: 0x%02x  0x%02x\n", i, pHP8753C_learn[i], LearnString[i]);
+                        if (pHP8753_learn[i] != LearnString[i]) {
+                            g_print("%-4d: 0x%02x  0x%02x\n", i, pHP8753_learn[i], LearnString[i]);
                             bDifferent = TRUE;
                         }
                     }
@@ -1002,7 +1002,7 @@ threadGPIB(gpointer _pGlobal) {
         }
 
         // restore timeout
-        ibtmo(descGPIB_HP8753, timeoutHP8753C);
+        ibtmo(descGPIB_HP8753, timeoutHP8753);
 
         if (GPIBfailed(GPIBstatus)) {
             postError("GPIB error or timeout");
@@ -1015,7 +1015,7 @@ threadGPIB(gpointer _pGlobal) {
         pGlobal->flags.bGPIBcommsActive = FALSE;
     }
 
-    g_free( pHP8753C_learn );
+    g_free( pHP8753_learn );
 
     return NULL;
 }

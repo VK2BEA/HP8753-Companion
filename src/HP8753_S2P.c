@@ -94,12 +94,12 @@ getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 	setHP8753channel( descGPIB_HP8753, eCH_ONE, pGPIBstatus );
 
 	if( getStartStopOrCenterSpanFrom8753learnString( learnString, pGlobal, eCH_ONE ) ) {
-		askHP8753C_dbl(descGPIB_HP8753, "STAR", &sweepStart, pGPIBstatus);
-		askHP8753C_dbl(descGPIB_HP8753, "STOP", &sweepStop, pGPIBstatus);
+		askHP8753_dbl(descGPIB_HP8753, "STAR", &sweepStart, pGPIBstatus);
+		askHP8753_dbl(descGPIB_HP8753, "STOP", &sweepStop, pGPIBstatus);
 	} else {
 		gdouble sweepCenter=1500.15e6, sweepSpan=2999.70e6;
-		askHP8753C_dbl(descGPIB_HP8753, "CENT", &sweepCenter, pGPIBstatus);
-		askHP8753C_dbl(descGPIB_HP8753, "SPAN", &sweepSpan, pGPIBstatus);
+		askHP8753_dbl(descGPIB_HP8753, "CENT", &sweepCenter, pGPIBstatus);
+		askHP8753_dbl(descGPIB_HP8753, "SPAN", &sweepSpan, pGPIBstatus);
 		sweepStart = sweepCenter - sweepSpan/2.0;
 		sweepStop = sweepCenter + sweepSpan/2.0;
 	}
@@ -199,12 +199,12 @@ getHP3753_S1P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
     }
 
     if( getStartStopOrCenterSpanFrom8753learnString( learnString, pGlobal, eCH_ONE ) ) {
-        askHP8753C_dbl(descGPIB_HP8753, "STAR", &sweepStart, pGPIBstatus);
-        askHP8753C_dbl(descGPIB_HP8753, "STOP", &sweepStop, pGPIBstatus);
+        askHP8753_dbl(descGPIB_HP8753, "STAR", &sweepStart, pGPIBstatus);
+        askHP8753_dbl(descGPIB_HP8753, "STOP", &sweepStop, pGPIBstatus);
     } else {
         gdouble sweepCenter=1500.15e6, sweepSpan=2999.70e6;
-        askHP8753C_dbl(descGPIB_HP8753, "CENT", &sweepCenter, pGPIBstatus);
-        askHP8753C_dbl(descGPIB_HP8753, "SPAN", &sweepSpan, pGPIBstatus);
+        askHP8753_dbl(descGPIB_HP8753, "CENT", &sweepCenter, pGPIBstatus);
+        askHP8753_dbl(descGPIB_HP8753, "SPAN", &sweepSpan, pGPIBstatus);
         sweepStart = sweepCenter - sweepSpan/2.0;
         sweepStop = sweepCenter + sweepSpan/2.0;
     }

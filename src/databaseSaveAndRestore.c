@@ -983,8 +983,8 @@ saveCalibrationAndSetup(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 			goto err;
 		//learn
 		if( channel == eCH_ONE ) {
-			if (sqlite3_bind_blob(stmt, ++queryIndex, pGlobal->HP8753cal.pHP8753C_learn,
-					lengthFORM1data( pGlobal->HP8753cal.pHP8753C_learn ), SQLITE_STATIC) != SQLITE_OK)
+			if (sqlite3_bind_blob(stmt, ++queryIndex, pGlobal->HP8753cal.pHP8753_learn,
+					lengthFORM1data( pGlobal->HP8753cal.pHP8753_learn ), SQLITE_STATIC) != SQLITE_OK)
 				goto err;
 		} else {
 			++queryIndex;
@@ -1156,8 +1156,8 @@ recoverCalibrationAndSetup(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 		length  = sqlite3_column_bytes(stmt, queryIndex);
 		tBlob   = sqlite3_column_blob(stmt, queryIndex++);
 		if( channel == eCH_ONE ) {
-			g_free(pGlobal->HP8753cal.pHP8753C_learn);
-			pGlobal->HP8753cal.pHP8753C_learn = g_memdup2(tBlob, (gsize) length);
+			g_free(pGlobal->HP8753cal.pHP8753_learn);
+			pGlobal->HP8753cal.pHP8753_learn = g_memdup2(tBlob, (gsize) length);
 		}
 
 		pGlobal->HP8753cal.perChannelCal[channel].sweepStart   = sqlite3_column_double(stmt, queryIndex++);

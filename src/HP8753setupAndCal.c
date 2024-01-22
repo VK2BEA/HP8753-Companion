@@ -65,11 +65,11 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 	postInfo("Retrieve learn string");
 	// Request Learn string (probably don't need to set the format as the LS is always in 'form1')
 	GPIBasyncWrite(descGPIB_HP8753, "FORM1;", pGPIBstatus, 	10 * TIMEOUT_RW_1SEC);
-	if ( get8753learnString( descGPIB_HP8753, &pGlobal->HP8753cal.pHP8753C_learn, pGPIBstatus ))
+	if ( get8753learnString( descGPIB_HP8753, &pGlobal->HP8753cal.pHP8753_learn, pGPIBstatus ))
 		goto err;
 	// find active channel from learn string
 	pGlobal->HP8753cal.settings.bActiveChannel =
-			getActiveChannelFrom8753learnString( pGlobal->HP8753cal.pHP8753C_learn, pGlobal );
+			getActiveChannelFrom8753learnString( pGlobal->HP8753cal.pHP8753_learn, pGlobal );
 
 	postInfo("Determine channel configuration");
 	// See of we have a coupled source. If uncoupled, we will need to get both sets of calibration correction arrays.
@@ -117,26 +117,26 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 			= getHP8753calType( descGPIB_HP8753, pGPIBstatus);
 		// If we ask for start/stop this actually changes the display (from start/stop to center/span say)
 		// so we ask for the appropriate settings based on the learn string
-		if( getStartStopOrCenterSpanFrom8753learnString( pGlobal->HP8753cal.pHP8753C_learn, pGlobal, channel ) ) {
-			askHP8753C_dbl(descGPIB_HP8753, "STAR", &pGlobal->HP8753cal.perChannelCal[ channel ].sweepStart, pGPIBstatus);
-			askHP8753C_dbl(descGPIB_HP8753, "STOP", &pGlobal->HP8753cal.perChannelCal[ channel ].sweepStop, pGPIBstatus);
+		if( getStartStopOrCenterSpanFrom8753learnString( pGlobal->HP8753cal.pHP8753_learn, pGlobal, channel ) ) {
+			askHP8753_dbl(descGPIB_HP8753, "STAR", &pGlobal->HP8753cal.perChannelCal[ channel ].sweepStart, pGPIBstatus);
+			askHP8753_dbl(descGPIB_HP8753, "STOP", &pGlobal->HP8753cal.perChannelCal[ channel ].sweepStop, pGPIBstatus);
 		} else {
 			gdouble sweepCenter=1500.15e6, sweepSpan=2999.70e6;
-			askHP8753C_dbl(descGPIB_HP8753, "CENT", &sweepCenter, pGPIBstatus);
-			askHP8753C_dbl(descGPIB_HP8753, "SPAN", &sweepSpan, pGPIBstatus);
+			askHP8753_dbl(descGPIB_HP8753, "CENT", &sweepCenter, pGPIBstatus);
+			askHP8753_dbl(descGPIB_HP8753, "SPAN", &sweepSpan, pGPIBstatus);
 			pGlobal->HP8753cal.perChannelCal[ channel ].sweepStart = sweepCenter - sweepSpan/2.0;
 			pGlobal->HP8753cal.perChannelCal[ channel ].sweepStop = sweepCenter + sweepSpan/2.0;
 		}
 		// Ask for the IF resolution BW
-		askHP8753C_dbl(descGPIB_HP8753, "IFBW", &pGlobal->HP8753cal.perChannelCal[ channel ].IFbandwidth, pGPIBstatus);
+		askHP8753_dbl(descGPIB_HP8753, "IFBW", &pGlobal->HP8753cal.perChannelCal[ channel ].IFbandwidth, pGPIBstatus);
 		// Ask for number of points
-		askHP8753C_dbl(descGPIB_HP8753, "POIN", &nPoints, pGPIBstatus);
+		askHP8753_dbl(descGPIB_HP8753, "POIN", &nPoints, pGPIBstatus);
 		pGlobal->HP8753cal.perChannelCal[ channel ].nPoints = (gint)nPoints;
 
 		pGlobal->HP8753cal.perChannelCal[ channel ].sweepType
 			= getHP8753sweepType( descGPIB_HP8753, pGPIBstatus );
 		// Get CW frequency
-		askHP8753C_dbl(descGPIB_HP8753, "CWFREQ", &pGlobal->HP8753cal.perChannelCal[ channel ].CWfrequency, pGPIBstatus);
+		askHP8753_dbl(descGPIB_HP8753, "CWFREQ", &pGlobal->HP8753cal.perChannelCal[ channel ].CWfrequency, pGPIBstatus);
 		// Are we averaging ?
 		pGlobal->HP8753cal.perChannelCal[ channel ].settings.bAveraging = askOption( descGPIB_HP8753, "AVERO?;", pGPIBstatus );
 
@@ -222,7 +222,7 @@ get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) 
 	// Request modified learn string (without interpolative correction and with hold)
 	// so that when we restore we do so efficiently.
 	// We will re-enable cal after loading learn string.
-	if( get8753learnString( descGPIB_HP8753, &pGlobal->HP8753cal.pHP8753C_learn, pGPIBstatus ) != 0)
+	if( get8753learnString( descGPIB_HP8753, &pGlobal->HP8753cal.pHP8753_learn, pGPIBstatus ) != 0)
 		goto err;
 
 	// Re-enable interpolative correction and sweeping if it was on previously
@@ -290,9 +290,9 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 
 	GPIBasyncWrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
 	// Includes the 4 byte header with size in bytes (big endian)
-	gint LSsize = GUINT16_FROM_BE(*(guint16 *)(pGlobal->HP8753cal.pHP8753C_learn+2)) + 4;
+	gint LSsize = GUINT16_FROM_BE(*(guint16 *)(pGlobal->HP8753cal.pHP8753_learn+2)) + 4;
 
-	GPIBasyncSRQwrite( descGPIB_HP8753, (gchar *)pGlobal->HP8753cal.pHP8753C_learn, LSsize,
+	GPIBasyncSRQwrite( descGPIB_HP8753, (gchar *)pGlobal->HP8753cal.pHP8753_learn, LSsize,
 			pGPIBstatus, 10 * TIMEOUT_RW_1MIN );
 	// Restoring the setup seems to reset the ESR and SRQ enable ... so do it here
 	enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
@@ -361,7 +361,7 @@ send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 			GPIBasyncWrite(descGPIB_HP8753, "CORION;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
 		}
 		// Find the sweep time
-		askHP8753C_dbl(descGPIB_HP8753, "SWET", &sweepTime[ channel ], pGPIBstatus);
+		askHP8753_dbl(descGPIB_HP8753, "SWET", &sweepTime[ channel ], pGPIBstatus);
 
 		if( GPIBfailed( *pGPIBstatus ) )
 		    return TRUE;

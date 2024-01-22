@@ -19,7 +19,7 @@
 
 gboolean askOption( gint descGPIB_HP8753, gchar *option, gint *pGPIBstatus );
 
-gint askHP8753C_dbl(gint descGPIB_HP8753, gchar *mnemonic, gdouble *dresult, gint *pGPIBstatus);
+gint askHP8753_dbl(gint descGPIB_HP8753, gchar *mnemonic, gdouble *dresult, gint *pGPIBstatus);
 
 gint getHP8753channelListFreqSegments(gint descGPIB_HP8753, tGlobal *pGlobal, eChannel channel, gint *pGPIBstatus );
 gint getHP8753channelTrace(gint descGPIB_HP8753, tGlobal *pGlobal, eChannel channel, gint *pGPIBstatus );
@@ -44,7 +44,7 @@ gint process8753learnString( gint descGPIB_HP8753, guchar *, tGlobal *pGlobal, g
 gboolean getStartStopOrCenterSpanFrom8753learnString( guchar *pLearn, tGlobal *pGlobal, eChannel channel );
 eChannel getActiveChannelFrom8753learnString( guchar *pLearn, tGlobal *pGlobal );
 
-gint findHP8753option(gint descGPIB_HP8753, const HP8753C_option *optList,
+gint findHP8753option(gint descGPIB_HP8753, const HP8753_option *optList,
 		gint maxOptions, gint *pGPIBstatus);
 
 gboolean selectLearningStringIndexes( tGlobal *pGlobal );

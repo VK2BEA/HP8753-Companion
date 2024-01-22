@@ -739,6 +739,12 @@ CB_BtnRemove (GtkButton * button, tGlobal *pGlobal)
 void
 CB_BtnGetTrace (GtkButton * button, tGlobal *pGlobal)
 {
+    if( pGlobal->flags.bDoNotRetrieveHPGLdata ) {
+        gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(
+                    g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_RadioBtn_PlotTypeHighRes") ), TRUE);
+        g_free( pGlobal->HP8753.plotHPGL );
+        pGlobal->HP8753.plotHPGL = NULL;
+    }
 	postDataToGPIBThread (TG_RETRIEVE_TRACE_from_HP8753, NULL);
 	gtk_widget_set_sensitive (GTK_WIDGET(
 			g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Box_SaveRecallDelete") ), FALSE);

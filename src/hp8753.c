@@ -507,7 +507,7 @@ on_shutdown (GApplication *app, gpointer userData)
     g_list_free_full ( g_steal_pointer (&pGlobal->pTraceList), (GDestroyNotify)freeTraceListItem );
     g_list_free_full ( g_steal_pointer (&pGlobal->pCalList), (GDestroyNotify)freeCalListItem );
 
-    g_free( pGlobal->HP8753cal.pHP8753C_learn );
+    g_free( pGlobal->HP8753cal.pHP8753_learn );
 	g_free( pGlobal->sLastDirectory );
 	g_free( pGlobal->sProject );
 

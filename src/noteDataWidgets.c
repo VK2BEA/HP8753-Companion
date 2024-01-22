@@ -71,7 +71,7 @@ BtnSXP (GtkButton *wButton, tGlobal *pGlobal, gboolean S2PnotS1P )
 		sFilename = g_strdup( lastFilename);
 	else
 		sFilename = g_date_time_format( now,
-		        S2PnotS1P ? "HP8753C.%d%b%y.%H%M%S.s2p" : "HP8753C.%d%b%y.%H%M%S.s1p");
+		        S2PnotS1P ? "HP8753.%d%b%y.%H%M%S.s2p" : "HP8753.%d%b%y.%H%M%S.s1p");
 	gtk_file_chooser_set_current_name (chooser, sFilename);
 
 	if( pGlobal->sLastDirectory )

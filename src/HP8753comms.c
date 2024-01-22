@@ -223,7 +223,7 @@ GPIBasyncSRQwrite( gint descGPIB_HP8753, void *pData,
  * \return option number or ERROR
  */
 gint
-findHP8753option(gint descGPIB_HP8753, const HP8753C_option *optList,
+findHP8753option(gint descGPIB_HP8753, const HP8753_option *optList,
     gint maxOptions, gint *pGPIBstatus) {
     gint i;
 
@@ -237,7 +237,7 @@ findHP8753option(gint descGPIB_HP8753, const HP8753C_option *optList,
         return i;
 }
 
-const HP8753C_option optFormat[] = {
+const HP8753_option optFormat[] = {
         { "LOGM?;", "Log Magnitude" },
         { "PHAS?;", "Phase" },
         { "DELA?;", "Delay" },
@@ -258,14 +258,14 @@ const HP8753C_option optFormat[] = {
  */
 gint
 getHP8753format( gint descGPIB_HP8753, gint *pGPIBstatus ) {
-    return findHP8753option( descGPIB_HP8753, optFormat, sizeof(optFormat) / sizeof(HP8753C_option), pGPIBstatus);
+    return findHP8753option( descGPIB_HP8753, optFormat, sizeof(optFormat) / sizeof(HP8753_option), pGPIBstatus);
 }
 
 const tGrid gridType[] = { eGridCartesian, eGridCartesian, eGridCartesian,
         eGridSmith, eGridPolar, eGridCartesian, eGridCartesian, eGridCartesian,
         eGridCartesian };
 
-const HP8753C_option optSweepType[] = {
+const HP8753_option optSweepType[] = {
         { "LINFREQ?;", "Linear Frequency" },
         { "LOGFREQ?;", "Log Frequency" },
         { "LISFREQ?;", "List Frequency" }, // dont look for SEG[1-30]
@@ -282,12 +282,12 @@ const HP8753C_option optSweepType[] = {
  */
 gint
 getHP8753sweepType( gint descGPIB_HP8753, gint *pGPIBstatus ) {
-    return findHP8753option( descGPIB_HP8753, optSweepType, sizeof(optSweepType) / sizeof(HP8753C_option), pGPIBstatus);
+    return findHP8753option( descGPIB_HP8753, optSweepType, sizeof(optSweepType) / sizeof(HP8753_option), pGPIBstatus);
 }
 
 // only one input port or S-paramaters are active at one time
 // S11 is A/R, S12 is B/R for example
-const HP8753C_option optMeasurementType[] = {
+const HP8753_option optMeasurementType[] = {
         { "S11?;", "S11" },
         { "S12?;", "S12" },
         { "S21?;", "S21" },
@@ -309,10 +309,10 @@ const HP8753C_option optMeasurementType[] = {
  */
 gint
 getHP8753measurementType( gint descGPIB_HP8753, gint *pGPIBstatus ) {
-    return findHP8753option( descGPIB_HP8753, optMeasurementType, sizeof(optMeasurementType) / sizeof(HP8753C_option), pGPIBstatus);
+    return findHP8753option( descGPIB_HP8753, optMeasurementType, sizeof(optMeasurementType) / sizeof(HP8753_option), pGPIBstatus);
 }
 
-const HP8753C_option optSmithMkrType[] = {
+const HP8753_option optSmithMkrType[] = {
         { "SMIMLIN?;", "Linear" },
         { "SMIMLOG?;", "Log" },
         { "SMIMRI?;", "Real/Imaginary" },
@@ -329,10 +329,10 @@ const HP8753C_option optSmithMkrType[] = {
  */
 gint
 getHP8753smithMkrType( gint descGPIB_HP8753, gint *pGPIBstatus ) {
-    return findHP8753option( descGPIB_HP8753, optSmithMkrType, sizeof(optSmithMkrType) / sizeof(HP8753C_option), pGPIBstatus);
+    return findHP8753option( descGPIB_HP8753, optSmithMkrType, sizeof(optSmithMkrType) / sizeof(HP8753_option), pGPIBstatus);
 }
 
-const HP8753C_option optPolarMkrType[] = {
+const HP8753_option optPolarMkrType[] = {
         { "POLMLIN?;", "Linear" },
         { "POLMLOG?;", "Log" },
         { "POLMRI?;", "Real/Imaginary" } };
@@ -347,10 +347,10 @@ const HP8753C_option optPolarMkrType[] = {
  */
 gint
 getHP8753polarMkrType( gint descGPIB_HP8753, gint *pGPIBstatus ) {
-    return findHP8753option( descGPIB_HP8753, optPolarMkrType, sizeof(optPolarMkrType) / sizeof(HP8753C_option), pGPIBstatus);
+    return findHP8753option( descGPIB_HP8753, optPolarMkrType, sizeof(optPolarMkrType) / sizeof(HP8753_option), pGPIBstatus);
 }
 
-const HP8753C_option optCalType[] =
+const HP8753_option optCalType[] =
     { { "CALN?;",         "None" },
       { "CALIRESP?;",    "Response" },
       { "CALIRAI?;",     "Response & Isolation" },
@@ -370,7 +370,7 @@ const HP8753C_option optCalType[] =
  */
 gint
 getHP8753calType( gint descGPIB_HP8753, gint *pGPIBstatus ) {
-    return findHP8753option( descGPIB_HP8753, optCalType, sizeof(optCalType) / sizeof(HP8753C_option), pGPIBstatus);
+    return findHP8753option( descGPIB_HP8753, optCalType, sizeof(optCalType) / sizeof(HP8753_option), pGPIBstatus);
 }
 
 /*!     \brief  Set the channel
@@ -434,7 +434,7 @@ askOption( gint descGPIB_HP8753, gchar *option, gint *pGPIBstatus ) {
  * \return 0 or 1
  */
 gint
-askHP8753C_dbl(gint descGPIB_HP8753, gchar *mnemonic, gdouble *pDblRresult, gint *pGPIBstatus) {
+askHP8753_dbl(gint descGPIB_HP8753, gchar *mnemonic, gdouble *pDblRresult, gint *pGPIBstatus) {
 #define DBL_ASCII_SIZE    25
     gchar *queryString = g_strdup_printf("%s?;", mnemonic);
     gchar ASCIIanswer[DBL_ASCII_SIZE + 1] = { 0 };
@@ -600,11 +600,11 @@ getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIB
             gint deltaMarker = pChannel->deltaMarker;
             if( deltaMarker == FIXED_MARKER ) {
                 // FDelta Fixed marker
-                if( askHP8753C_dbl(descGPIB_HP8753, "MARKFSTI", &sourceValue, pGPIBstatus) == ERROR )
+                if( askHP8753_dbl(descGPIB_HP8753, "MARKFSTI", &sourceValue, pGPIBstatus) == ERROR )
                     break;
-                if( askHP8753C_dbl(descGPIB_HP8753, "MARKFVAL", &re, pGPIBstatus) == ERROR )
+                if( askHP8753_dbl(descGPIB_HP8753, "MARKFVAL", &re, pGPIBstatus) == ERROR )
                     break;
-                if( askHP8753C_dbl(descGPIB_HP8753, "MARKFAUV", &im, pGPIBstatus) == ERROR )
+                if( askHP8753_dbl(descGPIB_HP8753, "MARKFAUV", &im, pGPIBstatus) == ERROR )
                     break;
                 pChannel->numberedMarkers[ deltaMarker ].point.r = re;
                 pChannel->numberedMarkers[ deltaMarker ].point.i = im;
@@ -822,25 +822,25 @@ getHP8753channelTrace(gint descGPIB_HP8753, tGlobal *pGlobal, eChannel channel, 
     if (pChannel->format == ERROR)
         return TRUE;
 
-    askHP8753C_dbl(descGPIB_HP8753, "SCAL", &pChannel->scaleVal, pGPIBstatus);
-    askHP8753C_dbl(descGPIB_HP8753, "REFP", &pChannel->scaleRefPos, pGPIBstatus);
-    askHP8753C_dbl(descGPIB_HP8753, "REFV", &pChannel->scaleRefVal, pGPIBstatus);
+    askHP8753_dbl(descGPIB_HP8753, "SCAL", &pChannel->scaleVal, pGPIBstatus);
+    askHP8753_dbl(descGPIB_HP8753, "REFP", &pChannel->scaleRefPos, pGPIBstatus);
+    askHP8753_dbl(descGPIB_HP8753, "REFV", &pChannel->scaleRefVal, pGPIBstatus);
 
     if ( pChannel->chFlags.bCenterSpan ) {
         gdouble cent = 1500.150e6, span = 2999.7e6;
-        askHP8753C_dbl( descGPIB_HP8753, "CENT", &cent, pGPIBstatus );
-        askHP8753C_dbl( descGPIB_HP8753, "SPAN", &span, pGPIBstatus );
+        askHP8753_dbl( descGPIB_HP8753, "CENT", &cent, pGPIBstatus );
+        askHP8753_dbl( descGPIB_HP8753, "SPAN", &span, pGPIBstatus );
         pChannel->sweepStart = cent - span/2.0;
         pChannel->sweepStop  = cent + span/2.0;
     } else {
-        askHP8753C_dbl( descGPIB_HP8753, "STAR", &pChannel->sweepStart, pGPIBstatus );
-        askHP8753C_dbl( descGPIB_HP8753, "STOP", &pChannel->sweepStop, pGPIBstatus );
+        askHP8753_dbl( descGPIB_HP8753, "STAR", &pChannel->sweepStart, pGPIBstatus );
+        askHP8753_dbl( descGPIB_HP8753, "STOP", &pChannel->sweepStop, pGPIBstatus );
     }
     pChannel->sweepType = getHP8753sweepType( descGPIB_HP8753, pGPIBstatus );
-    askHP8753C_dbl( descGPIB_HP8753, "IFBW", &pChannel->IFbandwidth, pGPIBstatus );
+    askHP8753_dbl( descGPIB_HP8753, "IFBW", &pChannel->IFbandwidth, pGPIBstatus );
 
     if( pChannel->sweepType == eSWP_CWTIME || pChannel->sweepType == eSWP_PWR )
-        askHP8753C_dbl( descGPIB_HP8753, "CWFREQ", &pChannel->CWfrequency, pGPIBstatus );
+        askHP8753_dbl( descGPIB_HP8753, "CWFREQ", &pChannel->CWfrequency, pGPIBstatus );
 
     // if we are sweeping in list frequency mode
     // find out if is just one segment or all segments
@@ -902,7 +902,7 @@ getHP8753channelTrace(gint descGPIB_HP8753, tGlobal *pGlobal, eChannel channel, 
 }
 
 
-const HP8753C_option optPlotQuadrant[] = {
+const HP8753_option optPlotQuadrant[] = {
         { "LEFL?;", "Lower Left" },
         { "LEFU?;", "Upper Left" },
         { "RIGL?;", "Lower Right" },
@@ -934,7 +934,7 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
     bFullPagePlot = askOption( descGPIB_HP8753, "FULP?;", pGPIBstatus );
 
     if( bFullPagePlot == TRUE) {
-        plotQuadrant = findHP8753option( descGPIB_HP8753, optPlotQuadrant, sizeof(optPlotQuadrant) / sizeof(HP8753C_option), pGPIBstatus);
+        plotQuadrant = findHP8753option( descGPIB_HP8753, optPlotQuadrant, sizeof(optPlotQuadrant) / sizeof(HP8753_option), pGPIBstatus);
     }
     GPIBasyncWrite(descGPIB_HP8753, "SCAPFULL;FULP;PTEXT ON;OUTPPLOT;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
     // The number of characters is dependent on the number of points and number of traces (including memory traces)
@@ -983,7 +983,7 @@ acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus ) {
     }
 
     // Restore plot quadrant .. if it was previously set
-    if( !bFullPagePlot && plotQuadrant < sizeof(optPlotQuadrant) / sizeof(HP8753C_option) ) {
+    if( !bFullPagePlot && plotQuadrant < sizeof(optPlotQuadrant) / sizeof(HP8753_option) ) {
         gchar *plotQuadrantCmd = g_strdup_printf( "%.4s;", optPlotQuadrant[ plotQuadrant ].code );
         GPIBasyncWrite(descGPIB_HP8753, plotQuadrantCmd, pGPIBstatus, 5 * TIMEOUT_RW_1SEC);
         g_free( plotQuadrantCmd );
@@ -1302,9 +1302,9 @@ getHP8753channelListFreqSegments(gint descGPIB_HP8753, tGlobal *pGlobal, eChanne
         for( int seg = 1; seg <= pChannel->nSegments; seg++ ) {
             // Select the segment and determine the points
             GPIBasyncWriteOneOfN( descGPIB_HP8753, "SSEG%d;", seg, pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
-            askHP8753C_dbl(descGPIB_HP8753, "POIN", &nPoints, pGPIBstatus);
-            askHP8753C_dbl(descGPIB_HP8753, "STAR", &startFreq, pGPIBstatus);
-            askHP8753C_dbl(descGPIB_HP8753, "STOP", &stopFreq, pGPIBstatus);
+            askHP8753_dbl(descGPIB_HP8753, "POIN", &nPoints, pGPIBstatus);
+            askHP8753_dbl(descGPIB_HP8753, "STAR", &startFreq, pGPIBstatus);
+            askHP8753_dbl(descGPIB_HP8753, "STOP", &stopFreq, pGPIBstatus);
 
             pChannel->segments[ seg-1 ].nPoints = (gint)nPoints;
             pChannel->segments[ seg-1 ].startFreq = startFreq;

@@ -399,7 +399,7 @@ cloneCalibrationProfile( tHP8753cal *pOrigCal, gchar *newProject ) {
     pNewCal->projectAndName.sName = g_strdup( pOrigCal->projectAndName.sName );
     pNewCal->sDateTime = g_strdup( pOrigCal->sDateTime );
     pNewCal->sNote = g_strdup( pOrigCal->sNote );
-    pNewCal->pHP8753C_learn = NULL;
+    pNewCal->pHP8753_learn = NULL;
     return pNewCal;
 }
 

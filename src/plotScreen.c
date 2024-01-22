@@ -176,7 +176,7 @@ parseHPGL( gchar *sHPGL, tGlobal *pGlobal ) {
             }
 		}
 
-		// some labels from the 8753C have 003 characters .. remove them
+		// labels from the 8753 have 003 characters .. remove them
 		if( sHPGL[ 2 + strLength - 1 ] == HPGL_LINE_TERMINATOR_CHARACTER )
 			sHPGL[ 2 + strLength - 1 ] = 0;
 		// allocate more space if needed

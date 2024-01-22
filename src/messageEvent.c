@@ -164,6 +164,13 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 			sensitiseControlsInUse( pGlobal, TRUE );
 			break;
 		case TM_REFRESH_TRACE:
+            GtkWidget *wBoxPlotType = g_hash_table_lookup(pGlobal->widgetHashTable,
+                                    (gconstpointer )"WID_BoxPlotType");
+            if( pGlobal->HP8753.plotHPGL == NULL )
+                gtk_widget_hide (GTK_WIDGET( wBoxPlotType ));
+            else
+                gtk_widget_show (GTK_WIDGET( wBoxPlotType ));
+
 			if (message->data == 0 ) {
 				gtk_widget_queue_draw( GTK_WIDGET( g_hash_table_lookup(pGlobal->widgetHashTable,
 										(gconstpointer )"WID_DrawingArea_Plot_A")));
@@ -192,13 +199,6 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 				gtk_widget_set_sensitive(
 					GTK_WIDGET( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Btn_Save")),
 					TRUE );
-
-            GtkWidget *wBoxPlotType = g_hash_table_lookup(pGlobal->widgetHashTable,
-                                    (gconstpointer )"WID_BoxPlotType");
-            if( pGlobal->HP8753.plotHPGL == NULL )
-                gtk_widget_hide (GTK_WIDGET( wBoxPlotType ));
-            else
-                gtk_widget_show (GTK_WIDGET( wBoxPlotType ));
 
 			break;
 		default:
