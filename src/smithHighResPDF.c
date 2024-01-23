@@ -236,16 +236,15 @@ drawSmithHRmarkerText( void *minst,
 		gboolean bActive, gint nPosition,
 		gdouble stimulus, gdouble value1, gdouble value2) {
 
-	gchar *sValue1 = NULL, *sValue2 = NULL, *sStimulus = NULL, *sPrefix1, *sPrefix2, *sPrefixStimulus;
+	gchar *sValue1 = NULL, *sValue2 = NULL, *sStimulus = NULL, *sPrefix1= "", *sPrefix2= "", *sPrefixStimulus;
 	tChannel *pChannel = &pGlobal->HP8753.channels[ channel ];
 	gchar mkrTextPSstring[ BUFFER_SIZE_250 ];
 	gint exit_code;
 
-	if( pChannel->mkrType == eMkrLog ) {
+	if( pChannel->mkrType != eMkrLog ) {
 		sValue1 = engNotation(value1, 3, eENG_SEPARATE, &sPrefix1);
 	} else {
 		sValue1 = g_strdup_printf( "%.3f", value1);
-		sPrefix1 = "";
 	}
 
 	// Value 2
@@ -406,8 +405,8 @@ showHRsmithStimulusInformation (void *minst, eChannel channel, tGlobal *pGlobal,
 		centerPSstring = doubleToStringWithSpaces( pChannel->CWfrequency / 1e6, "MHz" );
 		break;
 	case eSWP_PWR:
-		startPSstring = g_strdup_printf("%.3f dbm", pChannel->sweepStart);
-		stopPSstring = g_strdup_printf("%.3f dbm", pChannel->sweepStop);
+		startPSstring = g_strdup_printf("%.3f dBm", pChannel->sweepStart);
+		stopPSstring = g_strdup_printf("%.3f dBm", pChannel->sweepStop);
 		centerPSstring = doubleToStringWithSpaces( pChannel->CWfrequency / 1e6, "MHz" );
 		break;
 	case eSWP_LOGFREQ:
