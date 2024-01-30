@@ -170,10 +170,6 @@ drawMarkerText( cairo_t *cr,
 	gdouble markerFontSize = pGrid->fontSize * 0.90;
 	gdouble lineSpacing = pGrid->lineSpacing * 0.90;
 
-	// Are there any markers ?
-	if( pGlobal->HP8753.channels[ channel ].chFlags.bbMkrs == 0 )
-	    return;
-
 	cairo_save( cr ); {
     	// reset to original canvas scaling and transformation (0,0 at bottom left)
     	cairo_set_matrix( cr, &pGrid->initialMatrix );
@@ -389,6 +385,11 @@ drawMarkers( cairo_t *cr, tGlobal *pGlobal, tGridParameters *pGrid,
 	gboolean bFixedMarker = FALSE;
 	gboolean bActiveShown;
 
+    // Are there any markers ?
+    if( pGlobal->HP8753.channels[ channel ].chFlags.bbMkrs == 0 ) {
+        return;
+    }
+
 	for( mkrNo = 0, nMkrsShown=0, bActiveShown=FALSE, flagBit = 0x01; mkrNo < MAX_MKRS; mkrNo++, flagBit <<= 1 ) {
 		bFixedMarker = (mkrNo == FIXED_MARKER && pChannel->chFlags.bMkrsDelta && pChannel->deltaMarker == FIXED_MARKER);
 		if( (pChannel->chFlags.bbMkrs & flagBit) || bFixedMarker ) {
@@ -435,10 +436,10 @@ drawMarkers( cairo_t *cr, tGlobal *pGlobal, tGridParameters *pGrid,
 
 			gint mkrTextPosn;
 			if( !bFixedMarker )
-			drawMarkerSymbol( cr, pGrid, mkrLabels[mkrNo],
-					mkrNo == pChannel->activeMarker ? eACTIVE_MKR : eNONACTIVE_MKR,
-					pChannel->chFlags.bMkrsDelta && mkrNo == pChannel->deltaMarker,
-					X, Y);
+                drawMarkerSymbol( cr, pGrid, mkrLabels[mkrNo],
+                        mkrNo == pChannel->activeMarker ? eACTIVE_MKR : eNONACTIVE_MKR,
+                        pChannel->chFlags.bMkrsDelta && mkrNo == pChannel->deltaMarker,
+                        X, Y);
 			else
 				drawMarkerSymbol( cr, pGrid, "", eFIXED_MKR, FALSE, X, Y);
 			// Show marker details on screen
