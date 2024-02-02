@@ -206,10 +206,10 @@ writeCSVpoint( FILE *file, tFormat format, tComplex *point, gboolean bLF ) {
 	switch( format ) {
 	case eFMT_SMITH:
 	case eFMT_POLAR:
-		fprintf( file, ",%le,%le", point->r,  point->i );
+		fprintf( file, ",%.16lg,%.16lg", point->r,  point->i );
 		break;
 	default:
-		fprintf( file, ",%le", point->r );
+		fprintf( file, ",%.16lg", point->r );
 		break;
 	}
 	if( bLF )
@@ -308,7 +308,7 @@ CB_BtnSaveCSV (GtkButton *wButton, tGlobal *pGlobal)
 			if( pGlobal->HP8753.flags.bDualChannel ) {
 				if( pGlobal->HP8753.flags.bSourceCoupled ) {
 					for( int i=0; i < pGlobal->HP8753.channels[ eCH_ONE ].nPoints; i++ ) {
-						fprintf( fCSV, "%le",
+						fprintf( fCSV, "%.0lf",
 								pGlobal->HP8753.channels[ eCH_ONE ].stimulusPoints[i] );
 						writeCSVpoint( fCSV, fmtCh1, &pGlobal->HP8753.channels[ eCH_ONE ].responsePoints[i], FALSE );
 						writeCSVpoint( fCSV, fmtCh2, &pGlobal->HP8753.channels[ eCH_TWO ].responsePoints[i], TRUE );
@@ -317,14 +317,14 @@ CB_BtnSaveCSV (GtkButton *wButton, tGlobal *pGlobal)
 					for( int i=0; i < pGlobal->HP8753.channels[ eCH_ONE ].nPoints
 									|| i < pGlobal->HP8753.channels[ eCH_TWO ].nPoints; i++ ) {
 						if( i < pGlobal->HP8753.channels[ eCH_ONE ].nPoints ) {
-							fprintf( fCSV, "%le",
+							fprintf( fCSV, "%.0lf",
 									pGlobal->HP8753.channels[ eCH_ONE ].stimulusPoints[i] );
 							writeCSVpoint( fCSV, fmtCh1, &pGlobal->HP8753.channels[ eCH_ONE ].responsePoints[i], FALSE );
 						} else {
 							fprintf( fCSV, ",,,");
 						}
 						if( i < pGlobal->HP8753.channels[ eCH_TWO ].nPoints ) {
-							fprintf( fCSV, ",%le",
+							fprintf( fCSV, ",%.0lf",
 									pGlobal->HP8753.channels[ eCH_TWO ].stimulusPoints[i] );
 							writeCSVpoint( fCSV, fmtCh2, &pGlobal->HP8753.channels[ eCH_TWO ].responsePoints[i], TRUE );
 						} else {
@@ -334,7 +334,7 @@ CB_BtnSaveCSV (GtkButton *wButton, tGlobal *pGlobal)
 				}
 			} else {
 				for( int i=0; i < pGlobal->HP8753.channels[ eCH_ONE ].nPoints; i++ ) {
-					fprintf( fCSV, "%le",
+					fprintf( fCSV, "%.0lf",
 							pGlobal->HP8753.channels[ eCH_ONE ].stimulusPoints[i] );
 					writeCSVpoint( fCSV, fmtCh1, &pGlobal->HP8753.channels[ eCH_ONE ].responsePoints[i], TRUE );
 				}

@@ -751,7 +751,7 @@ threadGPIB(gpointer _pGlobal) {
                 // If the source is coupled, then a single hold works for both channels, if not, we
                 // must hold when we change to the other channel
                 pGlobal->HP8753.channels[ pGlobal->HP8753.activeChannel ].chFlags.bSweepHold = getHP8753switchOnOrOff(descGPIB_HP8753, "HOLD", &GPIBstatus);
-                GPIBasyncWrite(descGPIB_HP8753, "HOLD;", &GPIBstatus, 1.0);
+                GPIBasyncWrite(descGPIB_HP8753, "HOLD;", &GPIBstatus, 10.0);
 
                 postInfo("Get trace data channel");
                 // if dual channel, then get both channels
@@ -768,7 +768,7 @@ threadGPIB(gpointer _pGlobal) {
                             // if uncoupled, we need to hold the other channel also
                             pGlobal->HP8753.channels[ channel ].chFlags.bSweepHold
                                     = getHP8753switchOnOrOff(descGPIB_HP8753, "HOLD", &GPIBstatus);
-                            GPIBasyncWrite(descGPIB_HP8753, "HOLD;", &GPIBstatus, 1.0);
+                            GPIBasyncWrite(descGPIB_HP8753, "HOLD;", &GPIBstatus, 10.0);
                         }
                         getHP8753channelTrace(descGPIB_HP8753, pGlobal, channel, &GPIBstatus);
                     }
