@@ -776,14 +776,8 @@ threadGPIB(gpointer _pGlobal) {
                     // just the active channel .. but data goes in channel 1
                     getHP8753channelTrace(descGPIB_HP8753, pGlobal, eCH_ONE, &GPIBstatus);
                 }
-                postInfo("Get marker data");
-                getHP8753markersAndSegments(descGPIB_HP8753, pGlobal, &GPIBstatus);
-                // timestamp this plot
-                getTimeStamp(&pGlobal->HP8753.dateTime);
 
-                if (GPIBfailed(GPIBstatus))
-                    break;
-
+                // Get HPGL plot before querying segment data as selecting segments alters the display
                 if (pGlobal->flags.bDoNotRetrieveHPGLdata) {
                     pGlobal->HP8753.flags.bHPGLdataValid = FALSE;
                 } else {
@@ -791,6 +785,14 @@ threadGPIB(gpointer _pGlobal) {
                     if (acquireHPGLplot(descGPIB_HP8753, pGlobal, &GPIBstatus) != 0)
                         postError("Cannot acquire HPGL plot");
                 }
+
+                postInfo("Get marker data");
+                getHP8753markersAndSegments(descGPIB_HP8753, pGlobal, &GPIBstatus);
+                // timestamp this plot
+                getTimeStamp(&pGlobal->HP8753.dateTime);
+
+                if (GPIBfailed(GPIBstatus))
+                    break;
 
                 // Display the new data
                 if( !pGlobal->HP8753.flags.bShowHPGLplot )

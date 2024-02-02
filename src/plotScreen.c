@@ -439,7 +439,7 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 					charSizeY = *(gfloat *)(pGlobal->HP8753.plotHPGL + HPGLserialCount);
 					HPGLserialCount += sizeof( gfloat );
 					matrix.xx = charSizeX  * HPGL_P1P2_X * scaleX / 100.0;
-					matrix.yy = -charSizeY * HPGL_P1P2_Y * scaleY / 100.0;
+					matrix.yy = -charSizeY * HPGL_P1P2_Y * scaleY / 120.0;  // Slighly reduce height compared with width
 					cairo_set_font_matrix (cr, &matrix);
 					break;
 				default:
