@@ -394,8 +394,14 @@ static gboolean bResize = FALSE, bFocus = FALSE;
 void
 CB_AppSizeAllocate(   GtkWidget* wApp, GtkAllocation* pAllocation,
         tGlobal *pGlobal) {
+    static gint prevWidth = 0, prevHeight = 0;
+
+    if( pAllocation->width != prevWidth || pAllocation->height != prevHeight) {
         if( !bFocus )
             bResize = TRUE;
+    }
+    prevWidth = pAllocation->width;
+    prevHeight = pAllocation->height;
 }
 
 /*!     \brief  Notification that focus has been given to the application

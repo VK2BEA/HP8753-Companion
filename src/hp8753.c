@@ -56,13 +56,31 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
 	tGlobal *pGlobal = (tGlobal *)user_data;
 	GtkWidget *wControls;
 	GtkWidget *wFramePlotB;
+	GtkWidget *wDrawingAreaPlotA, *wDrawingAreaPlotB;
+    GtkWidget *wApplication;
+
 	GtkButton *wGetTraceBtn;
+
+    GtkAllocation alloc = {0};
+	gint minWidth, minHeight, scale, newHeight, newWidth;
+
+    gint widthApp, heightApp;
+    GdkRectangle screenArea = {0};
+    GdkWindowState wState;
 
     modmask = gtk_accelerator_get_default_mod_mask ();
     modifier = event->state & modmask; // GDK_MODIFIER_MASK;
 
-   if (event->keyval >= GDK_KEY_F1 && event->keyval <= GDK_KEY_F12) {
+   if ((event->keyval >= GDK_KEY_F1 && event->keyval <= GDK_KEY_F12)
+           || (event->keyval >= GDK_KEY_KP_Space && event->keyval <= GDK_KEY_KP_9)
+   ) {
 // GDK_CONTROL_MASK GDK_SHIFT_MASK GDK_MOD1_MASK (ALT) GDK_SUPER_MASK
+
+      // What's the size of the monitor
+      wApplication = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_hp8753c_main");
+      gdk_monitor_get_workarea(
+           gdk_display_get_primary_monitor( gdk_display_get_default()), &screenArea);
+      wState = gdk_window_get_state(gtk_widget_get_window(wApplication));
 
       switch( event->keyval ) {
       case GDK_KEY_F1:
@@ -79,6 +97,79 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
       case GDK_KEY_F3:
           wGetTraceBtn = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_btn_GetTrace");
           gtk_button_clicked( wGetTraceBtn );
+          break;
+
+      case GDK_KEY_KP_Add:
+          if (wState & GDK_WINDOW_STATE_FULLSCREEN)
+              break;
+
+          wDrawingAreaPlotA = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DrawingArea_Plot_A");
+          wDrawingAreaPlotB = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DrawingArea_Plot_B");
+
+          gtk_widget_get_size_request(wDrawingAreaPlotA, &minWidth, &minHeight);
+          gtk_widget_get_allocation(wDrawingAreaPlotA, &alloc);
+
+          scale = ((alloc.width + 2) * 10) / minWidth + 2;
+          newWidth = minWidth * scale / 10;
+          newHeight = minHeight * scale / 10;
+#define MIN_WIDGET_SIZE 1
+          gtk_window_resize( GTK_WINDOW(wApplication), MIN_WIDGET_SIZE, MIN_WIDGET_SIZE);
+
+          gtk_widget_set_size_request(wDrawingAreaPlotA, newWidth, newHeight);
+          gtk_widget_set_size_request(wDrawingAreaPlotB, newWidth, newHeight);
+          // make sure the resize happens ASAP
+          while (gtk_events_pending ())
+              gtk_main_iteration ();
+
+          gtk_widget_set_size_request(wDrawingAreaPlotA, minWidth, minHeight);
+          gtk_widget_set_size_request(wDrawingAreaPlotB, minWidth, minHeight);
+
+          gtk_window_get_size( GTK_WINDOW(wApplication), &widthApp, &heightApp );
+
+          //        This is a bit of a fudge because we don't know about the window decoration size
+          if( widthApp > (screenArea.width * 0.92) || heightApp > (screenArea.height * 0.95) ) {
+              gtk_window_fullscreen( GTK_WINDOW(wApplication));
+              while (gtk_events_pending ())
+                  gtk_main_iteration ();
+          }
+
+          break;
+
+      case GDK_KEY_KP_Subtract:
+#define MIN_WIDGET_SIZE 1
+
+          wDrawingAreaPlotA = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DrawingArea_Plot_A");
+          wDrawingAreaPlotB = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DrawingArea_Plot_B");
+
+          gtk_widget_get_size_request(wDrawingAreaPlotA, &minWidth, &minHeight);
+          gtk_widget_get_allocation(wDrawingAreaPlotA, &alloc);
+
+          scale = ((alloc.width + 2) * 10) / minWidth;
+
+          if (wState & GDK_WINDOW_STATE_FULLSCREEN) {
+              gtk_window_unfullscreen ( GTK_WINDOW(wApplication) );
+          } else {
+              scale -= 2;
+          }
+
+          if( scale < 10 )
+              scale = 10;
+
+          newWidth = minWidth * scale / 10;
+          newHeight = minHeight * scale / 10;
+
+#define MIN_WIDGET_SIZE 1
+          gtk_window_resize( GTK_WINDOW(wApplication), MIN_WIDGET_SIZE, MIN_WIDGET_SIZE);
+
+          gtk_widget_set_size_request(wDrawingAreaPlotA, newWidth, newHeight);
+          gtk_widget_set_size_request(wDrawingAreaPlotB, newWidth, newHeight);
+          // make sure the resize happens ASAP
+          while (gtk_events_pending ())
+              gtk_main_iteration ();
+
+          gtk_widget_set_size_request(wDrawingAreaPlotA, minWidth, minHeight);
+          gtk_widget_set_size_request(wDrawingAreaPlotB, minWidth, minHeight);
+
           break;
 
       case GDK_KEY_F9:
