@@ -62,7 +62,8 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
 	GtkButton *wGetTraceBtn;
 
     GtkAllocation alloc = {0};
-	gint minWidth, minHeight, scale, newHeight, newWidth;
+	gint minWidth, minHeight, newHeight, newWidth;
+	gdouble scale;
 
     gint widthApp, heightApp;
     GdkRectangle screenArea = {0};
@@ -109,9 +110,10 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
           gtk_widget_get_size_request(wDrawingAreaPlotA, &minWidth, &minHeight);
           gtk_widget_get_allocation(wDrawingAreaPlotA, &alloc);
 
-          scale = ((alloc.width + 2) * 10) / minWidth + 2;
-          newWidth = minWidth * scale / 10;
-          newHeight = minHeight * scale / 10;
+          scale = ((gdouble)alloc.width)/minWidth * 1.2;
+
+          newWidth = minWidth * scale;
+          newHeight = minHeight * scale;
 #define MIN_WIDGET_SIZE 1
           gtk_window_resize( GTK_WINDOW(wApplication), MIN_WIDGET_SIZE, MIN_WIDGET_SIZE);
 
@@ -129,34 +131,30 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
           //        This is a bit of a fudge because we don't know about the window decoration size
           if( widthApp > (screenArea.width * 0.92) || heightApp > (screenArea.height * 0.95) ) {
               gtk_window_fullscreen( GTK_WINDOW(wApplication));
-              while (gtk_events_pending ())
-                  gtk_main_iteration ();
           }
 
           break;
 
       case GDK_KEY_KP_Subtract:
 #define MIN_WIDGET_SIZE 1
-
           wDrawingAreaPlotA = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DrawingArea_Plot_A");
           wDrawingAreaPlotB = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DrawingArea_Plot_B");
 
           gtk_widget_get_size_request(wDrawingAreaPlotA, &minWidth, &minHeight);
           gtk_widget_get_allocation(wDrawingAreaPlotA, &alloc);
 
-          scale = ((alloc.width + 2) * 10) / minWidth;
-
           if (wState & GDK_WINDOW_STATE_FULLSCREEN) {
-              gtk_window_unfullscreen ( GTK_WINDOW(wApplication) );
+              gtk_window_unfullscreen( GTK_WINDOW(wApplication) );
+              scale = ((gdouble)alloc.width)/minWidth;
           } else {
-              scale -= 2;
+              scale = ((gdouble)alloc.width)/minWidth * 0.8;
           }
 
-          if( scale < 10 )
-              scale = 10;
+          if( scale < 1.0 )
+              scale = 1.0;
 
-          newWidth = minWidth * scale / 10;
-          newHeight = minHeight * scale / 10;
+          newWidth = minWidth * scale;
+          newHeight = minHeight * scale;
 
 #define MIN_WIDGET_SIZE 1
           gtk_window_resize( GTK_WINDOW(wApplication), MIN_WIDGET_SIZE, MIN_WIDGET_SIZE);
