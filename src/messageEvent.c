@@ -46,6 +46,7 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 
 	tGlobal *pGlobal = &globalData;
 	FILE *fSXP;
+	GtkWidget *wBoxPlotType;
 
 	GtkLabel *wLabel = GTK_LABEL(
 			g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_Lbl_Status"));
@@ -164,7 +165,7 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 			sensitiseControlsInUse( pGlobal, TRUE );
 			break;
 		case TM_REFRESH_TRACE:
-            GtkWidget *wBoxPlotType = g_hash_table_lookup(pGlobal->widgetHashTable,
+            wBoxPlotType = g_hash_table_lookup(pGlobal->widgetHashTable,
                                     (gconstpointer )"WID_BoxPlotType");
             if( pGlobal->HP8753.plotHPGL == NULL )
                 gtk_widget_hide (GTK_WIDGET( wBoxPlotType ));
