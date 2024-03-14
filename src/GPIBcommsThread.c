@@ -949,13 +949,13 @@ threadGPIB(gpointer _pGlobal) {
 
                     GPIBasyncWrite(descGPIB_HP8753, "FORM1;OUTPFORM;", &GPIBstatus, 1.0);
                     GPIBasyncRead(descGPIB_HP8753, &OUTPFORMheaderAndSize, HEADER_SIZE, &GPIBstatus,
-                        10 * TIMEOUT_RW_1SEC);
+                            10 * TIMEOUT_RW_1SEC);
                     // Convert from big endian to local (Intel LE)
                     OUTPFORMsize = GUINT16_FROM_BE(OUTPFORMheaderAndSize[1]);
                     pOUTPFORM = g_malloc( OUTPFORMsize );
                     // read learn string into malloced space (not clobbering header and size)
                     GPIBasyncRead(descGPIB_HP8753, pOUTPFORM, OUTPFORMsize, &GPIBstatus,
-                        10 * TIMEOUT_RW_1SEC);
+                            10 * TIMEOUT_RW_1SEC);
 
                     for( gint n=0; n < OUTPFORMsize / 6; n++ ) {
                         FORM1toDouble( pOUTPFORM + (n * 6), &real, &imag, FALSE );

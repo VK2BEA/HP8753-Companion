@@ -45,8 +45,8 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 	messageEventData *message;
 
 	tGlobal *pGlobal = &globalData;
-	FILE *fSXP;
 	GtkWidget *wBoxPlotType;
+	FILE *fSXP;
 
 	GtkLabel *wLabel = GTK_LABEL(
 			g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_Lbl_Status"));

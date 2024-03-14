@@ -500,13 +500,14 @@ get8753firmwareVersion(gint descGPIB_HP8753, gchar **psProduct, gint *pGPIBstatu
     gchar ASCIIanswer[MAX_IDN_SIZE + 1] = { 0 };
     gchar sManufacturer[MAX_IDN_SIZE + 1] = {0};
     gchar sProduct[MAX_IDN_SIZE + 1] = {0};
+    gchar sSerial[MAX_IDN_SIZE + 1] = {0};
 
     GPIBasyncWrite(descGPIB_HP8753, "IDN?;", pGPIBstatus, 20 * TIMEOUT_RW_1SEC);
     GPIBasyncRead(descGPIB_HP8753, &ASCIIanswer, MAX_IDN_SIZE, pGPIBstatus, 20 * TIMEOUT_RW_1SEC);
 
     if( GPIBsucceeded( *pGPIBstatus ) ) {
         LOG( G_LOG_LEVEL_INFO, "IDN returns \"%s\"", ASCIIanswer );
-        nConv = sscanf( ASCIIanswer, "%50[^,],%50[^,],%*d,%d.%d", sManufacturer, sProduct, &ver, &rev );
+        nConv = sscanf( ASCIIanswer, "%50[^,],%50[^,],%50[^,],%d.%d", sManufacturer, sProduct, sSerial, &ver, &rev );
     } else {
         LOG( G_LOG_LEVEL_CRITICAL, "GPIB communication prevented reading of IDN" );
     }

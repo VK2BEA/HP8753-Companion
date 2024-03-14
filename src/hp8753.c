@@ -109,8 +109,9 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
 
           gtk_widget_get_size_request(wDrawingAreaPlotA, &minWidth, &minHeight);
           gtk_widget_get_allocation(wDrawingAreaPlotA, &alloc);
-
-          scale = ((gdouble)alloc.width)/minWidth * 1.2;
+#define SMIG    10
+          // increase size by min/3
+          scale = (gdouble)((3 * alloc.width + SMIG)/minWidth)/3.0 + 0.333;
 
           newWidth = minWidth * scale;
           newHeight = minHeight * scale;
@@ -147,7 +148,7 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
               gtk_window_unfullscreen( GTK_WINDOW(wApplication) );
               scale = ((gdouble)alloc.width)/minWidth;
           } else {
-              scale = ((gdouble)alloc.width)/minWidth * 0.8;
+              scale = (gdouble)((3 * alloc.width + SMIG)/minWidth)/3.0 - 0.333;
           }
 
           if( scale < 1.0 )
@@ -518,7 +519,7 @@ clearHP8753traces( tHP8753 *pHP8753 ) {
 /*!     \brief  on_startup (startup signal callback)
  *
  * Setup application (get configuration and create main window (but do not show it))
- * nb: this occures befor 'activate'
+ * nb: this occures before 'activate'
  *
  * \ingroup initialize
  *
@@ -531,6 +532,9 @@ on_startup (GApplication *app, gpointer udata)
 	tGlobal *pGlobal = (tGlobal *)udata;
 	gboolean bAbort = FALSE;
 
+#if !GLIB_CHECK_VERSION(2, 32, 0)
+    g_thread_init(NULL);
+#endif
     LOG( G_LOG_LEVEL_INFO, "Starting");
 	setenv("IB_NO_ERROR", "1", 0);	// no noise
 	logVersion();
