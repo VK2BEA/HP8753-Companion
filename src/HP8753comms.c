@@ -513,7 +513,7 @@ get8753firmwareVersion(gint descGPIB_HP8753, gchar **psProduct, gint *pGPIBstatu
     }
 
     // should return 413 for 4.13 or INVALID on error
-    if ( GPIBfailed( *pGPIBstatus )  || nConv != 4 ) {
+    if ( GPIBfailed( *pGPIBstatus )  || nConv != 5 ) {
         return INVALID;
     } else {
         if( psProduct ) {
