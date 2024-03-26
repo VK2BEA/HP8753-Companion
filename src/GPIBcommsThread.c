@@ -184,10 +184,12 @@ GPIBasyncWriteBinary(gint GPIBdescriptor, const void *sData, gint length, gint *
 
     if (GPIBfailed(*pGPIBstatus))
         return eRDWT_ERROR;
+#ifdef GPIB_PRE_4_3_6
     //todo - remove when linux GPIB driver fixed
     // a bug in the drive means that the timout used for the ibrda command is not accessed immediatly
     // we delay, so that the timeout used is TNONE bedore changing to T30ms
     usleep(20 * 1000);
+#endif
 
     // set the timout for the ibwait to 30ms
     ibtmo(GPIBdescriptor, T30ms);
@@ -315,10 +317,12 @@ GPIBasyncRead(gint GPIBdescriptor, void *readBuffer, long maxBytes, gint *pGPIBs
     if (GPIBfailed(*pGPIBstatus))
         return eRDWT_ERROR;
 
+#ifdef GPIB_PRE_4_3_6
     //todo - remove when linux GPIB driver fixed
     // a bug in the drive means that the timout used for the ibrda command is not accessed immediatly
     // we delay, so that the timeout used is TNONE bedore changing to T30ms
     usleep(20 * 1000);
+#endif
 
     // set the timout for the ibwait to 30ms
     ibtmo(GPIBdescriptor, T30ms);
@@ -556,7 +560,8 @@ gpointer
 threadGPIB(gpointer _pGlobal) {
     tGlobal *pGlobal = (tGlobal*) _pGlobal;
 
-    gchar *sGPIBversion;
+    gchar *sGPIBversion = NULL;
+    gint verMajor, verMinor, verMicro;
     gint GPIBstatus;
     gint timeoutHP8753;   				// previous timeout
 
@@ -569,7 +574,10 @@ threadGPIB(gpointer _pGlobal) {
     // The HP8753 formats numbers like 3.141 not, the continental European way 3,14159
     setlocale(LC_NUMERIC, "C");
     ibvers(&sGPIBversion);
-
+    LOG(G_LOG_LEVEL_CRITICAL, sGPIBversion);
+    if( sGPIBversion && sscanf( sGPIBversion, "%d.%d.%d", &verMajor, &verMinor, &verMicro ) == 3  ) {
+        pGlobal->GPIBversion = verMajor * 10000 + verMinor * 100 + verMicro;
+    }
     // g_print( "Linux GPIB version: %s\n", sGPIBversion );
 
     // look for the hp82357b GBIB controller

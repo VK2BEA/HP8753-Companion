@@ -1372,7 +1372,8 @@ sendHP8753calibrationKit(gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstat
             default:
                 break;
             }
-            g_string_append_printf( stCalKit, "OFSD %.17le; OFSL %.17e; OFSZ %lg; MINF %llu; MAXF %llu; %s; STDD; ",
+            g_string_append_printf( stCalKit, "OFSD %.17le; OFSL %.17e; OFSZ %lg; MINF %" G_GUINT64_FORMAT
+                                                "; MAXF %" G_GUINT64_FORMAT "; %s; STDD; ",
                     pStandard->offsetDelay, pStandard->offsetLoss, pStandard->offsetZ0,
                     pStandard->minFreqHz, pStandard->maxFreqHz,
                     pStandard->connectorType == eConnectorTypeCoaxial ? "COAX" : "WAVE");

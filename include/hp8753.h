@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.29-2"
+   #define VERSION "1.29-3"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -384,6 +384,7 @@ typedef struct {
 
 	gint                GPIBcontrollerIndex,  GPIBdevicePID;
 	gchar               *sGPIBdeviceName;
+	gint                GPIBversion;
 	GtkPrintSettings    *printSettings;
 	GtkPageSetup        *pageSetup;
 	tPaperSize          PDFpaperSize;
@@ -662,6 +663,8 @@ g_memdup2(gconstpointer mem, gsize byte_size) {
 // This character separates project name from item name in database
 // ... its more complicated to ensure compatability with older database schemas
 #define ETX 0x03
+
+#undef GPIB_PRE_4_3_6
 
 #undef DELTA_MARKER_ZERO
 #undef USE_PRECAUTIONARY_DEVICE_IBCLR
