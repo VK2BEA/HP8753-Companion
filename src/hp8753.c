@@ -282,6 +282,7 @@ splashDestroy (gpointer *pGlobal)
 static gint     optDebug = 0;
 static gboolean bOptQuiet = 0;
 static gboolean bOptNoGPIBtimeout = 0;
+static gboolean bOptNoSplash = 0;
 
 static gchar    **argsRemainder = NULL;
 
@@ -293,6 +294,8 @@ static const GOptionEntry optionEntries[] =
           &bOptQuiet, "No GUI sounds", NULL },
   { "noGPIBtimeout",   't', 0, G_OPTION_ARG_NONE,
 		          &bOptNoGPIBtimeout, "no GPIB timeout (for debug with HP59401A)", NULL },
+  { "noSplash",        's', 0, G_OPTION_ARG_NONE,
+		          &bOptNoSplash, "don't display splash screen at start", NULL },
   { G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &argsRemainder, "", NULL },
   { NULL }
 };
@@ -387,8 +390,10 @@ on_activate (GApplication *app, gpointer udata)
 	//  start 1 second timer
 	//  g_timeout_add_seconds(1, (GSourceFunc)timer_handler, widgets);
 #ifndef DEBUG
-	g_timeout_add( 20, (GSourceFunc)splashCreate, pGlobal );
-	g_timeout_add( 5000, (GSourceFunc)splashDestroy, pGlobal );
+	if (!bOptNoSplash){
+		g_timeout_add( 20, (GSourceFunc)splashCreate, pGlobal );
+		g_timeout_add( 5000, (GSourceFunc)splashDestroy, pGlobal );
+	}
 #endif
 
 	pGlobal->flags.bSmithSpline = TRUE;
