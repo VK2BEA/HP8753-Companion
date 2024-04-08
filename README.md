@@ -53,7 +53,7 @@ To uninstall:
 Troubleshooting:
 ----------------------------------------------------------------------
 If problems are encountered, first confirm that correct GPIB communication is occuring. 
-<br/>__Warning__ *You must setup the GPIB controller and the GPIB address of the 8753 on the GPIB tab of the GUI. (press the > icon on the notebook widget until the GPIB tab is shown, or right click on any tab and select GPIB from the list)*
+<br/>__Warning__ *You must setup the GPIB controller and the GPIB address of the 8753 on the GPIB tab of the GUI. (press the ▶ icon on the notebook widget until the GPIB tab is shown, or right click on any tab and select GPIB from the list)*
 
 Use the `ibtest` and `ibterm` tools distributed with the `linux-gpib` distribution.
 
