@@ -279,7 +279,7 @@ splashDestroy (gpointer *pGlobal)
     return FALSE;
 }
 
-static gint     optDebug = 0;
+static gint     optDebug = INVALID;
 static gboolean bOptQuiet = 0;
 static gboolean bOptNoGPIBtimeout = 0;
 
@@ -322,6 +322,7 @@ on_activate (GApplication *app, gpointer udata)
 	const gchar __attribute__((unused)) *wname;
 	GtkWidget *widget;
 	GSList *widgetList;
+	gboolean bShowGPIBtab = FALSE;
 
 
     if ( pGlobal->flags.bRunning ) {
@@ -387,8 +388,10 @@ on_activate (GApplication *app, gpointer udata)
 	//  start 1 second timer
 	//  g_timeout_add_seconds(1, (GSourceFunc)timer_handler, widgets);
 #ifndef DEBUG
-	g_timeout_add( 20, (GSourceFunc)splashCreate, pGlobal );
-	g_timeout_add( 5000, (GSourceFunc)splashDestroy, pGlobal );
+	if( optDebug == INVALID || optDebug < 2 ) {
+        g_timeout_add( 20, (GSourceFunc)splashCreate, pGlobal );
+        g_timeout_add( 5000, (GSourceFunc)splashDestroy, pGlobal );
+	}
 #endif
 
 	pGlobal->flags.bSmithSpline = TRUE;
@@ -398,10 +401,12 @@ on_activate (GApplication *app, gpointer udata)
 	if( recoverProgramOptions(pGlobal) != TRUE ){
 		// We might need to do something if there are no retrieved options
 		// ... but I don't know what that might be!
+	    bShowGPIBtab = TRUE;
 	}
 
 	// debug level
-	pGlobal->flags.bbDebug = optDebug < 8 ? optDebug : 7;
+	if( optDebug != INVALID )
+	    pGlobal->flags.bbDebug = optDebug < 8 ? optDebug : 7;
 
 	gchar *sFWlabel = g_strdup_printf( "Firmware %d.%d", pGlobal->HP8753.analyzedLSindexes.version/100,
 			pGlobal->HP8753.analyzedLSindexes.version % 100 );
@@ -464,6 +469,10 @@ on_activate (GApplication *app, gpointer udata)
 	GtkWidget *wRadioBtnCalibration = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_RadioCal");
 
 	CB_Radio_Calibration ( GTK_RADIO_BUTTON( wRadioBtnCalibration ), pGlobal );
+
+	if( bShowGPIBtab )
+	    gtk_notebook_set_current_page ( GTK_NOTEBOOK( g_hash_table_lookup(pGlobal->widgetHashTable,
+            (gconstpointer )"WID_Note")), NPAGE_GPIB );
 
 	// Start the GPIB communication thread
 	pGlobal->pGThread = g_thread_new( "GPIBthread", threadGPIB, (gpointer)pGlobal );
