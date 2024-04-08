@@ -668,4 +668,10 @@ g_memdup2(gconstpointer mem, gsize byte_size) {
 
 #undef DELTA_MARKER_ZERO
 #undef USE_PRECAUTIONARY_DEVICE_IBCLR
+
+#ifndef GPIB_CHECK_VERSION
+ #define GPIB_CHECK_VERSION(ma,mi,mic) 0
+ #pragma message "You should update to a newer version of linux-gpib"
+#endif
+
 #endif /* HP8753COMMS_H_ */

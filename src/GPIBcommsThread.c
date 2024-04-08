@@ -184,7 +184,7 @@ GPIBasyncWriteBinary(gint GPIBdescriptor, const void *sData, gint length, gint *
 
     if (GPIBfailed(*pGPIBstatus))
         return eRDWT_ERROR;
-#ifdef GPIB_PRE_4_3_6
+#if !GPIB_CHECK_VERSION(4,3,6)
     //todo - remove when linux GPIB driver fixed
     // a bug in the drive means that the timout used for the ibrda command is not accessed immediatly
     // we delay, so that the timeout used is TNONE bedore changing to T30ms
@@ -317,7 +317,7 @@ GPIBasyncRead(gint GPIBdescriptor, void *readBuffer, long maxBytes, gint *pGPIBs
     if (GPIBfailed(*pGPIBstatus))
         return eRDWT_ERROR;
 
-#ifdef GPIB_PRE_4_3_6
+#if !GPIB_CHECK_VERSION(4,3,6)
     //todo - remove when linux GPIB driver fixed
     // a bug in the drive means that the timout used for the ibrda command is not accessed immediatly
     // we delay, so that the timeout used is TNONE bedore changing to T30ms
