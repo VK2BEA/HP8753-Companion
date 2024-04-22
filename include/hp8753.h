@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.30-1"
+   #define VERSION "1.31-1"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -361,20 +361,21 @@ typedef struct {
 	tHP8753calibrationKit HP8753calibrationKit;
 
 	struct {
-	    guint16 bSmithSpline     		: 1;
-	    guint16 bGPIB_UseCardNoAndPID	: 1;
-	    guint16 bCalibrationOrTrace		: 1;
-	    guint16 bShowDateTime			: 1;
-	    guint16 bAdmitanceSmith			: 1;
-	    guint16 bDeltaMarkerZero        : 1;
-	    guint16 bSaveUserKit            : 1;
-	    guint16 bRunning         		: 1;
-	    guint16 bbDebug					: 3;
-	    guint16 bGPIBcommsActive        : 1;
-	    guint16 bProject                : 1;
-	    guint16 bNoGPIBtimeout			: 1;
-	    guint16 bDoNotRetrieveHPGLdata  : 1;
-        guint16 bHPlogo                 : 1;
+	    guint32 bSmithSpline     		: 1;
+	    guint32 bGPIB_UseCardNoAndPID	: 1;
+	    guint32 bCalibrationOrTrace		: 1;
+	    guint32 bShowDateTime			: 1;
+	    guint32 bAdmitanceSmith			: 1;
+	    guint32 bDeltaMarkerZero        : 1;
+	    guint32 bSaveUserKit            : 1;
+	    guint32 bRunning         		: 1;
+	    guint32 bbDebug					: 3;
+	    guint32 bGPIBcommsActive        : 1;
+	    guint32 bProject                : 1;
+	    guint32 bNoGPIBtimeout			: 1;
+	    guint32 bDoNotRetrieveHPGLdata  : 1;
+	    guint32 bHPlogo                 : 1;
+	    guint32 bHoldLiveMarker         : 1;
 	} flags;
 
 	tRMCtarget RMCdialogTarget;
@@ -406,7 +407,9 @@ typedef struct {
 	GList *pCalKitList;
 
 	GThread * pGThread;
+
 	tComplex mousePosition[ eNUM_CH ];
+	gdouble  mouseXpercentHeld;
 
 } tGlobal;
 

@@ -38,6 +38,14 @@
   The <key>recall</key>, <key>save</key> and <key>delete</key> buttons are context sensitive and will apply to either the setup and calibration 
   or to traces depending upon the radio button selection</p></note>
   </section>
+  <section id="live_markers">
+  <title>Live Markers</title>
+  <p>Moving the mouse cursor over the plot will invoke the live marker.</p>
+  <p>The marker will highlight the response corresponding to the ordinate on the x axis at the cursor position.</p>
+  <p>The live marker can be frozen (to permit printing or saving the plot image) by pressing the middle mouse button.</p>
+  <p>Pressing the left or right mouse button releases the frozen live marker.</p>
+  <note style="important"><p>If two displays are shown, the live markers are linked so that the other display will show the response at the same x position as the display with the mouse cursor. This may not necessarily be the the same frequency if the channels are uncoupled.</p></note>
+  </section>
   <section id="trace_printing">
   <title>Printing or Saving Trace Images</title>
   <p>Once retrieved, the traces may be printed or saved as images in PNG or PDF formats.

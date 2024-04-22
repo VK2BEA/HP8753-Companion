@@ -466,6 +466,9 @@ CB_BtnRecall (GtkButton * button, tGlobal *pGlobal)
 	gchar *name;
 	gint rtn;
 
+	// Release live marker
+    pGlobal->flags.bHoldLiveMarker = FALSE;
+
 	if( pGlobal->flags.bCalibrationOrTrace )
 		cbSetup = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_CalibrationProfile") );
 	else
@@ -745,6 +748,9 @@ CB_BtnRemove (GtkButton * button, tGlobal *pGlobal)
 void
 CB_BtnGetTrace (GtkButton * button, tGlobal *pGlobal)
 {
+    // Release held live marker
+    pGlobal->flags.bHoldLiveMarker = FALSE;
+
     if( pGlobal->flags.bDoNotRetrieveHPGLdata ) {
         gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(
                     g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_RadioBtn_PlotTypeHighRes") ), TRUE);
@@ -828,8 +834,28 @@ drawingAreaMouseButton(GtkWidget *widget, GdkEvent *event, tGlobal *pGlobal, gbo
 {
 	guint button;
 	gdouble x, y;
+	gdouble fractionX = 0.0;
+
+	guint areaWidth   = gtk_widget_get_allocated_width (widget);
+
+    // We have only connected the press signal GDK_BUTTON_PRESS
+    // GdkEventType eventType = gdk_event_get_event_type ( event );
+
 	gdk_event_get_button ( event, &button );
 	gdk_event_get_coords ( event, &x, &y );
+
+	fractionX = x / (gdouble)(areaWidth);
+
+	if( button == 2 ) {
+	    pGlobal->mouseXpercentHeld = fractionX;
+	    pGlobal->flags.bHoldLiveMarker = TRUE;
+	} else {
+	    pGlobal->flags.bHoldLiveMarker = FALSE;
+	}
+
+    gtk_widget_queue_draw( GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DrawingArea_Plot_A") ));
+    gtk_widget_queue_draw( GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DrawingArea_Plot_B") ));
+
 }
 
 void CB_DrawingArea_Plot_A_MouseButton(GtkWidget *widget, GdkEvent *event, tGlobal *pGlobal)

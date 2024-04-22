@@ -1245,7 +1245,8 @@ saveProgramOptions(tGlobal *pGlobal) {
 	if (sqlite3_bind_int(stmt, ++queryIndex, CURRENT_DB_SCHEMA) != SQLITE_OK)		// always 0 for now
 		goto err;
 
-	memcpy( &options.components.flagsL, &pGlobal->flags, sizeof( guint32 ));
+	pGlobal->flags.bHoldLiveMarker = FALSE;
+	memcpy( &options.components.flagsL, &pGlobal->flags, sizeof( guint16 ) + sizeof( guint8 ));
 	options.components.PDFpaperSize = (guchar)pGlobal->PDFpaperSize;    // top 8 bits of a 64 bit word
 	if (sqlite3_bind_int(stmt, ++queryIndex, options.all) != SQLITE_OK)
 		goto err;
@@ -1577,7 +1578,7 @@ recoverProgramOptions(tGlobal *pGlobal) {
 			options.all = sqlite3_column_int(stmt, queryIndex++);
 			// don't overwrite this bit if it has been set with the command line switch
 			gint bNoGPIBtimeout = pGlobal->flags.bNoGPIBtimeout;
-			memcpy(&pGlobal->flags, &options.components.flagsL, sizeof(gushort));
+			memcpy(&pGlobal->flags, &options.components.flagsL, sizeof( guint16 ) + sizeof( guint8 ));
 			// The top byte is the PDF paper size
 			pGlobal->PDFpaperSize = options.components.PDFpaperSize;
 			GtkComboBox     *wComboPDFpaperSize = GTK_COMBO_BOX ( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_CB_PDFpaperSize" ) );

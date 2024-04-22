@@ -560,6 +560,9 @@ plotSmithAndPolarTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, t
 			else
 				xMouse = pGlobal->mousePosition[channel].r;
 
+            if( pGlobal->flags.bHoldLiveMarker )
+                xMouse = pGlobal->mouseXpercentHeld * pGrid->areaWidth;
+
 			if ( xMouse >= pGrid->leftGridPosn && xMouse <= pGrid->gridWidth+pGrid->leftGridPosn ) {
 				xFract = (xMouse-pGrid->leftGridPosn) / pGrid->gridWidth;
 				cairo_reset_clip( cr);
