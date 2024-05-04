@@ -458,6 +458,7 @@ drawHPlogo (cairo_t *cr, gchar *sProduct, gdouble centreX, gdouble lowerLeftY, g
 
 		cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0 );
         cairo_set_font_size( cr, 10.0 );
+        removeFontHinting( cr );
         rightJustifiedCairoText( cr, "300 kHz - 3 GHz", DECAL_WIDTH, -14.0);
         leftJustifiedCairoText( cr, "NETWORK ANALYZER", DECAL_WIDTH/2.0, 0.0 );
 

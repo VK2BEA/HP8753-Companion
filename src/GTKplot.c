@@ -39,6 +39,26 @@ const	gchar *formatSymbols[] = { "dB", "°", "s", "U", "U", "U", "U", "", "U", "
 const	gchar *formatSmithOrPolarSymbols[][2] = { {"U", "°"}, {"dB", "°"}, {"U", "U"}, {"Ω", "Ω"}, {"S", "S"} };
 const	gchar *sweepSymbols[] = { "Hz", "Hz", "Hz", "s", "dBm" };
 
+/*!     \brief  Turn off font metrics hinting
+ *
+ * Remove font metric hinting so that the font size remains the same
+ * in relation to the window size when resizing the drawing area
+ *
+ * \ingroup drawing
+ *
+ * \param cr        pointer to cairo context
+ */
+void
+removeFontHinting( cairo_t *cr ) {
+    // Remove hinting so that resize of window does not change
+    cairo_font_options_t *pFontOptions = cairo_font_options_create();
+    cairo_get_font_options (cr, pFontOptions);
+    cairo_font_options_set_hint_style( pFontOptions, CAIRO_HINT_STYLE_NONE );
+    cairo_font_options_set_hint_metrics( pFontOptions, CAIRO_HINT_METRICS_OFF );
+    cairo_set_font_options (cr, pFontOptions);
+    cairo_font_options_destroy( pFontOptions );
+}
+
 /*!     \brief  find the width of the string in the current font
  *
  * Determine the width of the string in the current font and scaling
@@ -113,6 +133,7 @@ void
 setCairoFontSize( cairo_t *cr, gdouble fSize ) {
 	cairo_matrix_t fMatrix = {0, .xx=fSize, .yy=-fSize};
 	cairo_set_font_matrix(cr, &fMatrix);
+	removeFontHinting( cr );
 }
 
 /*!     \brief  Render a text string right justified from the specified point

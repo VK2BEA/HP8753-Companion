@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.31-1"
+   #define VERSION "1.32-1"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -562,10 +562,11 @@ gint        recoverCalibrationAndSetup ( tGlobal *, gchar *, gchar * );
 gint        recoverCalibrationKit ( tGlobal *, gchar * );
 gint        recoverProgramOptions( tGlobal * );
 gint        recoverTraceData ( tGlobal *, gchar *, gchar * );
+void        removeFontHinting( cairo_t * );
 gint        renameMoveCopyDBitems(tGlobal *, tRMCtarget, tRMCpurpose, gchar *, gchar *, gchar *);
 void        rightJustifiedCairoText( cairo_t *, gchar *, gdouble, gdouble );
 gint        saveCalibrationAndSetup ( tGlobal *, gchar *, gchar * );
-gint        saveCalKit ( tGlobal *pGlobal );
+gint        saveCalKit ( tGlobal * );
 gint        saveLearnStringAnalysis ( tGlobal *, tLearnStringIndexes * );
 gint        saveProgramOptions ( tGlobal * );
 tHP8753cal* selectCalibrationProfile( tGlobal *, gchar *, gchar * );

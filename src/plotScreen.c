@@ -351,7 +351,7 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 	    cairo_save(cr);
 	    {
 			// Noto Sans Mono Light
-			cairo_select_font_face(cr, HPGL_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+	        cairo_select_font_face(cr, HPGL_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 
 			// If we don't set the color its black ... but the HP8753 does
 			gdk_cairo_set_source_rgba (cr, &HPGLpens[1] );      // black pen by default

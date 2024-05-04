@@ -128,7 +128,7 @@ drawMarkerSymbol(cairo_t *cr, tGridParameters *pGrid, gchar *sLabel,
 
 		cairo_show_text (cr, sLabel);
 		if( bDelta ) {
-	        cairo_select_font_face(cr, MARKER_SYMBOL_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+		    cairo_select_font_face(cr, MARKER_SYMBOL_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 			cairo_show_text (cr, "Δ");
 		}
 	}
@@ -216,9 +216,9 @@ drawMarkerText( cairo_t *cr,
     	cairo_move_to( cr, X, Y );
     	cairo_show_text( cr, mkrLabel[ mkrNo ]);
 		if( pChannel->chFlags.bMkrsDelta && mkrNo == pChannel->deltaMarker )
-			cairo_select_font_face(cr, MARKER_FONT_NARROW, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD );
+		    cairo_select_font_face(cr, MARKER_FONT_NARROW, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD );
 		else
-			cairo_select_font_face(cr, MARKER_FONT_NARROW, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );
+		    cairo_select_font_face(cr, MARKER_FONT_NARROW, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );
 
     	// X around which value and unit are given NNN.NNNN | UU
 		X = pGrid->areaWidth - pGrid->makerAreaWidth * 0.25;
@@ -307,7 +307,7 @@ drawBandwidthText( cairo_t *cr,
     	cairo_set_matrix( cr, &pGrid->initialMatrix );
     	cairo_reset_clip( cr );
 
-		cairo_select_font_face(cr, MARKER_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );
+    	cairo_select_font_face(cr, MARKER_FONT, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );
 		setCairoFontSize( cr, markerFontSize);
 		lineSpacing = markerFontSize * 1.2;
 
@@ -327,7 +327,7 @@ drawBandwidthText( cairo_t *cr,
     	cairo_move_to( cr, X, Y - 2.0 * lineSpacing );
     	cairo_show_text( cr, "Q:");
 
-		cairo_select_font_face(cr, MARKER_FONT_NARROW, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );
+    	cairo_select_font_face(cr, MARKER_FONT_NARROW, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL );
 
     	// X around which value and unit are given NNN.NNNN | UU
 		X = pGrid->areaWidth - pGrid->makerAreaWidth * 0.25;
