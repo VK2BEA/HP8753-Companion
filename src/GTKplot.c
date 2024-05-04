@@ -48,12 +48,12 @@ const	gchar *sweepSymbols[] = { "Hz", "Hz", "Hz", "s", "dBm" };
  *
  * \param cr        pointer to cairo context
  */
-void
+static void
 removeFontHinting( cairo_t *cr ) {
     // Remove hinting so that resize of window does not change
     cairo_font_options_t *pFontOptions = cairo_font_options_create();
     cairo_get_font_options (cr, pFontOptions);
-    cairo_font_options_set_hint_style( pFontOptions, CAIRO_HINT_STYLE_NONE );
+//  cairo_font_options_set_hint_style( pFontOptions, CAIRO_HINT_STYLE_NONE );
     cairo_font_options_set_hint_metrics( pFontOptions, CAIRO_HINT_METRICS_OFF );
     cairo_set_font_options (cr, pFontOptions);
     cairo_font_options_destroy( pFontOptions );
@@ -133,7 +133,6 @@ void
 setCairoFontSize( cairo_t *cr, gdouble fSize ) {
 	cairo_matrix_t fMatrix = {0, .xx=fSize, .yy=-fSize};
 	cairo_set_font_matrix(cr, &fMatrix);
-	removeFontHinting( cr );
 }
 
 /*!     \brief  Render a text string right justified from the specified point
@@ -996,6 +995,8 @@ gboolean CB_DrawingArea_A_Draw (GtkWidget *widget, cairo_t *cr, tGlobal *pGlobal
 	guint areaWidth   = gtk_widget_get_allocated_width (widget);
     guint areaHeight  = gtk_widget_get_allocated_height (widget);
 
+    removeFontHinting( cr );
+
     // clear the screen
 	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0 );
 	cairo_paint( cr );
@@ -1076,6 +1077,8 @@ CB_DrawingArea_B_Draw (GtkWidget *widget, cairo_t *cr, tGlobal *pGlobal)
 	// get with and height in points (1/72")
 	guint areaWidth   = gtk_widget_get_allocated_width  (widget);
     guint areaHeight  = gtk_widget_get_allocated_height (widget);
+
+    removeFontHinting( cr );
 
     // clear the screen
 	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0 );
