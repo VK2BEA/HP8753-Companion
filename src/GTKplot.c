@@ -873,6 +873,7 @@ gboolean plotA (guint areaWidth, guint areaHeight, gdouble margin, cairo_t *cr, 
     		( pGlobal->HP8753.flags.bDualChannel && !pGlobal->HP8753.flags.bSplitChannels );
 
     cairo_translate( cr, margin, margin );
+    removeFontHinting( cr );
 
     // adjust area to accomodate margin
     areaWidth  -= 2 * margin;
@@ -995,8 +996,6 @@ gboolean CB_DrawingArea_A_Draw (GtkWidget *widget, cairo_t *cr, tGlobal *pGlobal
 	guint areaWidth   = gtk_widget_get_allocated_width (widget);
     guint areaHeight  = gtk_widget_get_allocated_height (widget);
 
-    removeFontHinting( cr );
-
     // clear the screen
 	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0 );
 	cairo_paint( cr );
@@ -1019,6 +1018,7 @@ gboolean CB_DrawingArea_A_Draw (GtkWidget *widget, cairo_t *cr, tGlobal *pGlobal
 gboolean plotB (guint areaWidth, guint areaHeight, gdouble margin, cairo_t *cr, tGlobal *pGlobal)
 {
     cairo_translate( cr, margin, margin );
+    removeFontHinting( cr );
 
     // adjust area to accomodate margin
     areaWidth  -= 2 * margin;
@@ -1077,8 +1077,6 @@ CB_DrawingArea_B_Draw (GtkWidget *widget, cairo_t *cr, tGlobal *pGlobal)
 	// get with and height in points (1/72")
 	guint areaWidth   = gtk_widget_get_allocated_width  (widget);
     guint areaHeight  = gtk_widget_get_allocated_height (widget);
-
-    removeFontHinting( cr );
 
     // clear the screen
 	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0 );
