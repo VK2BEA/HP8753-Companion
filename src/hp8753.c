@@ -552,6 +552,7 @@ on_startup (GApplication *app, gpointer udata)
 
 	pGlobal->flags.bGPIB_UseCardNoAndPID = FALSE;
 	pGlobal->flags.bNoGPIBtimeout = bOptNoGPIBtimeout;
+	pGlobal->GPIBdevicePID = DEFAULT_GPIB_DEVICE_ID;
 
     /*! We use a loop source to send data back from the
      *  GPIB threads to indicate status
