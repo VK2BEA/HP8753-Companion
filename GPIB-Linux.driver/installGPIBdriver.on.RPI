@@ -1,9 +1,10 @@
 #! /bin/bash
 
-# Michael G. Katzmann - 29 Dec 2020
+# Michael G. Katzmann - 17 Sep 2024
 
-VERSION=1.12
+VERSION=1.13
 
+# 1.13 - 2024-Sep-17 - update to git repositry
 # 1.11 - 2022-Sep-06 - update linux-gpib version
 # 1.11 - 2022-Jun-06 - update 
 
@@ -36,7 +37,7 @@ command -v autogen >/dev/null 2>&1 || { echo "autogen is not installed. Aborting
 command -v libtoolize >/dev/null 2>&1 || { echo "libtool is not installed. Aborting." >&2; exit 1; }
 command -v flex >/dev/null 2>&1 || { echo "flex is not installed. Aborting." >&2; exit 1; }
 command -v bison >/dev/null 2>&1 || { echo "bison is not installed. Aborting." >&2; exit 1; }
-command -v svn >/dev/null 2>&1 || { echo "subversion is not installed. Aborting." >&2; exit 1; }
+command -v git >/dev/null 2>&1 || { echo "git is not installed. Aborting." >&2; exit 1; }
 
 dpkg -l raspberrypi-kernel-headers >/dev/null 2>&1 || { echo "raspberrypi-kernel-headers is not installed. Aborting" >&2; exit 1; }
 
@@ -47,13 +48,13 @@ pushd "${SCRIPTDIR}" > /dev/null
 #  https://sourceforge.net/projects/linux-gpib/files
 
 printf "0: ${GRN}Get SVN linux gpib kernel module and user programs and firmware${DEF}\n"
-svn checkout https://svn.code.sf.net/p/linux-gpib/code/trunk linux-gpib-code
+git clone https://git.code.sf.net/p/linux-gpib/git linux-gpib-git
 wget --content-disposition --no-check-certificate http://linux-gpib.sourceforge.net/firmware/gpib_firmware-2008-08-10.tar.gz
 tar xvfz gpib_firmware-2008-08-10.tar.gz
 
 printf "1: ${GRN}Make and install Linux GPIB library, scripts and programms${DEF}\n"
 
-pushd linux-gpib-code/linux-gpib-user >/dev/null
+pushd linux-gpib-git/linux-gpib-user >/dev/null
   make distclean >/dev/null
   touch ChangeLog
 #  libtoolize
@@ -104,6 +105,6 @@ printf "7: ${GRN}Copy gpib configuration file ${BLU} (a convienience .. edit for
 
 popd > /dev/null
 
-printf "${BLD}\nUse 'ibtest' or 'ibterm' to test GPIB...${NOR}
+printf "${BLD}\nUse 'ibtest' or 'ibterm' to test GPIB...${NOR}"
 
 
