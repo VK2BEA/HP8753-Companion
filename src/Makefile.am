@@ -40,7 +40,8 @@ hp8753_SOURCES = databaseSaveAndRestore.c  GTKplotMarkers.c \
                  GTKutility.c HP8753comms.c \
                  HP_FORM1toFORM3.c messageEvent.c \
                  noteGPIBwidgetCallbacks.c plotCartesian.c \
-                 plotSmith.c smithHighResPDF.c
+                 plotSmith.c smithHighResPDF.c \
+                 GPIB_interface.c USBTMC_interface.c Prologix_interface.c
 
 hp8753_SOURCES += $(top_srcdir)/include/GPIBcomms.h \
 				  $(top_srcdir)/include/hp8753comms.h \

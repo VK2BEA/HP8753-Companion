@@ -37,10 +37,14 @@
  * \param  tGlobal	    pointer global data
  */
 void setUseGPIBcardNoAndPID( tGlobal *pGlobal, gboolean bPID ) {
-	gtk_widget_set_sensitive( GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frm_GPIB_Controller_Identifier")), !bPID );
-	gtk_widget_set_sensitive( GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frm_GPIB_HP8753_Identifier")), !bPID );
-	gtk_widget_set_sensitive( GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frm_GPIB_Controler_CardNo")), bPID );
-	gtk_widget_set_sensitive( GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Frm_GPIB_HP8753_PID")), bPID );
+    gboolean bIF_GPIB = pGlobal->flags.bbGPIBinterfaceType == eGPIB;
+
+	gtk_widget_set_sensitive( GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable,
+	        (gconstpointer)"WID_Frm_GPIB_HP8753_Identifier")), bIF_GPIB && !bPID );
+	gtk_widget_set_sensitive( GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable,
+	        (gconstpointer)"WID_Frm_GPIB_Controler_CardNo")), bPID );
+	gtk_widget_set_sensitive( GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable,
+	        (gconstpointer)"WID_Frm_GPIB_HP8753_PID")), bIF_GPIB && bPID );
 }
 
 /*!     \brief  Callback / GPIB page / Use GBIB name or controller # and device PID
@@ -104,5 +108,57 @@ void
 CB_Spin_GPIB_HP8753_PID (GtkSpinButton* wSpin, tGlobal *pGlobal) {
 	pGlobal->GPIBdevicePID = (gint)gtk_spin_button_get_value( wSpin );
 	postDataToGPIBThread (TG_SETUP_GPIB, NULL);
+}
+
+/*!     \brief  Callback when user selects GPIB interface
+ *
+ * Callback when user selects GPIB interface
+ *
+ * \param  wIF_GPIB pointer to radio button widget
+ * \param  tGlobal      pointer global data
+ */
+void
+CB_Radio_IF_GPIB ( GtkRadioButton *wIF_GPIB, tGlobal *pGlobal ) {
+    if( gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( wIF_GPIB )) == 0)
+        return;
+
+    pGlobal->flags.bbGPIBinterfaceType = eGPIB;
+    gtk_widget_set_sensitive( GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_UseGPIB_ID")), TRUE );
+    setUseGPIBcardNoAndPID( pGlobal, pGlobal->flags.bGPIB_UseCardNoAndPID );
+    postDataToGPIBThread (TG_SETUP_GPIB, NULL);
+}
+
+/*!     \brief  Callback when user selects GPIB interface
+ *
+ * Callback when user selects GPIB interface
+ *
+ * \param  wIF_GPIB pointer to radio button widget
+ * \param  tGlobal      pointer global data
+ */
+void
+CB_Radio_IF_USBTMC ( GtkRadioButton *wIF_USBTMC, tGlobal *pGlobal ) {
+    if( gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( wIF_USBTMC )) == 0)
+        return;
+
+    pGlobal->flags.bbGPIBinterfaceType = eUSBTMC;
+    gtk_widget_set_sensitive( GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_UseGPIB_ID")), FALSE );
+    setUseGPIBcardNoAndPID( pGlobal, TRUE );
+    postDataToGPIBThread (TG_SETUP_GPIB, NULL);
+}
+
+/*!     \brief  Callback when user selects GPIB interface
+ *
+ * Callback when user selects GPIB interface
+ *
+ * \param  wIF_Prologix pointer to radio button widget
+ * \param  tGlobal      pointer global data
+ */
+void
+CB_Radio_IF_Prologix ( GtkRadioButton *wIF_Prologix, tGlobal *pGlobal ) {
+    if( gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( wIF_Prologix )) == 0)
+        return;
+
+    pGlobal->flags.bbGPIBinterfaceType = ePrologix;
+    postDataToGPIBThread (TG_SETUP_GPIB, NULL);
 }
 

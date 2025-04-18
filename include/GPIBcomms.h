@@ -18,17 +18,60 @@
 #define GPIBCOMMS_H_
 
 typedef enum { eRDWT_OK=0, eRDWT_ERROR, eRDWT_TIMEOUT, eRDWT_ABORT, eRDWT_CONTINUE, eRDWT_PREVIOUS_ERROR } tGPIBReadWriteStatus;
+typedef enum { eTMO_SET, eTMO_SAVE_AND_SET, eTMO_RESTORE } tTimeoutPurpose;
 
-gint GPIBwriteBinary( gint, const void *, gint, gint * );
-gint GPIBread( gint, void *sData, gint, gint * );
-gint GPIBwrite( gint, const void *, gint * );
-gint GPIBwriteOneOfN( gint, const void *, gint, gint * );
-tGPIBReadWriteStatus GPIBasyncWriteOneOfN( gint, const void *, gint, gint *, gdouble );
-tGPIBReadWriteStatus GPIBasyncRead( gint , void *, glong , gint *, gdouble );
-tGPIBReadWriteStatus GPIBasyncWrite( gint , const void *, gint *, gdouble );
-tGPIBReadWriteStatus GPIBasyncWriteBinary( gint, const void *, gint , gint *, gdouble  );
-tGPIBReadWriteStatus GPIBasyncSRQwrite( gint , void *, gint, gint *, gdouble );
-tGPIBReadWriteStatus enableSRQonOPC( gint , gint * );
+
+typedef struct {
+    tGPIBtype   interfaceType;
+    gint descriptor;
+    gint status;
+    gint nChars;
+} tGPIBinterface;
+
+gint GPIBwriteBinary(  tGPIBinterface *, const void *, gint, gint * );
+gint GPIBread(  tGPIBinterface *, void *sData, gint, gint * );
+gint GPIBwrite(  tGPIBinterface *, const void *, gint * );
+gint GPIBwriteOneOfN(  tGPIBinterface *, const void *, gint, gint * );
+tGPIBReadWriteStatus GPIBasyncWriteOneOfN(  tGPIBinterface *, const void *, gint, gdouble );
+tGPIBReadWriteStatus GPIBasyncRead(  tGPIBinterface * , void *, glong , gdouble );
+tGPIBReadWriteStatus GPIBasyncWrite(  tGPIBinterface * , const void *, gdouble );
+tGPIBReadWriteStatus GPIBasyncWriteBinary(  tGPIBinterface *, const void *, size_t, gdouble  );
+
+tGPIBReadWriteStatus IF_GPIB_asyncWrite( tGPIBinterface *, const void *, size_t, gdouble );
+tGPIBReadWriteStatus IF_USBTMC_asyncWrite( tGPIBinterface *, const void *, size_t, gdouble );
+tGPIBReadWriteStatus IF_Prologix_asyncWrite( tGPIBinterface *, const void *, size_t, gdouble );
+tGPIBReadWriteStatus IF_GPIB_asyncRead(  tGPIBinterface *, void *, long, gdouble);
+tGPIBReadWriteStatus IF_USBTMC_asyncRead( tGPIBinterface *, void *, long, gdouble);
+tGPIBReadWriteStatus IF_Prologix_asyncRead( tGPIBinterface *, void *, long, gdouble);
+gint IF_USBTMC_open( tGlobal *, tGPIBinterface * );
+gint IF_GPIB_open( tGlobal *, tGPIBinterface * );
+gint IF_Prologix_open( tGlobal *, tGPIBinterface * );
+gint IF_GPIB_close( tGPIBinterface *);
+gint IF_USBTMC_close( tGPIBinterface *);
+gint IF_Prologix_close( tGPIBinterface *);
+gboolean IF_GPIB_ping( tGPIBinterface * );
+gboolean IF_USBTMC_ping( tGPIBinterface * );
+gboolean IF_Prologix_ping( tGPIBinterface * );
+gint IF_GPIB_timeout( tGPIBinterface *, gint, gint *, tTimeoutPurpose );
+gint IF_USBTMC_timeout( tGPIBinterface *, gint, gint *, tTimeoutPurpose );
+gint IF_Prologix_timeout( tGPIBinterface *, gint, gint *, tTimeoutPurpose );
+gint IF_GPIB_local( tGPIBinterface * );
+gint IF_USBTMC_local( tGPIBinterface * );
+gint IF_Prologix_local( tGPIBinterface * );
+gint IF_GPIB_clear( tGPIBinterface * );
+gint IF_USBTMC_clear( tGPIBinterface * );
+gint IF_Prologix_clear( tGPIBinterface * );
+gint IF_GPIB_readConfiguration( tGPIBinterface *, gint, gint *, gint * );
+tGPIBReadWriteStatus IF_GPIB_asyncSRQwrite( tGPIBinterface *, void *, gint, gdouble );
+tGPIBReadWriteStatus IF_USBTMC_asyncSRQwrite( tGPIBinterface *, void *, gint, gdouble );
+tGPIBReadWriteStatus IF_Prologix_asyncSRQwrite( tGPIBinterface *, void *, gint, gdouble );
+
+tGPIBReadWriteStatus GPIBasyncSRQwrite(  tGPIBinterface * , void *, gint, gdouble );
+tGPIBReadWriteStatus GPIBenableSRQonOPC(  tGPIBinterface * );
+
+gint GPIBtimeout( tGPIBinterface *, gint, gint *, tTimeoutPurpose );
+gint GPIBclear( tGPIBinterface * );
+gint GPIBlocal( tGPIBinterface * );
 
 #define NULL_STR	-1
 #define WAIT_STR	-2

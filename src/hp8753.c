@@ -426,6 +426,9 @@ on_activate (GApplication *app, gpointer udata)
 	inventorySavedTraceNames( pGlobal );
 	inventorySavedCalibrationKits( pGlobal );
 
+	// set the title initially to that of the last trace saved
+	pGlobal->HP8753.sTitle = pGlobal->pTraceAbstract->sTitle;
+
 	// fill the combo box with the setup/cal names
 	GtkComboBoxText *wComboBoxProject = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_Project") );
 	GtkComboBoxText *wComboBoxCalKit = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_CalKit") );

@@ -17,42 +17,42 @@
 #ifndef HP8753COMMS_H_
 #define HP8753COMMS_H_
 
-gboolean askOption( gint descGPIB_HP8753, gchar *option, gint *pGPIBstatus );
+gboolean askOption( tGPIBinterface *, gchar * );
 
-gint askHP8753_dbl(gint descGPIB_HP8753, gchar *mnemonic, gdouble *dresult, gint *pGPIBstatus);
+gint askHP8753_dbl( tGPIBinterface *, gchar *, gdouble * );
 
-gint getHP8753channelListFreqSegments(gint descGPIB_HP8753, tGlobal *pGlobal, eChannel channel, gint *pGPIBstatus );
-gint getHP8753channelTrace(gint descGPIB_HP8753, tGlobal *pGlobal, eChannel channel, gint *pGPIBstatus );
-gint acquireHPGLplot( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );
-gint get8753firmwareVersion(gint descGPIB_HP8753, gchar **psProduct, gint *pGPIBstatus);
+gint getHP8753channelListFreqSegments( tGPIBinterface *, tGlobal *, eChannel );
+gint getHP8753channelTrace(tGPIBinterface *, tGlobal *, eChannel );
+gint acquireHPGLplot( tGPIBinterface *, tGlobal * );
+gint get8753firmwareVersion( tGPIBinterface *, gchar ** );
 
-gint getHP8753markersAndSegments( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );
-gint get8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );
-gint send8753setupAndCal( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );
-gint getHP8753switchOnOrOff( gint GPIBdescriptor, gchar *sRequest, gint *pGPIBstatus );
+gint getHP8753markersAndSegments( tGPIBinterface *, tGlobal * );
+gint get8753setupAndCal( tGPIBinterface *, tGlobal * );
+gint send8753setupAndCal( tGPIBinterface *, tGlobal * );
+gint getHP8753switchOnOrOff( tGPIBinterface *, gchar * );
 
-gint getHP8753format( gint descGPIB_HP8753, gint *pGPIBstatus );
-gint getHP8753sweepType( gint descGPIB_HP8753, gint *pGPIBstatus );
-gint getHP8753measurementType( gint descGPIB_HP8753, gint *pGPIBstatus );
-gint getHP8753smithMkrType( gint descGPIB_HP8753, gint *pGPIBstatus );
-gint getHP8753polarMkrType( gint descGPIB_HP8753, gint *pGPIBstatus );
-gint getHP8753calType( gint descGPIB_HP8753, gint *pGPIBstatus );
+gint getHP8753format( tGPIBinterface * );
+gint getHP8753sweepType( tGPIBinterface * );
+gint getHP8753measurementType( tGPIBinterface * );
+gint getHP8753smithMkrType( tGPIBinterface * );
+gint getHP8753polarMkrType( tGPIBinterface * );
+gint getHP8753calType( tGPIBinterface * );
 
-gint get8753learnString( gint descGPIB_HP8753, guchar **ppLearnString, gint *pGPIBstatus );
-gboolean analyze8753learnString( gint descGPIB_HP8753, tLearnStringIndexes *pLSindex, gint *pGPIBstatus );
-gint process8753learnString( gint descGPIB_HP8753, guchar *, tGlobal *pGlobal, gint *pGPIBstatus );
-gboolean getStartStopOrCenterSpanFrom8753learnString( guchar *pLearn, tGlobal *pGlobal, eChannel channel );
-eChannel getActiveChannelFrom8753learnString( guchar *pLearn, tGlobal *pGlobal );
+gint get8753learnString( tGPIBinterface *, guchar ** );
+gboolean analyze8753learnString( tGPIBinterface *, tLearnStringIndexes * );
+gint process8753learnString( tGPIBinterface *, guchar *, tGlobal * );
+gboolean getStartStopOrCenterSpanFrom8753learnString( guchar *, tGlobal *, eChannel );
+eChannel getActiveChannelFrom8753learnString( guchar *, tGlobal * );
+gint sendHP8753calibrationKit (tGPIBinterface *, tGlobal * );
 
-gint findHP8753option(gint descGPIB_HP8753, const HP8753_option *optList,
-		gint maxOptions, gint *pGPIBstatus);
+gint findHP8753option( tGPIBinterface *, const HP8753_option *, gint );
 
-gboolean selectLearningStringIndexes( tGlobal *pGlobal );
+gboolean selectLearningStringIndexes( tGlobal * );
 
-gint setHP8753channel( gint descGPIB_HP8753, eChannel channel, gint *pGPIBstatus );
+gint setHP8753channel( tGPIBinterface *, eChannel );
 
-gint getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );
-gint getHP3753_S1P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus );
+gint getHP3753_S2P( tGPIBinterface *, tGlobal * );
+gint getHP3753_S1P( tGPIBinterface *, tGlobal * );
 
 #define MAX_OUTPCAL_LEN	15
 

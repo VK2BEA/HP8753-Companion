@@ -29,7 +29,7 @@
 #include "messageEvent.h"
 
 gint
-getSparam( gint descGPIB_HP8753, tGlobal *pGlobal, tComplex *Sparam[], gint *nPoints, gint *pGPIBstatus )
+getSparam(  tGPIBinterface *pGPIBinterface, tGlobal *pGlobal, tComplex *Sparam[], gint *nPoints )
 {
 
 	guint16 sizeF2 = 0, headerAndSize[2];
@@ -39,12 +39,12 @@ getSparam( gint descGPIB_HP8753, tGlobal *pGlobal, tComplex *Sparam[], gint *nPo
 		guint32 bytes;
 	} rBits, iBits;
 
-	GPIBasyncWrite(descGPIB_HP8753, "FORM2;OUTPFORM;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+	GPIBasyncWrite( pGPIBinterface, "FORM2;OUTPFORM;", 10 * TIMEOUT_RW_1SEC );
 	// first read header and size of data
-	GPIBasyncRead(descGPIB_HP8753, headerAndSize, HEADER_SIZE, pGPIBstatus, 20 * TIMEOUT_RW_1SEC);
+	GPIBasyncRead( pGPIBinterface, headerAndSize, HEADER_SIZE, 20 * TIMEOUT_RW_1SEC );
 	sizeF2 = GUINT16_FROM_BE(headerAndSize[1]);
 	pFORM2 = g_malloc(sizeF2);
-	GPIBasyncRead(descGPIB_HP8753, pFORM2, sizeF2, pGPIBstatus, 30 * TIMEOUT_RW_1SEC);
+	GPIBasyncRead( pGPIBinterface, pFORM2, sizeF2, 30 * TIMEOUT_RW_1SEC );
 
 	*nPoints = sizeF2 / (sizeof(gint32) * 2);
 	*Sparam = g_realloc( *Sparam, sizeof(tComplex) * sizeF2 );
@@ -57,7 +57,7 @@ getSparam( gint descGPIB_HP8753, tGlobal *pGlobal, tComplex *Sparam[], gint *nPo
 	}
 	g_free(pFORM2);
 
-	return (GPIBfailed(*pGPIBstatus));
+	return (GPIBfailed( pGPIBinterface->status ));
 }
 
 /*!     \brief  Retrieve all four complex S-paramaters data from HP8753
@@ -72,50 +72,50 @@ getSparam( gint descGPIB_HP8753, tGlobal *pGlobal, tComplex *Sparam[], gint *nPo
  * \return 0 on success or 1 or -1 on problem
  */
 gint
-getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
+getHP3753_S2P( tGPIBinterface *pGPIBinterface, tGlobal *pGlobal )
 {
 	guchar *learnString = NULL;
 	gdouble sweepStart = 300.0e3, sweepStop=3.0e9;
 	int i;
 
-    enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
+    GPIBenableSRQonOPC( pGPIBinterface );
 
 	postInfo("Determine current configuration");
-	if( !getHP8753switchOnOrOff( descGPIB_HP8753, "COUC", pGPIBstatus ) ) {
+	if( !getHP8753switchOnOrOff( pGPIBinterface, "COUC" ) ) {
 		postError("Source must be coupled for S2P");
 		return ERROR;
 	}
 	// Request Learn string
-	GPIBasyncWrite(descGPIB_HP8753, "FORM1;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
-	if ( get8753learnString( descGPIB_HP8753, &learnString, pGPIBstatus ))
+	GPIBasyncWrite( pGPIBinterface, "FORM1;", 10 * TIMEOUT_RW_1SEC);
+	if ( get8753learnString( pGPIBinterface, &learnString ))
 		goto err;
 
-	GPIBasyncWrite(descGPIB_HP8753, "HOLD;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
-	setHP8753channel( descGPIB_HP8753, eCH_ONE, pGPIBstatus );
+	GPIBasyncWrite(pGPIBinterface, "HOLD;", 10 * TIMEOUT_RW_1SEC);
+	setHP8753channel( pGPIBinterface, eCH_ONE );
 
 	if( getStartStopOrCenterSpanFrom8753learnString( learnString, pGlobal, eCH_ONE ) ) {
-		askHP8753_dbl(descGPIB_HP8753, "STAR", &sweepStart, pGPIBstatus);
-		askHP8753_dbl(descGPIB_HP8753, "STOP", &sweepStop, pGPIBstatus);
+		askHP8753_dbl(pGPIBinterface, "STAR", &sweepStart );
+		askHP8753_dbl(pGPIBinterface, "STOP", &sweepStop );
 	} else {
 		gdouble sweepCenter=1500.15e6, sweepSpan=2999.70e6;
-		askHP8753_dbl(descGPIB_HP8753, "CENT", &sweepCenter, pGPIBstatus);
-		askHP8753_dbl(descGPIB_HP8753, "SPAN", &sweepSpan, pGPIBstatus);
+		askHP8753_dbl(pGPIBinterface, "CENT", &sweepCenter );
+		askHP8753_dbl(pGPIBinterface, "SPAN", &sweepSpan );
 		sweepStart = sweepCenter - sweepSpan/2.0;
 		sweepStop = sweepCenter + sweepSpan/2.0;
 	}
 
 	postInfo("Set for S11 + S21");
-	GPIBasyncWrite(descGPIB_HP8753, "S11;SMIC;LINFREQ;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+	GPIBasyncWrite( pGPIBinterface, "S11;SMIC;LINFREQ;", 10 * TIMEOUT_RW_1SEC );
 	// Sweep
-	setHP8753channel( descGPIB_HP8753, eCH_TWO, pGPIBstatus );
+	setHP8753channel( pGPIBinterface, eCH_TWO );
 	// Depending upon the settings, a sweep may take a long time
-	if( GPIBasyncSRQwrite( descGPIB_HP8753, "S21;SMIC;SING;", NULL_STR, pGPIBstatus, 10 * TIMEOUT_RW_1MIN ) != eRDWT_OK ) {
-		*pGPIBstatus = ERR;
+	if( GPIBasyncSRQwrite( pGPIBinterface, "S21;SMIC;SING;", NULL_STR, 10 * TIMEOUT_RW_1MIN ) != eRDWT_OK ) {
+	    pGPIBinterface->status = ERR;
 		goto err;
 	}
 	// Read real / imag S11
 	postInfo("Read S21 data");
-	getSparam( descGPIB_HP8753, pGlobal, &pGlobal->HP8753.S2P.S21, &pGlobal->HP8753.S2P.nPoints, pGPIBstatus );
+	getSparam( pGPIBinterface, pGlobal, &pGlobal->HP8753.S2P.S21, &pGlobal->HP8753.S2P.nPoints );
 
 	// Derive the frequency points
 	pGlobal->HP8753.S2P.freq = g_realloc(pGlobal->HP8753.S2P.freq, pGlobal->HP8753.S2P.nPoints * sizeof(gdouble) );
@@ -124,41 +124,40 @@ getHP3753_S2P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 				+ (sweepStop - sweepStart) * ((gdouble) i / ((gdouble)pGlobal->HP8753.S2P.nPoints - 1));
 	}
 	// Next sweep on channel 2 will be S12
-	GPIBasyncWrite(descGPIB_HP8753, "S12;SMIC;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
+	GPIBasyncWrite( pGPIBinterface, "S12;SMIC;", 10 * TIMEOUT_RW_1SEC );
 
 	// ... but first get S11 from channel 1
-	setHP8753channel( descGPIB_HP8753, eCH_ONE, pGPIBstatus );
+	setHP8753channel( pGPIBinterface, eCH_ONE );
 	postInfo("Read S11 data");
-	getSparam( descGPIB_HP8753, pGlobal, &pGlobal->HP8753.S2P.S11, &pGlobal->HP8753.S2P.nPoints, pGPIBstatus );
+	getSparam( pGPIBinterface, pGlobal, &pGlobal->HP8753.S2P.S11, &pGlobal->HP8753.S2P.nPoints );
 
 	// Set channel 1 to measure S22 and sweep
 	postInfo("Set for S22 + S12");
 	// Depending upon the settings, a sweep may take a long time
-	if( GPIBasyncSRQwrite( descGPIB_HP8753, "S22;SMIC;SING;", NULL_STR, pGPIBstatus, 10 * TIMEOUT_RW_1MIN ) != eRDWT_OK ) {
-        *pGPIBstatus = ERR;
+	if( GPIBasyncSRQwrite( pGPIBinterface, "S22;SMIC;SING;", NULL_STR, 10 * TIMEOUT_RW_1MIN ) != eRDWT_OK ) {
+	    pGPIBinterface->status = ERR;
         goto err;
     }
 	// collect S12 data
 	postInfo("Read S22 data");
-	getSparam( descGPIB_HP8753, pGlobal, &pGlobal->HP8753.S2P.S22, &pGlobal->HP8753.S2P.nPoints, pGPIBstatus );
+	getSparam( pGPIBinterface, pGlobal, &pGlobal->HP8753.S2P.S22, &pGlobal->HP8753.S2P.nPoints );
 
 	// Switch to channel two and get the S12 data
-	setHP8753channel( descGPIB_HP8753, eCH_TWO, pGPIBstatus );
+	setHP8753channel( pGPIBinterface, eCH_TWO );
 	postInfo("Read S12 data");
-	getSparam( descGPIB_HP8753, pGlobal, &pGlobal->HP8753.S2P.S12, &pGlobal->HP8753.S2P.nPoints, pGPIBstatus );
+	getSparam( pGPIBinterface, pGlobal, &pGlobal->HP8753.S2P.S12, &pGlobal->HP8753.S2P.nPoints );
 
 	postInfo("Restore setup");
 	// Return the analyzer to the previous configuration by sending back the learn string
-	GPIBasyncWrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
+	GPIBasyncWrite( pGPIBinterface, "FORM1;INPULEAS;", 10 * TIMEOUT_RW_1SEC );
 	// Includes the 4 byte header with size in bytes (big endian)
-	GPIBasyncSRQwrite( descGPIB_HP8753, learnString, lengthFORM1data(learnString),
-			pGPIBstatus, 10 * TIMEOUT_RW_1MIN  );
+	GPIBasyncSRQwrite( pGPIBinterface, learnString, lengthFORM1data(learnString), 10 * TIMEOUT_RW_1MIN  );
 
-    enableSRQonOPC( descGPIB_HP8753, pGPIBstatus ); // learn string wipes out ESR and SRQ enables
+    GPIBenableSRQonOPC( pGPIBinterface ); // learn string wipes out ESR and SRQ enables
     pGlobal->HP8753.S2P.SnPtype = S2P;
 	g_free( learnString );
 
-	return( GPIBfailed( *pGPIBstatus )  );
+	return( GPIBfailed( pGPIBinterface->status )  );
 err:
 	return ERROR;
 }
@@ -173,38 +172,38 @@ err:
  * \return 0 on success or 1 or -1 on problem
  */
 gint
-getHP3753_S1P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
+getHP3753_S1P( tGPIBinterface *pGPIBinterface, tGlobal *pGlobal )
 {
     guchar *learnString = NULL;
     gdouble sweepStart = 300.0e3, sweepStop=3.0e9;
     gint measurement = 0;
     int i;
 
-    enableSRQonOPC( descGPIB_HP8753, pGPIBstatus );
+    GPIBenableSRQonOPC( pGPIBinterface );
 
     postInfo("Determine current configuration");
 
     // Request Learn string
-    GPIBasyncWrite(descGPIB_HP8753, "FORM1;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
-    if ( get8753learnString( descGPIB_HP8753, &learnString, pGPIBstatus ))
+    GPIBasyncWrite( pGPIBinterface, "FORM1;", 10 * TIMEOUT_RW_1SEC );
+    if ( get8753learnString( pGPIBinterface, &learnString ))
         goto err;
 
-    GPIBasyncWrite(descGPIB_HP8753, "HOLD;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC);
-    setHP8753channel( descGPIB_HP8753, eCH_ONE, pGPIBstatus );
+    GPIBasyncWrite( pGPIBinterface, "HOLD;", 10 * TIMEOUT_RW_1SEC );
+    setHP8753channel( pGPIBinterface, eCH_ONE );
 
-    measurement = getHP8753measurementType( descGPIB_HP8753, pGPIBstatus );
+    measurement = getHP8753measurementType( pGPIBinterface );
     if( measurement != S11_MEAS && measurement != S22_MEAS) {
         postError("S11 or S22 not selected");
         return ERROR;
     }
 
     if( getStartStopOrCenterSpanFrom8753learnString( learnString, pGlobal, eCH_ONE ) ) {
-        askHP8753_dbl(descGPIB_HP8753, "STAR", &sweepStart, pGPIBstatus);
-        askHP8753_dbl(descGPIB_HP8753, "STOP", &sweepStop, pGPIBstatus);
+        askHP8753_dbl( pGPIBinterface, "STAR", &sweepStart );
+        askHP8753_dbl( pGPIBinterface, "STOP", &sweepStop );
     } else {
         gdouble sweepCenter=1500.15e6, sweepSpan=2999.70e6;
-        askHP8753_dbl(descGPIB_HP8753, "CENT", &sweepCenter, pGPIBstatus);
-        askHP8753_dbl(descGPIB_HP8753, "SPAN", &sweepSpan, pGPIBstatus);
+        askHP8753_dbl( pGPIBinterface, "CENT", &sweepCenter );
+        askHP8753_dbl( pGPIBinterface, "SPAN", &sweepSpan );
         sweepStart = sweepCenter - sweepSpan/2.0;
         sweepStop = sweepCenter + sweepSpan/2.0;
     }
@@ -212,18 +211,18 @@ getHP3753_S1P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
     postInfo( measurement == S11_MEAS ? "Measure S11" : "Measure S22");
 
     // Depending upon the settings, a sweep may take a long time
-    if( GPIBasyncSRQwrite( descGPIB_HP8753, "SMIC;LINFREQ;SING;", NULL_STR, pGPIBstatus, 10 * TIMEOUT_RW_1MIN ) != eRDWT_OK ) {
-        *pGPIBstatus = ERR;
+    if( GPIBasyncSRQwrite( pGPIBinterface, "SMIC;LINFREQ;SING;", NULL_STR, 10 * TIMEOUT_RW_1MIN ) != eRDWT_OK ) {
+        pGPIBinterface->status = ERR;
         goto err;
     }
     if ( measurement == S11_MEAS ) {
         // Read real / imag S11
         postInfo( "Read S11");
-        getSparam( descGPIB_HP8753, pGlobal, &pGlobal->HP8753.S2P.S11, &pGlobal->HP8753.S2P.nPoints, pGPIBstatus );
+        getSparam( pGPIBinterface, pGlobal, &pGlobal->HP8753.S2P.S11, &pGlobal->HP8753.S2P.nPoints );
     } else {
         // Read real / imag S12
         postInfo( "Read S22");
-        getSparam( descGPIB_HP8753, pGlobal, &pGlobal->HP8753.S2P.S22, &pGlobal->HP8753.S2P.nPoints, pGPIBstatus );
+        getSparam( pGPIBinterface, pGlobal, &pGlobal->HP8753.S2P.S22, &pGlobal->HP8753.S2P.nPoints );
     }
     // Derive the frequency points
     pGlobal->HP8753.S2P.freq = g_realloc(pGlobal->HP8753.S2P.freq, pGlobal->HP8753.S2P.nPoints * sizeof(gdouble) );
@@ -234,17 +233,16 @@ getHP3753_S1P( gint descGPIB_HP8753, tGlobal *pGlobal, gint *pGPIBstatus )
 
     postInfo("Restore setup");
     // Return the analyzer to the previous configuration by sending back the learn string
-    GPIBasyncWrite( descGPIB_HP8753, "FORM1;INPULEAS;", pGPIBstatus, 10 * TIMEOUT_RW_1SEC );
+    GPIBasyncWrite( pGPIBinterface, "FORM1;INPULEAS;", 10 * TIMEOUT_RW_1SEC );
     // Includes the 4 byte header with size in bytes (big endian)
-    GPIBasyncSRQwrite( descGPIB_HP8753, learnString, lengthFORM1data(learnString),
-            pGPIBstatus, 10 * TIMEOUT_RW_1MIN  );
+    GPIBasyncSRQwrite( pGPIBinterface, learnString, lengthFORM1data(learnString), 10 * TIMEOUT_RW_1MIN  );
 
-    enableSRQonOPC( descGPIB_HP8753, pGPIBstatus ); // learn string wipes out ESR and SRQ enables
+    GPIBenableSRQonOPC( pGPIBinterface ); // learn string wipes out ESR and SRQ enables
 
     g_free( learnString );
 
     pGlobal->HP8753.S2P.SnPtype = (measurement == S11_MEAS ? S1P_S11 : S1P_S22);
-    return( GPIBfailed( *pGPIBstatus )  );
+    return( GPIBfailed( pGPIBinterface->status )  );
 err:
     return ERROR;
 }

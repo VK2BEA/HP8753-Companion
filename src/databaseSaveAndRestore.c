@@ -1659,6 +1659,19 @@ recoverProgramOptions(tGlobal *pGlobal) {
 	}
 
     gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_UseGPIB_ID" )), pGlobal->flags.bGPIB_UseCardNoAndPID);
+    switch( pGlobal->flags.bbGPIBinterfaceType ) {
+    case eGPIB:
+    default:
+        gtk_button_clicked( GTK_BUTTON( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_RadioInterfaceGPIB")) );
+        break;
+    case eUSBTMC:
+        gtk_button_clicked( GTK_BUTTON( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_RadioInterfaceUSBTMC")) );
+        break;
+    case ePrologix:
+        gtk_button_clicked( GTK_BUTTON( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_RadioInterfacePrologix")) );
+
+        break;
+    }
     gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_SmithSpline" )), pGlobal->flags.bSmithSpline);
     gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_ShowDateTime" )), pGlobal->flags.bShowDateTime);
     gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_SmithGBnotRX" )), pGlobal->flags.bAdmitanceSmith);

@@ -18,7 +18,7 @@
 #define HP8753_H_
 
 #ifndef VERSION
-   #define VERSION "1.32-3"
+   #define VERSION "2.00-1"
 #endif
 
 #include <glib-2.0/glib.h>
@@ -111,6 +111,8 @@ typedef enum {
 } tEngNotation;
 
 typedef enum { eACTIVE_MKR, eNONACTIVE_MKR, eFIXED_MKR } tMkrStyle;
+
+typedef enum { eGPIB = 0, eUSBTMC = 1, ePrologix = 2 } tGPIBtype;
 
 typedef enum {
 	eColorBlack,
@@ -376,6 +378,7 @@ typedef struct {
 	    guint32 bDoNotRetrieveHPGLdata  : 1;
 	    guint32 bHPlogo                 : 1;
 	    guint32 bHoldLiveMarker         : 1;
+        guint32 bbGPIBinterfaceType     : 2;
 	} flags;
 
 	tRMCtarget RMCdialogTarget;
@@ -573,7 +576,7 @@ gint        saveTraceData ( tGlobal *, gchar *, gchar * );
 tHP8753cal* selectFirstCalibrationProfileInProject( tGlobal * );
 tHP8753traceAbstract*   selectFirstTraceProfileInProject( tGlobal * );
 tHP8753traceAbstract*   selectTraceProfile( tGlobal *, gchar *, gchar * );
-gint        sendHP8753calibrationKit (gint, tGlobal *, gint * );
+
 void        sensitiseControlsInUse( tGlobal *, gboolean );
 void        setCairoColor( cairo_t *, eColor );
 void        setCairoFontSize( cairo_t *, gdouble );
