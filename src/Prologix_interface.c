@@ -40,14 +40,14 @@
  * Read data from the GPIB device asynchronously while checking for exceptions
  * This is needed when it is anticipated that the response will take some time.
  *
- * \param pGPIBinterface pointer GPIB device data
+ * \param pGPIB_HP8753   pointer GPIB device data
  * \param sData          pointer to data to write
  * \param length         number of bytes to write
  * \param timeout        the maximum time to wait before abandoning
  * \return               read status result
  */
 tGPIBReadWriteStatus
-IF_Prologix_asyncWrite( tGPIBinterface *pGPIBinterface, const void *pData, size_t length,
+IF_Prologix_asyncWrite( tGPIBinterface *pGPIB_HP8753, const void *pData, size_t length,
         gdouble timeoutSecs) {
     return eRDWT_OK;
 }
@@ -57,15 +57,14 @@ IF_Prologix_asyncWrite( tGPIBinterface *pGPIBinterface, const void *pData, size_
  * Read data from the GPIB device asynchronously while checking for exceptions
  * This is needed when it is anticipated that the response will take some time.
  *
- * \param GPIBdescriptor GPIB device descriptor
+ * \param pGPIB_HP8753   GPIB device descriptor
  * \param readBuffer     pointer to data to save read data
  * \param maxBytes       maxium number of bytes to read
- * \param pGPIBstatus    pointer to GPIB status
  * \param timeout        the maximum time to wait before abandoning
  * \return               read status result
  */
 tGPIBReadWriteStatus
-IF_Prologix_asyncRead(  tGPIBinterface *pGPIBinterface, void *readBuffer, long maxBytes, gdouble timeoutSecs) {
+IF_Prologix_asyncRead(  tGPIBinterface *pGPIB_HP8753, void *readBuffer, long maxBytes, gdouble timeoutSecs) {
     return eRDWT_OK;
 }
 
@@ -73,7 +72,7 @@ IF_Prologix_asyncRead(  tGPIBinterface *pGPIBinterface, void *readBuffer, long m
  *
  * Checks for the presence of a device, by attempting to address it as a listener.
  *
- * \param pGPIBinterface pointer to GPIB interface structure
+ * \param pGPIB_HP8753   pointer to GPIB interface structure
  * \return               TRUE if device responds or FALSE if not
  */
 gboolean
@@ -87,7 +86,7 @@ IF_Prologix_ping( tGPIBinterface *pGPIB_HP8753 ) {
  * based on the paramaters set (whether to use descriptors or GPIB addresses)
  *
  * \param pGlobal             pointer to global data structure
- * \param pGPIBinterface      pointer to GPIB interfcae structure
+ * \param pGPIB_HP8753        pointer to GPIB interfcae structure
  * \return                    0 on sucess or ERROR on failure
  */
 gint
@@ -99,7 +98,7 @@ IF_Prologix_open( tGlobal *pGlobal, tGPIBinterface *pGPIB_HP8753 ) {
  *
  * Close the GPIB device
  *
- * \param tGPIBinterface      pointer to GPIB device structure
+ * \param pGPIB_HP8753      pointer to GPIB device structure
  */
 gint
 IF_Prologix_close( tGPIBinterface *pGPIB_HP8753) {
@@ -111,14 +110,14 @@ IF_Prologix_close( tGPIBinterface *pGPIB_HP8753) {
  * Sets a new Prologix timeout and optionally saves the current value
  * This is needed when it is anticipated that the response will take some time.
  *
- * \param pGPIBinterface    pointer to GPIB interfcae structure
+ * \param pGPIB_HP8753      pointer to GPIB interfcae structure
  * \param value             new timeout value
  * \param pSavedTimeout     pointer to where to save current timeout
  * \param purpose           enum command
  * \return                  status result
  */
 gint
-IF_Prologix_timeout( tGPIBinterface *pGPIBinterface, gint value, gint *pSavedTimeout, tTimeoutPurpose purpose ) {
+IF_Prologix_timeout( tGPIBinterface *pGPIB_HP8753, gint value, gint *pSavedTimeout, tTimeoutPurpose purpose ) {
     return 0;
 }
 
@@ -126,11 +125,11 @@ IF_Prologix_timeout( tGPIBinterface *pGPIBinterface, gint value, gint *pSavedTim
  *
  * Set GPIB device to local control
  *
- * \param pGPIBinterface pointer to GPIB device structure
+ * \param pGPIB_HP8753   pointer to GPIB device structure
  * \return               read status result
  */
 gint
-IF_Prologix_local( tGPIBinterface *pGPIBinterface ) {
+IF_Prologix_local( tGPIBinterface *pGPIB_HP8753 ) {
     return 0;
 }
 
@@ -138,11 +137,11 @@ IF_Prologix_local( tGPIBinterface *pGPIBinterface ) {
  *
  * Sent the clear command to the Prologix interface
  *
- * \param pGPIBinterface pointer to GPIB interfcae structure
+ * \param pGPIB_HP8753   pointer to GPIB interfcae structure
  * \return               read status result
  */
 gint
-IF_Prologix_clear( tGPIBinterface *pGPIBinterface ) {
+IF_Prologix_clear( tGPIBinterface *pGPIB_HP8753 ) {
     return 0;
 }
 
@@ -152,15 +151,14 @@ IF_Prologix_clear( tGPIBinterface *pGPIBinterface ) {
  * trigger an SRQ (since the ESE bit (B5) in the Status Register Enable mask is set).
  * After a command that sets the OPC, wait for the event without tying up the GPIB.
  *
- * \param pGPIBinterface   GPIB descriptor for HP8753 device
+ * \param pGPIB_HP8753     GPIB descriptor for HP8753 device
  * \param pData            pointer to command to send (OPC permitted) or binary data
  * \param nBytes           number of bytes or -1 for NULL terminated string
- * \param pGPIBstatus      pointer to GPIB status
  * \param timeoutSecs      timout period to wait
  * \return TRUE on success or ERROR on problem
  */
 tGPIBReadWriteStatus
-IF_Prologix_asyncSRQwrite( tGPIBinterface *pGPIBinterface, void *pData,
+IF_Prologix_asyncSRQwrite( tGPIBinterface *pGPIB_HP8753, void *pData,
         gint nBytes, gdouble timeoutSecs ) {
     return eRDWT_OK;
 }
