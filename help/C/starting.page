@@ -19,6 +19,7 @@
   <title>GPIB connection to the HP8753</title>
 
   <p>The first and most important setup task is to establish communication with the HP8753 Network analyzer over the HPIB (GPIB).</p>
+  <p>Connection to the HP8753 may be made using a GPIB controller attached to the computer or using a USBTMC/USB488 class GPIB device.</p>
   <p >When you start <app>Gutenberg</app> for the first time, there will be no saved calibration &amp; setup profiles nor will there be any saved traces.</p>
   <p>A necessary prerequisite for for the program to communicate with the HP8753 is the installation of the Linux GPIB driver and libraries.</p>
   <p>For details on installing the Linux GPIB driver refer to the site, <link href="https://linux-gpib.sourceforge.io/">https://linux-gpib.sourceforge.io/</link> 
@@ -27,9 +28,12 @@
 
 <section>
   <title>Establishing a GPIB connection to HP8753</title>
+      <p>Select the GPIB page.</p>
+  <p>Select the type of interface to be used by activating either the GPIB or USBTMC radio buttons. If you select USBTMC, the only active configurable option will be the <em>Minor Device No.</em>. Set this to the minor device number for the USBTMC device connected to the HP8753 GPIB port. Ensure that the device (e.g. <code>/dev/usbtmc0</code>) has read and write permissions for the user.</p>
+  <p>If the GPIB interface is selected use the following steps:</p>
   <steps>
-    <item><p>Select the GPIB page</p></item>
-    <item><p>Check the <em>'Use Card Index &amp; ID'</em> box to select the controller card index and GPIB PID directly, or leave unchecked to refer to the device and controller by the name defined in the <code>/etc/gpib.conf</code> file. </p>
+    <item><p>Select the GPIB interface using the radio button</p></item>
+    <item><p>Check the <em>'Use Minor Dev No. &amp; PID'</em> box to explicitly use the controller card index and GPIB PID, or leave unchecked to refer to the device and controller by a name defined in the <code>/etc/gpib.conf</code> file. </p>
     <code mime="application/xml"><![CDATA[device {
         minor    = 0            /* minor number for interface board this device is connected to */
         name     = "hp8753c"    /* device mnemonic          */
@@ -42,7 +46,7 @@
         timeout  = T30s         /* timeout for commands     */
     }]]></code>
     </item>
-    <item><p>Set the controller and HP8753 names used in the GPIB configuration file (<code>/etc/gpib.conf</code> or <code>/usr/local/etc/gpib.conf</code>), or set the card index and GPIB PID</p></item>
+    <item><p>Set the HP8753 name used in the GPIB configuration file (<code>/etc/gpib.conf</code> or <code>/usr/local/etc/gpib.conf</code>), or set the minor device number and GPIB PID</p></item>
     <item><p>Observe the status line to ensure that communications has been established</p></item>
   </steps>
   <p><media type="image" width="300" mime="image/png" src="media/HP8753-GPIBsetup.png" /></p>

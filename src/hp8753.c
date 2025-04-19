@@ -210,8 +210,16 @@ keyHandler (GtkWidget *widget, GdkEventKey  *event, gpointer   user_data) {
           return FALSE;     // pass the event on to the underlying widgets
     	  break;
       }
-   } else if( event->keyval == GDK_KEY_Escape &&  modifier == 0 ) {
-	   postDataToGPIBThread (TG_ABORT, NULL);
+   } else if( event->keyval == GDK_KEY_Escape  ) {
+       switch ( modifier ) {
+       case 0:
+       default:
+                postDataToGPIBThread (TG_ABORT, NULL);
+                break;
+       case GDK_SHIFT_MASK:
+                postDataToGPIBThread (TG_SETUP_GPIB, NULL);
+                break;
+       }
    } else {
        // not a Fn or Esc key .. do with it what you will
        return FALSE;     // pass the event on to the underlying widgets

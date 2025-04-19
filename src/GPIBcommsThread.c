@@ -369,9 +369,13 @@ threadGPIB(gpointer _pGlobal) {
             postError("Cannot obtain HP8753 descriptor");
         } else if (!pingGPIBdevice( &GPIBinterface )) {
             postError("HP8753 is not responding");
-
-            GPIBtimeout( &GPIBinterface, T1s, NULL, eTMO_SET );
-            GPIBclear(  &GPIBinterface );
+            // attempt to reopen if USBTMC
+            if( GPIBinterface.interfaceType == eUSBTMC ) {
+                GPIBopen(pGlobal, &GPIBinterface);
+            } else {
+                GPIBtimeout( &GPIBinterface, T1s, NULL, eTMO_SET );
+                GPIBclear(  &GPIBinterface );
+            }
             usleep(ms(250));
         } else {
             pGlobal->flags.bGPIBcommsActive = TRUE;

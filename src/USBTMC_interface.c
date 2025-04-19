@@ -342,7 +342,14 @@ IF_USBTMC_close( tGPIBinterface *pGPIB_HP8753) {
  */
 gboolean
 IF_USBTMC_ping( tGPIBinterface *pGPIB_HP8753 ) {
-    return( fcntl( pGPIB_HP8753->descriptor, F_GETFD) != -1 || errno != EBADF );
+    unsigned char statusByte = 0;
+    gint status = ioctl( pGPIB_HP8753->descriptor, USBTMC488_IOCTL_READ_STB, &statusByte );
+    if ( status == ERROR )
+        return FALSE;
+    else
+        return TRUE;
+
+    // return( fcntl( pGPIB_HP8753->descriptor, F_GETFD) != -1 || errno != EBADF );
 }
 
 gint GPIB_TO_USBTMC_TIMEOUT[] = { 100000,
