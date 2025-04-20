@@ -29,8 +29,9 @@
 
 #include "messageEvent.h"
 
-#define QUERY_SIZE    100
-#define ANSWER_SIZE   100
+#define QUERY_SIZE      100
+#define ANSWER_SIZE     100
+#define COMPLETE_SIZE   10
 
 // Index to HP8753 learn string for items that we cannot
 // get with conventional queries.
@@ -418,7 +419,7 @@ gint
 getHP8753markersAndSegments( tGPIBinterface *pGPIB_HP8753, tGlobal *pGlobal  ) {
     gchar sQuery[ QUERY_SIZE ];
     gchar sAnswer[ ANSWER_SIZE ];
-    gchar complete;
+    gchar sComplete[ COMPLETE_SIZE ];
     gboolean bMarkerChanged = FALSE;
     gdouble re, im, sourceValue;
     gint n;
@@ -535,8 +536,8 @@ getHP8753markersAndSegments( tGPIBinterface *pGPIB_HP8753, tGlobal *pGlobal  ) {
         // if we have markers, see if we have enabled bandwidth
         if( pChannel->chFlags.bbMkrs ) {
             GPIBasyncWrite( pGPIB_HP8753, "WIDT?;", 10 * TIMEOUT_RW_1SEC);
-            GPIBasyncRead( pGPIB_HP8753, &complete, 1, 10 * TIMEOUT_RW_1SEC);
-            pChannel->chFlags.bBandwidth = (complete == '1');
+            GPIBasyncRead( pGPIB_HP8753, sComplete, COMPLETE_SIZE, 10 * TIMEOUT_RW_1SEC);
+            pChannel->chFlags.bBandwidth = (sComplete[0] == '1');
 
             if( pChannel->chFlags.bBandwidth ) {
                 GPIBasyncWrite( pGPIB_HP8753, "OUTPMWID;", 10 * TIMEOUT_RW_1SEC);

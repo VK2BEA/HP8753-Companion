@@ -463,7 +463,7 @@ IF_GPIB_asyncSRQwrite( tGPIBinterface *pGPIBinterface, void *pData,
         memcpy( pPayload + nBytes, "OPC;NOOP;", SIZE_OPC_NOOP );
         nTotalBytes = nBytes + SIZE_OPC_NOOP;
     }
-
+    DBG(eDEBUG_EXTREME, "🖊 HP8753: %s", pPayload);
     if( IF_GPIB_asyncWrite( pGPIBinterface, pPayload, nTotalBytes, timeoutSecs ) != eRDWT_OK ) {
         g_free( pPayload );
         return eRDWT_ERROR;
@@ -502,12 +502,14 @@ IF_GPIB_asyncSRQwrite( tGPIBinterface *pGPIBinterface, void *pData,
                 // For some bazaar reason the HP8753C can raise SRQ again when the ESR?; is written and cleared when is read
                 // so mask it out before that.
 
+                DBG(eDEBUG_EXTREME, "🖊 HP8753: %s", "ESR?;");
                 if( GPIBasyncWrite(pGPIBinterface , "ESR?;",
                                             10 * TIMEOUT_RW_1SEC) == eRDWT_OK
                     && GPIBasyncRead( pGPIBinterface, sESR, ESR_RESPONSE_MAXSIZE,
                                             10 * TIMEOUT_RW_1SEC ) == eRDWT_OK ) {
                     gint ESR = atoi( sESR );
                     if( ESR & ESE_OPC ) {
+                        DBG(eDEBUG_EXTREME, "ESE_OPC set (%s)", sESR);
                         rtn = eRDWT_OK;
                     } else {
                         DBG(eDEBUG_ALWAYS, "SRQ but ESR did not show OPC.. ESR = $s", sESR);

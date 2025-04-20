@@ -471,6 +471,7 @@ IF_USBTMC_asyncSRQwrite( tGPIBinterface *pGPIB_HP8753, void *pData,
         nTotalBytes = nBytes + SIZE_OPC_NOOP;
     }
 
+    DBG(eDEBUG_EXTREME, "🖊 HP8753: %s", pPayload);
     if( IF_USBTMC_asyncWrite( pGPIB_HP8753, pPayload, nTotalBytes, timeoutSecs ) != eRDWT_OK ) {
         g_free( pPayload );
         return eRDWT_ERROR;
@@ -513,12 +514,14 @@ IF_USBTMC_asyncSRQwrite( tGPIBinterface *pGPIB_HP8753, void *pData,
                 // so mask it out before that.
 
 #define SIZE_ESR_QUERY    5    // # bytes in ESR?;
+                DBG(eDEBUG_EXTREME, "🖊 HP8753: %s", "ESR?;");
                 if( IF_USBTMC_asyncWrite( pGPIB_HP8753 , "ESR?;", SIZE_ESR_QUERY,
                                             10 * TIMEOUT_RW_1SEC) == eRDWT_OK
                     && IF_USBTMC_asyncRead( pGPIB_HP8753, sESR, ESR_RESPONSE_MAXSIZE,
                                             10 * TIMEOUT_RW_1SEC ) == eRDWT_OK ) {
                     gint ESR = atoi( sESR );
                     if( ESR & ESE_OPC ) {
+                        DBG(eDEBUG_EXTREME, "ESE_OPC set (%s)", sESR);
                         rtn = eRDWT_OK;
                     } else {
                         DBG(eDEBUG_ALWAYS, "SRQ but ESR did not show OPC.. ESR = $s", sESR);
