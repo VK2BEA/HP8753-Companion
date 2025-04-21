@@ -572,7 +572,7 @@ threadGPIB(gpointer _pGlobal) {
                 }
 
                 if( GPIB_HP8753.interfaceType == eUSBTMC )
-                	usleep(ms(20));	// This is needed for USBTMC only.
+                	usleep(ms(80));	// This is needed for USBTMC only.
                 GPIBtimeout( &GPIB_HP8753, T1s, NULL, eTMO_SET );
                 // clear errors
                 if (GPIBfailed( GPIB_HP8753.status )) {
