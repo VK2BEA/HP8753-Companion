@@ -152,8 +152,7 @@ getHP3753_S2P( tGPIBinterface *pGPIBinterface, tGlobal *pGlobal )
 	GPIBasyncWrite( pGPIBinterface, "FORM1;INPULEAS;", 10 * TIMEOUT_RW_1SEC );
 	// Includes the 4 byte header with size in bytes (big endian)
 	GPIBasyncSRQwrite( pGPIBinterface, learnString, lengthFORM1data(learnString), 10 * TIMEOUT_RW_1MIN  );
-
-    GPIBenableSRQonOPC( pGPIBinterface ); // learn string wipes out ESR and SRQ enables
+	// n.b restoring the learn string wipes out ESR and SRQ enables
     pGlobal->HP8753.S2P.SnPtype = S2P;
 	g_free( learnString );
 
@@ -236,8 +235,7 @@ getHP3753_S1P( tGPIBinterface *pGPIBinterface, tGlobal *pGlobal )
     GPIBasyncWrite( pGPIBinterface, "FORM1;INPULEAS;", 10 * TIMEOUT_RW_1SEC );
     // Includes the 4 byte header with size in bytes (big endian)
     GPIBasyncSRQwrite( pGPIBinterface, learnString, lengthFORM1data(learnString), 10 * TIMEOUT_RW_1MIN  );
-
-    GPIBenableSRQonOPC( pGPIBinterface ); // learn string wipes out ESR and SRQ enables
+    // n.b restoring the learn string wipes out ESR and SRQ enables
 
     g_free( learnString );
 

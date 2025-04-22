@@ -54,7 +54,7 @@ get8753setupAndCal( tGPIBinterface *pGPIB_HP8753, tGlobal *pGlobal  ) {
 
 	// clear the status registers and preset the HP8753
 	GPIBclear( pGPIB_HP8753 );
-	GPIBasyncWrite( pGPIB_HP8753, "CLS;", 20 * TIMEOUT_RW_1SEC);
+	GPIBasyncWrite( pGPIB_HP8753, "CLS;", 30 * TIMEOUT_RW_1SEC);
 	usleep( ms(20) );
 	GPIBasyncSRQwrite( pGPIB_HP8753, "ESE1;SRE32;NOOP;", NULL_STR, 10 * TIMEOUT_RW_1SEC );
 
@@ -283,7 +283,7 @@ send8753setupAndCal( tGPIBinterface *pGPIB_HP8753, tGlobal *pGlobal )  {
 	// clear the status registers and preset the HP8753
 	GPIBclear( pGPIB_HP8753 );
 
-	GPIBasyncWrite( pGPIB_HP8753, "CLS;", 20 * TIMEOUT_RW_1SEC);
+	GPIBasyncWrite( pGPIB_HP8753, "CLS;", 30 * TIMEOUT_RW_1SEC);
     usleep( ms(20) );
 
 	GPIBasyncSRQwrite( pGPIB_HP8753, "PRES;ESE1;SRE32;NOOP;", NULL_STR, 10 * TIMEOUT_RW_1SEC);
@@ -344,7 +344,7 @@ send8753setupAndCal( tGPIBinterface *pGPIB_HP8753, tGlobal *pGlobal )  {
 
 				GPIBasyncSRQwrite( pGPIB_HP8753, pGlobal->HP8753cal.perChannelCal[ channel ].pCalArrays[ i ],
 						lengthFORM1data( pGlobal->HP8753cal.perChannelCal[ channel ].pCalArrays[ i ] ),
-						20 * TIMEOUT_RW_1SEC );
+						30 * TIMEOUT_RW_1SEC );
 			}
 		}
 

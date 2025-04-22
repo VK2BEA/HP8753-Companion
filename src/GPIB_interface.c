@@ -39,26 +39,26 @@
  * Read data from the GPIB device asynchronously while checking for exceptions
  * This is needed when it is anticipated that the response will take some time.
  *
- * \param pGPIBinterface pointer GPIB device data
+ * \param pGPIB_HP8753   pointer GPIB device data
  * \param sData          pointer to data to write
  * \param length         number of bytes to write
  * \param timeout        the maximum time to wait before abandoning
  * \return               read status result
  */
 tGPIBReadWriteStatus
-IF_GPIB_asyncWrite( tGPIBinterface *pGPIBinterface, const void *pData, size_t length,
+IF_GPIB_asyncWrite( tGPIBinterface *pGPIB_HP8753, const void *pData, size_t length,
         gdouble timeoutSecs) {
 
     gdouble waitTime = 0.0;
     tGPIBReadWriteStatus rtn = eRDWT_CONTINUE;
     gint    currentTimeout;
 
-    GPIBtimeout( pGPIBinterface, TNONE, &currentTimeout, eTMO_SAVE_AND_SET );
+    GPIBtimeout( pGPIB_HP8753, TNONE, &currentTimeout, eTMO_SAVE_AND_SET );
 
-    pGPIBinterface->nChars = 0;
-    pGPIBinterface->status = ibwrta( pGPIBinterface->descriptor, pData, length);
+    pGPIB_HP8753->nChars = 0;
+    pGPIB_HP8753->status = ibwrta( pGPIB_HP8753->descriptor, pData, length);
 
-    if (GPIBfailed( pGPIBinterface->status ))
+    if (GPIBfailed( pGPIB_HP8753->status ))
         return eRDWT_ERROR;
 #if !GPIB_CHECK_VERSION(4,3,6)
     //todo - remove when linux GPIB driver fixed
@@ -68,11 +68,11 @@ IF_GPIB_asyncWrite( tGPIBinterface *pGPIBinterface, const void *pData, size_t le
 #endif
 
     // set the timout for the ibwait to 30ms
-    GPIBtimeout( pGPIBinterface, T30ms, NULL, eTMO_SET );
+    GPIBtimeout( pGPIB_HP8753, T30ms, NULL, eTMO_SET );
     do {
         // Wait for read completion or timeout
-        pGPIBinterface->status = ibwait( pGPIBinterface->descriptor, TIMO | CMPL | END);
-        if (( pGPIBinterface->status & TIMO) == TIMO ) {
+        pGPIB_HP8753->status = ibwait( pGPIB_HP8753->descriptor, TIMO | CMPL | END);
+        if (( pGPIB_HP8753->status & TIMO) == TIMO ) {
             // Timeout
             rtn = eRDWT_CONTINUE;
             waitTime += THIRTY_MS;
@@ -83,44 +83,44 @@ IF_GPIB_asyncWrite( tGPIBinterface *pGPIBinterface, const void *pData, size_t le
             }
         } else {
             // did we have a read error
-            if (( pGPIBinterface->status & ERR) == ERR)
+            if (( pGPIB_HP8753->status & ERR) == ERR)
                 rtn = eRDWT_ERROR;
             // or did we complete the read
-            else if (( pGPIBinterface->status & CMPL ) == CMPL || ( pGPIBinterface->status & END ) == END )
+            else if (( pGPIB_HP8753->status & CMPL ) == CMPL || ( pGPIB_HP8753->status & END ) == END )
                 rtn = eRDWT_OK;
         }
         // If we get a message on the queue, it is assumed to be an abort
         if (checkMessageQueue( NULL) == SEVER_DIPLOMATIC_RELATIONS) {
             // This will stop future GPIB commands for this sequence
-            pGPIBinterface->status |= ERR;
+            pGPIB_HP8753->status |= ERR;
             rtn = eRDWT_ABORT;
         }
     } while (rtn == eRDWT_CONTINUE && (globalData.flags.bNoGPIBtimeout || waitTime < timeoutSecs));
 
     if (rtn != eRDWT_OK)
-        ibstop( pGPIBinterface->descriptor );
+        ibstop( pGPIB_HP8753->descriptor );
 
-    pGPIBinterface->status = AsyncIbsta();
-	pGPIBinterface->nChars = AsyncIbcnt();
+    pGPIB_HP8753->status = AsyncIbsta();
+	pGPIB_HP8753->nChars = AsyncIbcnt();
 
-    DBG(eDEBUG_EXTREME, "🖊 HP8753: %d / %d bytes", pGPIBinterface->nChars, length);
+    DBG(eDEBUG_EXTREME, "🖊 HP8753: %d / %d bytes", pGPIB_HP8753->nChars, length);
 
-    if (( pGPIBinterface->status & CMPL) != CMPL) {
+    if (( pGPIB_HP8753->status & CMPL) != CMPL) {
         if (waitTime >= timeoutSecs)
             LOG(G_LOG_LEVEL_CRITICAL, "GPIB async write timeout after %.2f sec. status %04X",
-                    timeoutSecs, pGPIBinterface->status );
+                    timeoutSecs, pGPIB_HP8753->status );
         else
-            LOG(G_LOG_LEVEL_CRITICAL, "GPIB async write status/error: %04X/%d", pGPIBinterface->status,
+            LOG(G_LOG_LEVEL_CRITICAL, "GPIB async write status/error: %04X/%d", pGPIB_HP8753->status,
                     AsyncIberr());
     }
 
-    GPIBtimeout( pGPIBinterface, TNONE, &currentTimeout, eTMO_RESTORE );
+    GPIBtimeout( pGPIB_HP8753, TNONE, &currentTimeout, eTMO_RESTORE );
 
     if ( waitTime > FIVE_SECONDS )
         postInfo("");
 
     if( rtn == eRDWT_CONTINUE ) {
-        pGPIBinterface->status |= ERR_TIMEOUT;
+        pGPIB_HP8753->status |= ERR_TIMEOUT;
         return (eRDWT_TIMEOUT);
     } else {
         return (rtn);
@@ -132,7 +132,7 @@ IF_GPIB_asyncWrite( tGPIBinterface *pGPIBinterface, const void *pData, size_t le
  * Read data from the GPIB device asynchronously while checking for exceptions
  * This is needed when it is anticipated that the response will take some time.
  *
- * \param GPIBdescriptor GPIB device descriptor
+ * \param pGPIB_HP8753   GPIB device descriptor
  * \param readBuffer     pointer to data to save read data
  * \param maxBytes       maxium number of bytes to read
  * \param pGPIBstatus    pointer to GPIB status
@@ -140,17 +140,17 @@ IF_GPIB_asyncWrite( tGPIBinterface *pGPIBinterface, const void *pData, size_t le
  * \return               read status result
  */
 tGPIBReadWriteStatus
-IF_GPIB_asyncRead(  tGPIBinterface *pGPIBinterface, void *readBuffer, long maxBytes, gdouble timeoutSecs) {
+IF_GPIB_asyncRead(  tGPIBinterface *pGPIB_HP8753, void *readBuffer, long maxBytes, gdouble timeoutSecs) {
     gdouble waitTime = 0.0;
     tGPIBReadWriteStatus rtn = eRDWT_CONTINUE;
     gint    currentTimeout;
 
-    GPIBtimeout( pGPIBinterface, TNONE, &currentTimeout, eTMO_SAVE_AND_SET );
+    GPIBtimeout( pGPIB_HP8753, TNONE, &currentTimeout, eTMO_SAVE_AND_SET );
 
-    pGPIBinterface->nChars = 0;
-    pGPIBinterface->status = ibrda( pGPIBinterface->descriptor, readBuffer, maxBytes);
+    pGPIB_HP8753->nChars = 0;
+    pGPIB_HP8753->status = ibrda( pGPIB_HP8753->descriptor, readBuffer, maxBytes);
 
-    if (GPIBfailed( pGPIBinterface->status ))
+    if (GPIBfailed( pGPIB_HP8753->status ))
         return eRDWT_ERROR;
 
 #if !GPIB_CHECK_VERSION(4,3,6)
@@ -161,11 +161,11 @@ IF_GPIB_asyncRead(  tGPIBinterface *pGPIBinterface, void *readBuffer, long maxBy
 #endif
 
     // set the timout for the ibwait to 30ms
-    GPIBtimeout( pGPIBinterface, T30ms, NULL, eTMO_SET );
+    GPIBtimeout( pGPIB_HP8753, T30ms, NULL, eTMO_SET );
     do {
         // Wait for read completion or timeout
-        pGPIBinterface->status = ibwait( pGPIBinterface->descriptor, TIMO | CMPL | END);
-        if ((pGPIBinterface->status & TIMO) == TIMO) {
+        pGPIB_HP8753->status = ibwait( pGPIB_HP8753->descriptor, TIMO | CMPL | END);
+        if ((pGPIB_HP8753->status & TIMO) == TIMO) {
             // Timeout
             rtn = eRDWT_CONTINUE;
             waitTime += THIRTY_MS;
@@ -176,45 +176,45 @@ IF_GPIB_asyncRead(  tGPIBinterface *pGPIBinterface, void *readBuffer, long maxBy
             }
         } else {
             // did we have a read error
-            if ((pGPIBinterface->status & ERR) == ERR)
+            if ((pGPIB_HP8753->status & ERR) == ERR)
                 rtn = eRDWT_ERROR;
             // or did we complete the read
-            else if ((pGPIBinterface->status & CMPL) == CMPL || (pGPIBinterface->status & END) == END)
+            else if ((pGPIB_HP8753->status & CMPL) == CMPL || (pGPIB_HP8753->status & END) == END)
                 rtn = eRDWT_OK;
         }
         // If we get a message on the queue, it is assumed to be an abort
         if (checkMessageQueue( NULL) == SEVER_DIPLOMATIC_RELATIONS) {
             // This will stop future GPIB commands for this sequence
-            pGPIBinterface->status |= ERR;
+            pGPIB_HP8753->status |= ERR;
             rtn = eRDWT_ABORT;
         }
     } while (rtn == eRDWT_CONTINUE && (globalData.flags.bNoGPIBtimeout || waitTime < timeoutSecs));
 
     if (rtn != eRDWT_OK)
-        ibstop( pGPIBinterface->descriptor);
+        ibstop( pGPIB_HP8753->descriptor);
 
-    pGPIBinterface->status = AsyncIbsta();
-	pGPIBinterface->nChars = AsyncIbcnt();
+    pGPIB_HP8753->status = AsyncIbsta();
+	pGPIB_HP8753->nChars = AsyncIbcnt();
 
 
-    DBG(eDEBUG_EXTREME, "👓 HP8753: %d bytes (%d max)", pGPIBinterface->nChars, maxBytes);
+    DBG(eDEBUG_EXTREME, "👓 HP8753: %d bytes (%d max)", pGPIB_HP8753->nChars, maxBytes);
 
-    if ((pGPIBinterface->status & CMPL) != CMPL) {
+    if ((pGPIB_HP8753->status & CMPL) != CMPL) {
         if (waitTime >= timeoutSecs)
             LOG(G_LOG_LEVEL_CRITICAL, "GPIB async read timeout after %.2f sec. status %04X",
-                    timeoutSecs, pGPIBinterface->status);
+                    timeoutSecs, pGPIB_HP8753->status);
         else
-            LOG(G_LOG_LEVEL_CRITICAL, "GPIB async read status/error: %04X/%d", pGPIBinterface->status,
+            LOG(G_LOG_LEVEL_CRITICAL, "GPIB async read status/error: %04X/%d", pGPIB_HP8753->status,
                     AsyncIberr());
     }
 
     if ( waitTime > FIVE_SECONDS )
         postInfo("");
 
-    GPIBtimeout( pGPIBinterface, TNONE, &currentTimeout, eTMO_RESTORE );
+    GPIBtimeout( pGPIB_HP8753, TNONE, &currentTimeout, eTMO_RESTORE );
 
     if( rtn == eRDWT_CONTINUE ) {
-        pGPIBinterface->status |= ERR_TIMEOUT;
+        pGPIB_HP8753->status |= ERR_TIMEOUT;
         return (eRDWT_TIMEOUT);
     } else {
         return (rtn);
@@ -350,31 +350,31 @@ IF_GPIB_close( tGPIBinterface *pGPIB_HP8753) {
  * Sets a new GPIB timeout and optionally saves the current value
  * This is needed when it is anticipated that the response will take some time.
  *
- * \param pGPIBinterface    pointer to GPIB interfcae structure
+ * \param pGPIB_HP8753      pointer to GPIB interfcae structure
  * \param value             new timeout value
  * \param pSavedTimeout     pointer to where to save current timeout
  * \param purpose           enum command
  * \return                  status result
  */
 gint
-IF_GPIB_timeout( tGPIBinterface *pGPIBinterface, gint value, gint *pSavedTimeout, tTimeoutPurpose purpose ) {
+IF_GPIB_timeout( tGPIBinterface *pGPIB_HP8753, gint value, gint *pSavedTimeout, tTimeoutPurpose purpose ) {
     switch( purpose ) {
     case eTMO_SAVE_AND_SET:
         if( pSavedTimeout != NULL )
-            pGPIBinterface->status = ibask( pGPIBinterface->descriptor, IbaTMO, pSavedTimeout);
-        if( !(pGPIBinterface->status & ERR) )
-            pGPIBinterface->status = ibtmo( pGPIBinterface->descriptor, value);
+            pGPIB_HP8753->status = ibask( pGPIB_HP8753->descriptor, IbaTMO, pSavedTimeout);
+        if( !(pGPIB_HP8753->status & ERR) )
+            pGPIB_HP8753->status = ibtmo( pGPIB_HP8753->descriptor, value);
         break;
     default:
     case eTMO_SET:
-        pGPIBinterface->status = ibtmo( pGPIBinterface->descriptor, value);
+        pGPIB_HP8753->status = ibtmo( pGPIB_HP8753->descriptor, value);
         break;
     case eTMO_RESTORE:
-        pGPIBinterface->status = ibtmo( pGPIBinterface->descriptor, *pSavedTimeout);
+        pGPIB_HP8753->status = ibtmo( pGPIB_HP8753->descriptor, *pSavedTimeout);
         break;
     }
 
-    return pGPIBinterface->status;
+    return pGPIB_HP8753->status;
 }
 
 /*!     \brief  Set GPIB device to local control
@@ -407,15 +407,15 @@ IF_GPIB_clear( tGPIBinterface *pGPIBinterface ) {
  *
  * Read configuration value for GPIB device
  *
- * \param pGPIBinterface pointer to GPIB interfcae structure
+ * \param pGPIB_HP8753   pointer to GPIB interfcae structure
  * \param option         the paramater to read
  * \param result         pointer to the integer receiving the value
  * \param pGPIBstatus    pointer to GPIB status
  * \return               OK or ERROR
  */
 gint
-IF_GPIB_readConfiguration( tGPIBinterface *pGPIBinterface, gint option, gint *result, gint *pGPIBstatus) {
-    *pGPIBstatus = ibask( pGPIBinterface->descriptor, option, result);
+IF_GPIB_readConfiguration( tGPIBinterface *pGPIB_HP8753, gint option, gint *result, gint *pGPIBstatus) {
+    *pGPIBstatus = ibask( pGPIB_HP8753->descriptor, option, result);
 
     if (GPIBfailed(*pGPIBstatus))
         return ERROR;
@@ -429,7 +429,7 @@ IF_GPIB_readConfiguration( tGPIBinterface *pGPIBinterface, gint option, gint *re
  * trigger an SRQ (since the ESE bit (B5) in the Status Register Enable mask is set).
  * After a command that sets the OPC, wait for the event without tying up the GPIB.
  *
- * \param pGPIBinterface   GPIB descriptor for HP8753 device
+ * \param pGPIB_HP8753     GPIB descriptor for HP8753 device
  * \param pData            pointer to command to send (OPC permitted) or binary data
  * \param nBytes           number of bytes or -1 for NULL terminated string
  * \param pGPIBstatus      pointer to GPIB status
@@ -437,7 +437,7 @@ IF_GPIB_readConfiguration( tGPIBinterface *pGPIBinterface, gint option, gint *re
  * \return TRUE on success or ERROR on problem
  */
 tGPIBReadWriteStatus
-IF_GPIB_asyncSRQwrite( tGPIBinterface *pGPIBinterface, void *pData,
+IF_GPIB_asyncSRQwrite( tGPIBinterface *pGPIB_HP8753, void *pData,
         gint nBytes, gdouble timeoutSecs ) {
 
 #define SRQ_EVENT       1
@@ -464,7 +464,7 @@ IF_GPIB_asyncSRQwrite( tGPIBinterface *pGPIBinterface, void *pData,
         nTotalBytes = nBytes + SIZE_OPC_NOOP;
     }
     DBG(eDEBUG_EXTREME, "🖊 HP8753: %s", pPayload);
-    if( IF_GPIB_asyncWrite( pGPIBinterface, pPayload, nTotalBytes, timeoutSecs ) != eRDWT_OK ) {
+    if( IF_GPIB_asyncWrite( pGPIB_HP8753, pPayload, nTotalBytes, timeoutSecs ) != eRDWT_OK ) {
         g_free( pPayload );
         return eRDWT_ERROR;
     } else {
@@ -472,9 +472,9 @@ IF_GPIB_asyncSRQwrite( tGPIBinterface *pGPIBinterface, void *pData,
     }
 
     // get the controller index
-    ibask( pGPIBinterface->descriptor, IbaBNA, &GPIBcontrollerIndex);
-    ibask( pGPIBinterface->descriptor, IbaTMO, &currentTimeoutDevice);
-    ibtmo( pGPIBinterface->descriptor, T1s);
+    ibask( pGPIB_HP8753->descriptor, IbaBNA, &GPIBcontrollerIndex);
+    ibask( pGPIB_HP8753->descriptor, IbaTMO, &currentTimeoutDevice);
+    ibtmo( pGPIB_HP8753->descriptor, T1s);
     ibask( GPIBcontrollerIndex, IbaTMO, &currentTimeoutController);
     ibtmo( GPIBcontrollerIndex, T30ms);    // just to check if we've been ordered to abandon ship
     DBG( eDEBUG_EXTENSIVE, "Waiting for SRQ" );
@@ -487,8 +487,8 @@ IF_GPIB_asyncSRQwrite( tGPIBinterface *pGPIBinterface, void *pData,
         if ( waitResult == SRQ_EVENT ) {
             // This actually is an SRQ ..  is it from the HP8753 ?
             // Serial poll for status to reset SRQ and find out if it was the HP8753
-            if( ( pGPIBinterface->status = ibrsp( pGPIBinterface->descriptor, &status)) & ERR ) {
-                LOG(G_LOG_LEVEL_CRITICAL, "HPIB serial poll fail %04X/%d", pGPIBinterface->status, AsyncIberr());
+            if( ( pGPIB_HP8753->status = ibrsp( pGPIB_HP8753->descriptor, &status)) & ERR ) {
+                LOG(G_LOG_LEVEL_CRITICAL, "HPIB serial poll fail %04X/%d", pGPIB_HP8753->status, AsyncIberr());
                 rtn = eRDWT_ERROR;
             } else if( status & ST_SRQ ) {
                 // there is but one condition that asserts the SRQ ... the OPC
@@ -503,9 +503,9 @@ IF_GPIB_asyncSRQwrite( tGPIBinterface *pGPIBinterface, void *pData,
                 // so mask it out before that.
 
                 DBG(eDEBUG_EXTREME, "🖊 HP8753: %s", "ESR?;");
-                if( GPIBasyncWrite(pGPIBinterface , "ESR?;",
+                if( GPIBasyncWrite(pGPIB_HP8753 , "ESR?;",
                                             10 * TIMEOUT_RW_1SEC) == eRDWT_OK
-                    && GPIBasyncRead( pGPIBinterface, sESR, ESR_RESPONSE_MAXSIZE,
+                    && GPIBasyncRead( pGPIB_HP8753, sESR, ESR_RESPONSE_MAXSIZE,
                                             10 * TIMEOUT_RW_1SEC ) == eRDWT_OK ) {
                     gint ESR = atoi( sESR );
                     if( ESR & ESE_OPC ) {
@@ -528,7 +528,7 @@ IF_GPIB_asyncSRQwrite( tGPIBinterface *pGPIBinterface, void *pData,
             // If we get a message on the queue, it is assumed to be an abort
             if (checkMessageQueue( NULL) == SEVER_DIPLOMATIC_RELATIONS) {
                 // This will stop future GPIB commands for this sequence
-                pGPIBinterface->status |= ERR;
+                pGPIB_HP8753->status |= ERR;
                 rtn = eRDWT_ABORT;
             }
         }
@@ -543,6 +543,12 @@ IF_GPIB_asyncSRQwrite( tGPIBinterface *pGPIBinterface, void *pData,
             postInfo(sMessage);
             g_free(sMessage);
         }
+        // If we get a message on the queue, it is assumed to be an abort
+        if (checkMessageQueue(NULL) == SEVER_DIPLOMATIC_RELATIONS) {
+            // This will stop future GPIB commands for this sequence
+            pGPIB_HP8753->status |= ERR;
+            rtn = eRDWT_ABORT;
+        }
     } while (rtn == eRDWT_CONTINUE && (globalData.flags.bNoGPIBtimeout || waitTime < timeoutSecs));
 
     if( rtn == eRDWT_OK ) {
@@ -552,11 +558,11 @@ IF_GPIB_asyncSRQwrite( tGPIBinterface *pGPIBinterface, void *pData,
     }
 
     // Return timeouts
-    ibtmo( pGPIBinterface->descriptor, currentTimeoutDevice);
+    ibtmo( pGPIB_HP8753->descriptor, currentTimeoutDevice);
     ibtmo( GPIBcontrollerIndex, currentTimeoutDevice);
 
     if( rtn == eRDWT_CONTINUE ) {
-        pGPIBinterface->status |= ERR_TIMEOUT;
+        pGPIB_HP8753->status |= ERR_TIMEOUT;
         return (eRDWT_TIMEOUT);
     } else {
         return (rtn);

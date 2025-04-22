@@ -572,7 +572,6 @@ threadGPIB(gpointer _pGlobal) {
                     }
                 }
 
-                DELAY_MS_USBTMC( GPIB_HP8753.interfaceType, 80 );
                 if( GPIB_HP8753.interfaceType == eUSBTMC )
                 	usleep(ms(80));	// This is needed for USBTMC only.
                 GPIBtimeout( &GPIB_HP8753, T1s, NULL, eTMO_SET );
@@ -601,7 +600,6 @@ threadGPIB(gpointer _pGlobal) {
                     message->data = NULL;
                 }
 
-                DELAY_MS_USBTMC( GPIB_HP8753.interfaceType, 80 );
                 GPIBtimeout( &GPIB_HP8753, T1s, NULL, eTMO_SET );
                 // clear errors
                 if (GPIBfailed( GPIB_HP8753.status )) {
@@ -627,7 +625,6 @@ threadGPIB(gpointer _pGlobal) {
                     message->data = NULL;
                 }
 
-                DELAY_MS_USBTMC( GPIB_HP8753.interfaceType, 80 );
                 GPIBtimeout( &GPIB_HP8753, T1s, NULL, eTMO_SET );
                 // clear errors
                 if (GPIBfailed( GPIB_HP8753.status )) {
