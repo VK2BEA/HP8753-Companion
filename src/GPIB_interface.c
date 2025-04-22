@@ -543,12 +543,6 @@ IF_GPIB_asyncSRQwrite( tGPIBinterface *pGPIB_HP8753, void *pData,
             postInfo(sMessage);
             g_free(sMessage);
         }
-        // If we get a message on the queue, it is assumed to be an abort
-        if (checkMessageQueue(NULL) == SEVER_DIPLOMATIC_RELATIONS) {
-            // This will stop future GPIB commands for this sequence
-            pGPIB_HP8753->status |= ERR;
-            rtn = eRDWT_ABORT;
-        }
     } while (rtn == eRDWT_CONTINUE && (globalData.flags.bNoGPIBtimeout || waitTime < timeoutSecs));
 
     if( rtn == eRDWT_OK ) {
