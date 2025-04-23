@@ -14,6 +14,8 @@ This is a program to augment functionality of the HP 8753 Vector Nework Analyzer
 6. Print high resolution traces (or HPGL plot) to Linux CUPS printer
 7. Import .XKT calibration kit definitions and send them to the HP8753 (optionally saving as a user kit)
 
+Communication to the HP8753 instrument is over the GPIB. Either the [Linux GPIB interface](https://linux-gpib.sourceforge.io/doc_html/supported-hardware.html) or [USBTMC/USB488 interface](https://github.com/xyphro/UsbGpib) may be used.
+
 Please see the YouTube description here:  
 [![HP8753 Companion video](https://github.com/VK2BEA/HP8753-Companion/assets/3782222/f3309627-889d-4e28-8884-ea4f6471a7ff)](https://www.youtube.com/watch?v=ORWQE22tbRo)
 [![HP8753 HPGL K+L](https://github.com/VK2BEA/HP8753-Companion/assets/3782222/14e20995-aede-409e-8829-9d42484e72bd)](https://www.youtube.com/watch?v=ORWQE22tbRo)
