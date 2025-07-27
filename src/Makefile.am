@@ -17,7 +17,7 @@ hp8753_CPPFLAGS += @GLIB_CFLAGS@ @GTK3_CFLAGS@ @SQLITE3_CFLAGS@
 hp8753_CFLAGS = $(AM_CFLAGS)
 hp8753_CXXFLAGS = $(AM_CXXFLAGS)
 
-hp8753_LDFLAGS = -lgpib -lm -lgs -rdynamic
+hp8753_LDFLAGS = -lgpib -lm -lgs -laio -rdynamic
 hp8753_LDFLAGS += @GLIB_LIBS@ @GTK3_LIBS@ @SQLITE3_LIBS@
 
 #

@@ -66,8 +66,12 @@ AC_CHECK_PROG(GS_CHECK,gs,yes)
 if test x"$GS_CHECK" != x"yes" ; then
    AC_MSG_ERROR([Please install gs before installing.])
 fi
+
 # libgpib
 AC_CHECK_LIB(gpib,ibask,,AC_MSG_ERROR([Please install Linux GPIB driver before continuing.]))
+
+# libaio
+AC_CHECK_LIB(aio,aio_read,,AC_MSG_ERROR([Please install aio library continuing.]))
 
 # libsystemd
 # AC_CHECK_LIB(systemd,sd_journal_print,,AC_MSG_ERROR([Please install systemd library (libsystemd-dev on Debian type systems).]))
