@@ -93,7 +93,7 @@ printf "4: ${GRN}Copy the script that is executed by systemd (specified in servi
 printf "5: ${GRN}Copy udev rules to:
        - configure the driver for the gpib controller type
        - load the firmware (if required e.g. by Agilent/Keysight 82357b)${DEF}\n" 
-  cp Systemd/{60-linux-gpib-adapter.rules,61-linux-gpib-firmware.rules} /etc/udev/rules.d/
+  cp Systemd/{60-linux-gpib-adapter.rules,59-linux-gpib-firmware.rules} /etc/udev/rules.d/
 
 # Copy firmare files:
 printf "6: ${GRN}Copy firmare files ( originally from https://linux-gpib.sourceforge.io )${DEF}\n"
