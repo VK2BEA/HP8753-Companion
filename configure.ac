@@ -71,7 +71,7 @@ fi
 AC_CHECK_LIB(gpib,ibask,,AC_MSG_ERROR([Please install Linux GPIB driver before continuing.]))
 
 # libaio
-AC_CHECK_LIB(aio,aio_read,,AC_MSG_ERROR([Please install aio library continuing.]))
+AC_CHECK_LIB(aio,aio_read,,AC_MSG_ERROR([Please install aio library before continuing.]))
 
 # libsystemd
 # AC_CHECK_LIB(systemd,sd_journal_print,,AC_MSG_ERROR([Please install systemd library (libsystemd-dev on Debian type systems).]))

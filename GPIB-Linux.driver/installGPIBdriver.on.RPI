@@ -1,9 +1,10 @@
 #! /bin/bash
 
-# Michael G. Katzmann - 17 Sep 2024
+# Michael G. Katzmann - 27 Jul 2025
 
-VERSION=1.13
+VERSION=1.14
 
+# 1.14 - 2025-Jul-27 - update dkms file locations & update to 4.3.7
 # 1.13 - 2024-Sep-17 - update to git repositry
 # 1.11 - 2022-Sep-06 - update linux-gpib version
 # 1.11 - 2022-Jun-06 - update 
@@ -16,7 +17,7 @@ VERSION=1.13
 ## of the steps needed 
 ##
 
-GPIB_VER=4.3.6
+GPIB_VER=4.3.7
 
 GRN="\e[32m"
 BLU="\e[34m"
@@ -69,7 +70,7 @@ printf "0: ${GRN}Copy kernel module source to /usr/src for dkms${DEF}\n"
 if [[ "$(dkms status -m linux-gpib)" != "" ]]; then
   dkms remove -m linux-gpib/${GPIB_VER} --all >/dev/null
 fi
-cp -a linux-gpib-code/linux-gpib-kernel /usr/src/linux-gpib-${GPIB_VER}
+cp -a linux-gpib-git/linux-gpib-kernel /usr/src/linux-gpib-${GPIB_VER}
 cp dkms.conf /usr/src/linux-gpib-${GPIB_VER}
 dkms add -m linux-gpib -v ${GPIB_VER}
 dkms build -m linux-gpib -v ${GPIB_VER}
