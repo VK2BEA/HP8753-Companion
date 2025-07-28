@@ -4,22 +4,61 @@ KERNEL=="gpib[0-9]*", TAG+="systemd"
 # Allow users to have access to /dev/gpib*
 ACTION!="remove", KERNEL=="gpib[0-9]*", TAG+="uaccess"
 
-SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", GOTO="usb_start"
-GOTO="gpib_adapter_end"
-LABEL="usb_start"
+SUBSYSTEM!="usb",  GOTO="exit"
+  # Agilent/Keysight 82357A/B & National Instruments ni-usb-b
+  # The idProduct changes after the firmware is loaded by a udev rule from 61-linux-gpib-firmware.rules
+  #     in the linux-gpib-firmware package. 
+  #                 Keysight: 0007 changes to 0107 (82357A) and 0518 to 0718 (82357B).
+  #     National Instruments: 702b before the firmware is loaded (GPIB-USB-B)
+  #                 Keithley: 713b before the firmware is loaded (KUSB-488B)
 
-# Give systemd access to all supported adapters, including those without firmware
-ENV{PRODUCT}=="957/107/*|957/7/*|957/[57]18/*", ENV{ID_GPIB_BOARD_TYPE}="agilent_82357a", TAG+="systemd"
-ENV{PRODUCT}=="3923/702[ab]/*|3923/713b/*|3923/709b/*|3923/7618/*", ENV{ID_GPIB_BOARD_TYPE}="ni_usb_b", TAG+="systemd"
+  # Give systemd access to all supported adapters, including those without firmware
+  # VID 0957 - HP / Agilent / Keysight (82357A (0107), 82357b (0718))
+  ENV{PRODUCT}=="957/107/*|957/718/*", ENV{GPIB_CONFIG}="Y", TAG+="systemd"
+  DRIVER=="agilent_82357a", ENV{GPIB_CONFIG_OPTIONS}+="--board-type agilent_82357a"
+  # VID 3923 - National Instruments (GPIB-USB-B (702a), GPIB-USB-HS (709b), GPIB-USB-HS+ (7618), 
+  #          Keithley KUSB-488 (713b), Keithley KUSB-488A (725c), Measurement Computing USB-488 (725d))
+  ENV{PRODUCT}=="3923/702a/*|3923/709b/*|3923/7618/*|3923/713b/*|3923/725[cd]/*", ENV{GPIB_CONFIG}="Y", TAG+="systemd"
+  DRIVER=="ni_usb_gpib", ENV{GPIB_CONFIG_OPTIONS}+="--board-type ni_usb_b"
+  # VID 0403 - Laboritory of Photovoltaics and Optoelectronics (LPVO (6001)) (actually FTDI)
+  ENV{PRODUCT}=="403/6001", ENV{GPIB_CONFIG}="Y", TAG+="systemd"
+  DRIVER=="lpvo_usb_gpib", ENV{GPIB_CONFIG_OPTIONS}+="--board-type lpvo_usb_gpib"
 
-# Agilent/Keysight 82357A/B with firmware loaded
-ATTR{idVendor}=="0957", ATTR{idProduct}=="0107|0718", ENV{ID_GPIB_ADAPTER}="1"
-# NI adapters with firmware loaded
-ATTR{idVendor}=="3923", ATTR{idProduct}=="702a|709b|7618", ENV{ID_GPIB_ADAPTER}="1"
+  # Set an environment variable with the USB S/N - for logging purposes only 
+  ENV{GPIB_CONFIG}=="Y", ATTRS{serial}=="*", ENV{SERIAL}="$attr{serial}"
 
-# Default to minor id = 0
-ENV{ID_GPIB_ADAPTER}=="1", ENV{ID_GPIB_MINOR}!="[0-9]|[0-9][0-9]", ENV{ID_GPIB_MINOR}="0"
+  # Agilent/Keysight 82357A/B with firmware loaded
+  # The idProduct changes after the firmware is loaded by a udev rule from 61-linux-gpib-firmware.rules
+  #     in the linux-gpib-firmware package. 0007 to 0107 (82357A) and 0518 to 0718 (82357B)
 
-ENV{ID_GPIB_ADAPTER}=="1", ENV{SYSTEMD_WANTS}="linux-gpib-config@.service"
+  # use systemd to run gpib_config if it is an appropriate adapter
+  # The instance name (inserted between @ and .) will be the escaped sysfs device path 
+  # (also DEVPATH with the /sys prefix: /sys/devices/pci0000:00/0000:00:14.0/usb1/1-4)
+  # e.g.: linux-gpib-config@sys-devices-pci0000:00-0000:00:14.0-usb1-1\x2d4.service
+  # The systemd unit file can use the %I variable to pass the sysfs path to a script
+  ACTION=="add|change", ENV{DEVTYPE}=="usb_interface", ENV{GPIB_CONFIG}=="Y", ENV{SYSTEMD_WANTS}="linux-gpib-config@.service"
+ 
+LABEL="exit"
 
-LABEL="gpib_adapter_end"
+# create a udev rule file 59-gpib-local.conf to set a deterministic minor number e.g.:
+#
+# /etc/udev/rules.d/59-linux-gpib-local.conf
+# 
+#    # This sets the minor device numbers prior to
+#    # /usr/lib/udev/rules.d/60-linux-gpib-adapter.conf
+#    # which triggers systemd programs (gpib_config) to configure the devices
+#    SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_interface", GOTO="execute"
+#    GOTO="end"
+#
+#    LABEL="execute"
+#      # Agilent 82357B (after firmware load .. before idProduct is 0518)
+#      ATTRS{idVendor}=="0957", ATTRS{idProduct}=="0718", ATTRS{serial}=="MY49450720", ENV{GPIB_CONFIG_OPTIONS}+="--minor 10"
+#      # National Instruments GPIB-USB-HS on minor 11 & 12
+#      ATTRS{idVendor}=="3923", ATTRS{idProduct}=="709b", ATTRS{serial}=="016AC4CD",   ENV{GPIB_CONFIG_OPTIONS}+="--minor 11"
+#      ATTRS{idVendor}=="3923", ATTRS{idProduct}=="709b", ATTRS{serial}=="013876C6",   ENV{GPIB_CONFIG_OPTIONS}+="--minor 12"
+
+#      # it is also possible to match on the particular USB port (rather than device S/N)
+#      # e.g. use DEVPATH="/devices/pci0000:00/0000:00:14.0/usb1/1-4/1-4:1.0" rather than ATTRS{serial}=="016AC4CD"
+#
+#    LABEL="end"
+

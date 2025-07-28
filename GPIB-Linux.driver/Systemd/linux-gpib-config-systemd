@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/sh
 
 # This script configures the Linux-GPIB driver for Agilent 82357A/B and National
 # Instruments GPIB-USB adapters. It is intended to be called from a systemd unit
@@ -16,12 +16,6 @@ case $1 in
         exit 0
         ;;
     ?*)
-        # Get the adapter serial number from sysfs. This isn't necessarily the
-        # same as the ID_SERIAL_SHORT environment variable, which udev can
-        # mangle, but it will be the same as the serial number in struct
-        # usb_device, which the --serial parameter of gpib_config matches
-        # against.
-        serial_from_sysfs=$(cat $1/serial)
 
         # Since we can only realistically pass one argument into the systemd
         # unit file, we can get the environment variables defined in the udev
@@ -29,15 +23,18 @@ case $1 in
         # https://superuser.com/questions/924683/passing-udev-environment-variables-to-systemd-service-execution
         eval $(udevadm info --query=env --export $1)
 
-        /usr/bin/logger --journald <<end
-MESSAGE_ID=a50ec012c08b44d28a3bdcfe92951e1a
-MESSAGE=Preparing to configure $ID_GPIB_BOARD_TYPE adapater with serial number $serial_from_sysfs on /dev/gbib$ID_GPIB_MINOR
-end
-        echo "$MEASSAGE" | systemd-cat -p info
-        /usr/local/sbin/gpib_config \
-            --minor $ID_GPIB_MINOR \
-            --board-type $ID_GPIB_BOARD_TYPE \
-#           --serial $serial_from_sysfs
+        if [[ "${ID_GPIB_MINOR}" != "" ]]; then
+          OPT_MINOR="--minor ${ID_GPIB_MINOR}"
+        fi
+        if [[ "${ID_GPIB_BOARD_TYPE}" != "" ]]; then
+          OPT_BOARD_TYPE="--board-type ${ID_GPIB_BOARD_TYPE}"
+        fi
+        ARGS="${GPIB_CONFIG_OPTIONS} --sysfs-device-path ${DEVPATH} ${OPT_MINOR} ${OPT_BOARD_TYPE}"
+
+        MESSAGE="gpib_config $ARGS (S/N:  $SERIAL)"
+        echo "${MESSAGE}" | systemd-cat -t linux-gpib-confib-systemd -p info
+
+        gpib_config ${ARGS}
         ;;
     *)
         usage

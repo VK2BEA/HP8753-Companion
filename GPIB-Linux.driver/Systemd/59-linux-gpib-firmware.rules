@@ -1,0 +1,20 @@
+
+
+ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", GOTO="execute"
+GOTO="exit"
+
+LABEL="execute"
+  # Give systemd access to all supported adapters, including those without firmware
+  # HP / Agilent / Keysight
+  ENV{PRODUCT}=="957/7/*|957/518/*",       TAG+="systemd"
+  # National Instruments
+  ENV{PRODUCT}=="3923/702b/*|3923/713b/*", TAG+="systemd"
+
+  # Agilent 82357A
+  ATTRS{idVendor}=="0957", ATTRS{idProduct}=="0007",      PROGRAM="/usr/bin/systemd-escape -p %N", ENV{SYSTEMD_WANTS}="linux-gpib-firmware-loader-agilent82357a@%c.service"
+  # Agilent 82357B
+  ATTRS{idVendor}=="0957", ATTRS{idProduct}=="0518",      PROGRAM="/usr/bin/systemd-escape -p %N", ENV{SYSTEMD_WANTS}="linux-gpib-firmware-loader-agilent82357b@%c.service"
+  # NI-USB-B and Keithley KUSB-488
+  ATTRS{idVendor}=="3923", ATTRS{idProduct}=="702b|713b", PROGRAM="/usr/bin/systemd-escape -p %N", ENV{SYSTEMD_WANTS}="linux-gpib-firmware-loader-ni@%c.service"
+
+LABEL="exit"
