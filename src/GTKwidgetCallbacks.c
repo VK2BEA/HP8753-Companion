@@ -118,6 +118,35 @@ sensitiseControlsInUse( tGlobal *pGlobal, gboolean bSensitive ) {
 
 }
 
+/*!     \brief  Check to see if all cal and trace items have been deleted from a project
+ *
+ * Check to see if all cal and trace items have been deleted from a project
+ *
+ * \param   pGlobal pointer to global data
+ * \param   project name
+ * \return	true if empty
+ */
+gboolean
+isProjectEmpty( tGlobal *pGlobal, gchar *sProject ) {
+	gboolean bEmpty = TRUE;
+	GList *l;
+	tProjectAndName *pProjectAndName;
+
+	for( l = pGlobal->pCalList; l != NULL && bEmpty; l = l->next ){
+		pProjectAndName = &(((tHP8753cal *)l->data)->projectAndName);
+		if( g_strcmp0(  pProjectAndName->sProject, sProject ) == 0 )
+			bEmpty = FALSE;
+	}
+
+	for( l = pGlobal->pTraceList; l != NULL && bEmpty; l = l->next ){
+		pProjectAndName = &(((tHP8753traceAbstract *)l->data)->projectAndName);
+		if( g_strcmp0(  pProjectAndName->sProject, sProject ) == 0 )
+			bEmpty = FALSE;
+	}
+
+	return bEmpty;
+}
+
 /*!     \brief  Populate the setup & trace combo box widgets
  *
  * populate the setup & trace combobox widgets based on the selected project
@@ -679,7 +708,6 @@ CB_BtnRemove (GtkButton * button, tGlobal *pGlobal)
 	gchar *sQuestion = NULL;
 
 	if( pGlobal->flags.bCalibrationOrTrace ) {
-		wCombo = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_CalibrationProfile") );
 		name = pGlobal->pCalibrationAbstract->projectAndName.sName;
 		sanitizedName = g_markup_escape_text ( name, -1 );
 		sQuestion = g_strdup_printf(
@@ -687,7 +715,6 @@ CB_BtnRemove (GtkButton * button, tGlobal *pGlobal)
 				"\n\t\t\t\t\t...are you sure you want to delete the:\n\n"
 				"\t\"<b>%s</b>\"\n\n⚖️ calibration profile?", sanitizedName);
 	} else {
-		wCombo = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_TraceProfile") );
 		name = pGlobal->pTraceAbstract->projectAndName.sName;
 		sanitizedName = g_markup_escape_text ( name, -1 );
 		sQuestion = g_strdup_printf(
@@ -720,6 +747,7 @@ CB_BtnRemove (GtkButton * button, tGlobal *pGlobal)
 				populateCalComboBoxWidget( pGlobal );
                 // We've deleted the calibration profile from this project
 				// so we are not looking at, so just select the first cal item
+				wCombo = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_CalibrationProfile") );
                 gtk_combo_box_set_active( GTK_COMBO_BOX(wCombo), 0);
                 // also update the calibration pointer to the first profile in the list
                 // that matches the project
@@ -730,11 +758,23 @@ CB_BtnRemove (GtkButton * button, tGlobal *pGlobal)
                 populateTraceComboBoxWidget( pGlobal );
                 // We've deleted the calibration profile from this project
                 // so we are not looking at, so just select the first cal item
+            	wCombo = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_TraceProfile") );
                 gtk_combo_box_set_active( GTK_COMBO_BOX(wCombo), 0);
                 // also update the calibration pointer to the first profile in the list
                 // that matches the project
                 pGlobal->pTraceAbstract = selectFirstTraceProfileInProject( pGlobal );
 			}
+#if 0
+            // If there are no more calibrations and traces in this project - also delete the project
+            if( isProjectEmpty( pGlobal, pGlobal->sProject ) ) {
+                GList *pThisProject = g_list_find_custom (pGlobal->pProjectList, pGlobal->sProject, (GCompareFunc) strcmp );
+                if( pThisProject ) {
+                    g_free(  pThisProject->data );
+                    pGlobal->pProjectList = g_list_remove( pGlobal->pProjectList, pThisProject->data );
+                    populateProjectComboBoxWidget( pGlobal );
+				}
+            }
+#endif
 		}
 	} else {
 		gtk_label_set_text( GTK_LABEL(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Lbl_Status")),

@@ -405,7 +405,6 @@ IF_USBTMC_timeout( tGPIBinterface *pGPIB_HP8753, gint value, gint *savedTimeout,
  */
 gint
 IF_USBTMC_local( tGPIBinterface *pGPIB_HP8753 ) {
-    usleep( ms(40) );
     gint rtn = ioctl( pGPIB_HP8753->descriptor, USBTMC488_IOCTL_GOTO_LOCAL );
     pGPIB_HP8753->status = (rtn == ERROR ? ERR : 0 );
 

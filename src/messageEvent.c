@@ -84,6 +84,12 @@ messageEventDispatch(GSource *source, GSourceFunc callback, gpointer udata) {
 		case TM_SAVE_SETUPandCAL:
 			if( saveCalibrationAndSetup( pGlobal, pGlobal->sProject, (gchar *)message->data ) != ERROR ) {
 			    populateCalComboBoxWidget( pGlobal );
+			    // If this is a new project, also update the project combobox list
+                if( !g_list_find( pGlobal->pProjectList, pGlobal->sProject ) ) {
+                    pGlobal->pProjectList = g_list_prepend( pGlobal->pProjectList, g_strdup( pGlobal->sProject ) );
+                    pGlobal->pProjectList = g_list_sort (pGlobal->pProjectList, (GCompareFunc)g_strcmp0);
+                    populateProjectComboBoxWidget( pGlobal );
+                }
 	            showCalInfo( &(pGlobal->HP8753cal), pGlobal );
 	            gtk_widget_set_sensitive(
 	                    GTK_WIDGET( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Btn_Recall")),
