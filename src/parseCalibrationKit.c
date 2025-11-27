@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Michael G. Katzmann
+ * Copyright (c) 2022-2026 Michael G. Katzmann
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
  * limitations under the License.
 */
 
-
-#include "hp8753.h"
 #include <math.h>
 #include <glib/gprintf.h>
+
+#include "hp8753.h"
 
 GList *listXML = NULL;
 
@@ -221,7 +221,7 @@ static void startConnectorList( GMarkupParseContext *context,
 				heirachy[ XMLlevel ] = elementsConnectorList[i].element;
 			}
 		}
-		pCalKit->lConnectorList = g_list_prepend( pCalKit->lConnectorList, g_malloc0( sizeof( tXKTconnector )) );
+		pCalKit->lConnectorList = g_list_prepend( pCalKit->lConnectorList, g_new0( tXKTconnector, 1 ) );
 		tCalibrationConnectorType thisConnector = eConnectorTypeUnknown;
 		switch( heirachy[ XMLlevel ] ) {
 		case eXKT_Coaxial:
@@ -312,7 +312,7 @@ static void startStandardList( GMarkupParseContext *context,
 				heirachy[ XMLlevel ] = elementsStandardList[i].element;
 			}
 		}
-		pCalKit->lStandardList = g_list_prepend( pCalKit->lStandardList, g_malloc0( sizeof( tXKTstandard )) );
+		pCalKit->lStandardList = g_list_prepend( pCalKit->lStandardList, g_new0( tXKTstandard, 1 ) );
 		tCalibrationStdType thisStandard = eStdTypeUnknown;
 		switch( heirachy[ XMLlevel ] ) {
 		case eXKT_FixedLoadStandard:
@@ -606,7 +606,7 @@ static void startCalKit( GMarkupParseContext *context,
     		break;
     	case eXKT_KitClasses:
     		g_markup_parse_context_push (context, &parserKitClasses, pCalKit);
-    		pCalKit->lKitClasses = g_list_prepend( pCalKit->lKitClasses, g_malloc0( sizeof( tXKTkitClass )) );
+    		pCalKit->lKitClasses = g_list_prepend( pCalKit->lKitClasses, g_new0( tXKTkitClass, 1 ) );
     		break;
     	default:
     		break;

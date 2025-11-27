@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Michael G. Katzmann
+ * Copyright (c) 2022-2026 Michael G. Katzmann
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@
 
 #include <gtk/gtk.h>
 #include <cairo/cairo.h>
+#include <math.h>
+
 #include "hp8753.h"
 #include "GTKplot.h"
-#include <math.h>
 
 #define HP_LOGO_SCALE_FACTOR    1.981962e-3
 #define DECAL_WIDTH 270.0

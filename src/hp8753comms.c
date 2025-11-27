@@ -18,15 +18,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
-
 #include <glib-2.0/glib.h>
 #include <gpib/ib.h>
 #include <errno.h>
+
 #include "hp8753.h"
 #include "GPIBcomms.h"
 #include "hp8753comms.h"
 #include "HPGLplot.h"
-
 #include "messageEvent.h"
 
 #define QUERY_SIZE      100
@@ -1027,7 +1026,7 @@ analyze8753learnString( tGPIBinterface *pGPIB_HP8753, tLearnStringIndexes *pLSin
     if ( get8753learnString( pGPIB_HP8753, &modifiedLS ) )
             goto err;
 #define LS_ACTIVE_CHAN1    0x01
-#define    LS_ACTIVE_CHAN2    0x02
+#define LS_ACTIVE_CHAN2    0x02
     for( i=START_OF_LS_PAYLOAD; i < LSsize; i++ ) {
         if( baselineLS[i] == LS_ACTIVE_CHAN1 && modifiedLS[i] == LS_ACTIVE_CHAN2 ) {
             pLSindexes->iActiveChannel = i;
@@ -1042,7 +1041,7 @@ analyze8753learnString( tGPIBinterface *pGPIB_HP8753, tLearnStringIndexes *pLSin
     if ( get8753learnString( pGPIB_HP8753, &modifiedLS ) )
         goto err;
 #define LS_NO_MARKERS        0x00
-#define    LS_MARKERS_1AND4    0x12
+#define LS_MARKERS_1AND4    0x12
 #define LS_NO_ACTIVE_MKRS    0x00
 #define LS_ACTIVE_MKR_4        0x10
     for( i=START_OF_LS_PAYLOAD, channel=eCH_ONE, channelFn2=eCH_ONE;
@@ -1064,7 +1063,7 @@ analyze8753learnString( tGPIBinterface *pGPIB_HP8753, tLearnStringIndexes *pLSin
     if ( get8753learnString( pGPIB_HP8753, &modifiedLS ) )
         goto err;
 #define LS_NO_DELTA_MKR    0x40
-#define    LS_DELTA_MKR4    0x10
+#define LS_DELTA_MKR4    0x10
     for( i=START_OF_LS_PAYLOAD, channel=eCH_ONE; i < LSsize && channel <= eCH_TWO; i++ ) {
         if( baselineLS[i] == LS_NO_DELTA_MKR && modifiedLS[i] == LS_DELTA_MKR4 ) {
             DBG( eDEBUG_TESTING, "%s: Enabled delta marker - ch %d @ %d", __FUNCTION__, channel, i);
@@ -1075,7 +1074,7 @@ analyze8753learnString( tGPIBinterface *pGPIB_HP8753, tLearnStringIndexes *pLSin
     DBG( eDEBUG_TESTING, "%s: Determine start/stop or center", __FUNCTION__);
     postInfo("start/stop or center/span");
 #define LS_START_STOP    0x01
-#define    LS_CENTER_SPAN    0x00
+#define LS_CENTER_SPAN    0x00
     // Strt/Stop or Center
     GPIBasyncWrite( pGPIB_HP8753, "PRES;CENT1500.15E6;", 10 * TIMEOUT_RW_1SEC);
     GPIBasyncWrite( pGPIB_HP8753, "CHAN2;CENT1500.15E6;CHAN1;", 10 * TIMEOUT_RW_1SEC);
@@ -1112,7 +1111,7 @@ analyze8753learnString( tGPIBinterface *pGPIB_HP8753, tLearnStringIndexes *pLSin
     DBG( eDEBUG_TESTING, "%s: enabled segments", __FUNCTION__);
     postInfo("enabled segments");
 #define LS_NO_SEGMENTS    0x00
-#define    LS_ONE_SEGMENT    0x03
+#define LS_ONE_SEGMENT    0x03
     // Number of list segments
     GPIBasyncWrite( pGPIB_HP8753, "PRES;EDITLIST;SADD;SADD;SADD;EDITDONE;", 10 * TIMEOUT_RW_1SEC);
     if ( get8753learnString( pGPIB_HP8753, &modifiedLS ) )

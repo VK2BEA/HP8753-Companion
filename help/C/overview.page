@@ -32,11 +32,13 @@
   <item><p>Using the mouse, interrogate the displayed traces</p></item>
   <item><p>Save traces, or trace data in several formats:</p>
      <list>
-   	<item><p>PNG image</p></item>
+   	    <item><p>PNG image</p></item>
+   	    <item><p>SVG image</p></item>
         <item><p>PDF page</p></item>
         <item><p>CSV file</p></item>
         <item><p>High resolution Smith chart PDF</p></item>
         <item><p>Touchstone S2P file</p></item>
+        <item><p>Touchstone S1P file</p></item>
     </list>    
   </item>
 </list>

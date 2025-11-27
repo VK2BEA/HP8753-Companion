@@ -1,0 +1,1344 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.99.5 -->
+<interface>
+  <!-- interface-name hp8753.ui -->
+  <!-- interface-description UI file for HP8753 Companion -->
+  <!-- interface-copyright Michael G. Katzmann 2025 -->
+  <!-- interface-authors Michael G. Katzmanmn -->
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkApplicationWindow" id="WID_hp8753_main">
+    <property name="halign">fill</property>
+    <property name="height-request">-1</property>
+    <property name="hexpand">False</property>
+    <property name="vexpand">False</property>
+    <property name="width-request">-1</property>
+    <child>
+      <object class="GtkBox" id="WID_box_main">
+        <child>
+          <object class="GtkBox" id="WID_box_Controls">
+            <property name="halign">start</property>
+            <property name="height-request">-1</property>
+            <property name="hexpand">False</property>
+            <property name="hexpand-set">True</property>
+            <property name="homogeneous">False</property>
+            <property name="margin-bottom">4</property>
+            <property name="margin-end">4</property>
+            <property name="margin-start">4</property>
+            <property name="margin-top">4</property>
+            <property name="orientation">vertical</property>
+            <property name="vexpand">True</property>
+            <property name="width-request">310</property>
+            <child>
+              <object class="GtkBox" id="WID_box_GetTrace">
+                <property name="homogeneous">True</property>
+                <property name="margin-bottom">0</property>
+                <property name="margin-end">2</property>
+                <property name="margin-start">2</property>
+                <property name="margin-top">2</property>
+                <property name="spacing">10</property>
+                <property name="valign">start</property>
+                <child>
+                  <object class="GtkButton" id="WID_btn_GetTrace">
+                    <property name="has-tooltip">False</property>
+                    <property name="label">Get Trace</property>
+                    <property name="tooltip-markup">Retrieve the &lt;span foreground="red"&gt;currently displayed&lt;/span&gt;
+traces from the HP8753.</property>
+                    <property name="valign">start</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel"/>
+                </child>
+                <child>
+                  <object class="GtkLabel"/>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkFrame">
+                <property name="css-classes">square
+topBorderOnly</property>
+                <property name="margin-bottom">0</property>
+                <property name="margin-top">4</property>
+                <child>
+                  <object class="GtkBox">
+                    <property name="homogeneous">True</property>
+                    <property name="margin-bottom">4</property>
+                    <property name="margin-end">2</property>
+                    <property name="margin-start">2</property>
+                    <property name="margin-top">4</property>
+                    <property name="spacing">8</property>
+                    <child>
+                      <object class="GtkButton" id="WID_btn_Print">
+                        <property name="has-tooltip">False</property>
+                        <property name="icon-name">document-print</property>
+                        <property name="margin-bottom">0</property>
+                        <property name="tooltip-text">Print plots</property>
+                        <property name="valign">start</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="WID_btn_PDF">
+                        <property name="has-tooltip">False</property>
+                        <property name="label">PDF</property>
+                        <property name="valign">start</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="WID_btn_PNG">
+                        <property name="has-tooltip">True</property>
+                        <property name="label">PNG</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="WID_btn_SVG">
+                        <property name="has-tooltip">True</property>
+                        <property name="label">SVG</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkNotebook" id="WID_notebook">
+                <property name="enable-popup">True</property>
+                <property name="halign">fill</property>
+                <property name="hexpand">False</property>
+                <property name="hexpand-set">True</property>
+                <property name="margin-top">2</property>
+                <property name="scrollable">True</property>
+                <property name="vexpand">True</property>
+                <child>
+                  <object class="GtkBox" id="Tab_calibration">
+                    <property name="margin-end">4</property>
+                    <property name="margin-start">4</property>
+                    <property name="margin-top">4</property>
+                    <property name="orientation">vertical</property>
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkScrolledWindow">
+                        <property name="vexpand">True</property>
+                        <child>
+                          <object class="GtkTextView" id="WID_nbCal_txtV_CalibrationNote">
+                            <property name="indent">2</property>
+                            <property name="input-hints">emoji|none</property>
+                            <property name="tooltip-text">Notes on calibration setup.
+e.g. Cable set / adapters</property>
+                            <property name="top-margin">0</property>
+                            <property name="visible">True</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox" id="WID_nbCal_box_CalInfo">
+                        <property name="halign">fill</property>
+                        <property name="height-request">80</property>
+                        <property name="homogeneous">True</property>
+                        <property name="margin-bottom">2</property>
+                        <property name="margin-end">0</property>
+                        <property name="margin-start">0</property>
+                        <property name="margin-top">2</property>
+                        <child>
+                          <object class="GtkTextView" id="WID_nbCal_txtV_CalInfoCh1">
+                            <property name="css-classes">smallerText</property>
+                            <property name="editable">False</property>
+                            <property name="focusable">True</property>
+                            <property name="margin-bottom">0</property>
+                            <property name="margin-end">0</property>
+                            <property name="margin-start">0</property>
+                            <property name="margin-top">0</property>
+                            <property name="tooltip-text">Calibration (Ch1 or coupled) &amp; setup that will be restored when recall is pressed </property>
+                            <property name="vexpand">False</property>
+                            <property name="visible">True</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkTextView" id="WID_nbCal_txtV_CalInfoCh2">
+                            <property name="css-classes">smallerText</property>
+                            <property name="editable">False</property>
+                            <property name="focus-on-click">True</property>
+                            <property name="focusable">True</property>
+                            <property name="margin-bottom">0</property>
+                            <property name="margin-end">0</property>
+                            <property name="margin-start">0</property>
+                            <property name="margin-top">0</property>
+                            <property name="tooltip-text">Calibration (uncoupled Ch2) &amp; setup that will be restored when recall is pressed </property>
+                            <property name="visible">True</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="tab">
+                  <object class="GtkLabel">
+                    <property name="label">Calibration</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox" id="Tab_trace">
+                    <property name="can-focus">True</property>
+                    <property name="focus-on-click">True</property>
+                    <property name="focusable">False</property>
+                    <property name="margin-end">2</property>
+                    <property name="margin-start">4</property>
+                    <property name="margin-top">0</property>
+                    <property name="orientation">vertical</property>
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkFrame">
+                        <property name="can-focus">True</property>
+                        <property name="can-target">True</property>
+                        <property name="css-classes">square
+bottomBorderOnly</property>
+                        <property name="focus-on-click">True</property>
+                        <property name="focusable">True</property>
+                        <property name="label">Title</property>
+                        <property name="margin-end">0</property>
+                        <property name="margin-start">0</property>
+                        <child>
+                          <object class="GtkEntry" id="WID_nbTrace_entry_Title">
+                            <property name="buffer">WID_nbTrace_buf_Title</property>
+                            <property name="focusable">True</property>
+                            <property name="margin-bottom">4</property>
+                            <property name="margin-end">2</property>
+                            <property name="margin-start">2</property>
+                            <property name="margin-top">2</property>
+                            <property name="tooltip-text">Titlle shown on the plot</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="css-classes">
+</property>
+                        <property name="margin-bottom">0</property>
+                        <property name="margin-end">0</property>
+                        <property name="margin-start">0</property>
+                        <property name="margin-top">0</property>
+                        <property name="valign">fill</property>
+                        <child>
+                          <object class="GtkLabel" id="WID_nbTrace_lbl_Time">
+                            <property name="css-classes">italicBlue</property>
+                            <property name="halign">start</property>
+                            <property name="hexpand">True</property>
+                            <property name="margin-bottom">4</property>
+                            <property name="margin-start">4</property>
+                            <property name="margin-top">4</property>
+                            <property name="valign">center</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkBox" id="WID_nbTrace_box_PlotType">
+                            <property name="homogeneous">False</property>
+                            <property name="valign">center</property>
+                            <child>
+                              <object class="GtkCheckButton" id="WID_nbTrace_rbtn_PlotTypeHighRes">
+                                <property name="label">High Res.</property>
+                                <property name="tooltip-text">Show high resolution plot of channel data</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkCheckButton" id="WID_nbTrace_rbtn_PlotTypeHPGL">
+                                <property name="group">WID_nbTrace_rbtn_PlotTypeHighRes</property>
+                                <property name="label">HPGL</property>
+                                <property name="tooltip-text">Show the HPGL plot representation of the HP8753 screen</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSeparator"/>
+                    </child>
+                    <child>
+                      <object class="GtkScrolledWindow">
+                        <property name="hexpand">False</property>
+                        <property name="vexpand">True</property>
+                        <child>
+                          <object class="GtkTextView" id="WID_nbTrace_txtV_TraceNote">
+                            <property name="indent">4</property>
+                            <property name="input-hints">emoji|none</property>
+                            <property name="tooltip-text">Description of trace for reference.
+(e.g. device and setup to give context to the trace)</property>
+                            <property name="vexpand">False</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="tab">
+                  <object class="GtkLabel">
+                    <property name="label">Trace</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox" id="Tab_data">
+                    <property name="margin-end">2</property>
+                    <property name="margin-start">4</property>
+                    <property name="margin-top">4</property>
+                    <property name="orientation">vertical</property>
+                    <property name="spacing">5</property>
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="homogeneous">True</property>
+                        <property name="margin-bottom">2</property>
+                        <property name="margin-end">0</property>
+                        <property name="margin-start">0</property>
+                        <property name="margin-top">10</property>
+                        <property name="spacing">10</property>
+                        <child>
+                          <object class="GtkButton" id="WID_nbData_btn_S2P">
+                            <property name="label">Get S2P</property>
+                            <property name="tooltip-text">Sweep HP8753 for S11, S21, 
+S22 &amp; S12 and them save to
+an S2P file.</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="WID_nbData_btn_S1P">
+                            <property name="label">Get S1P</property>
+                            <property name="tooltip-text">Sweep HP8753 for S11 or S22 
+(selected mesurement on active channel) 
+and them save to an S1P file.</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel"/>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">S2P or S1P data is obtained from the HP8753
+by sweeping for S-paramaters (complex).</property>
+                        <property name="margin-bottom">2</property>
+                        <property name="margin-end">6</property>
+                        <property name="margin-start">6</property>
+                        <property name="margin-top">2</property>
+                        <property name="xalign">0.0</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="homogeneous">True</property>
+                        <property name="margin-end">0</property>
+                        <property name="margin-start">0</property>
+                        <property name="spacing">10</property>
+                        <child>
+                          <object class="GtkButton" id="WID_nbData_btn_CSV">
+                            <property name="label">CSV</property>
+                            <property name="tooltip-text">Save the channel data acquired
+from the HP8753 to a CSV file</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel"/>
+                        </child>
+                        <child>
+                          <object class="GtkLabel"/>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">CSV data is saved from the previously         
+acquired trace.</property>
+                        <property name="margin-end">6</property>
+                        <property name="margin-start">6</property>
+                        <property name="xalign">0.0</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="tab">
+                  <object class="GtkLabel">
+                    <property name="label">Data</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkScrolledWindow" id="Tab_Options">
+                    <property name="hscrollbar-policy">never</property>
+                    <property name="margin-end">4</property>
+                    <property name="margin-start">2</property>
+                    <property name="margin-top">4</property>
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="homogeneous">False</property>
+                        <property name="margin-start">0</property>
+                        <property name="margin-top">0</property>
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">3</property>
+                        <child>
+                          <object class="GtkCheckButton" id="WID_nbOpts_cbtn_SmithBezier">
+                            <property name="label">Bezier polar &amp; Smith plot</property>
+                            <property name="margin-start">2</property>
+                            <property name="tooltip-text">Interpolate a bezier curve between 
+points on polar and Smith plots
+rather than straight lines.</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="WID_nbOpts_cbtn_ShowDateTime">
+                            <property name="label">Show date &amp; time on plot</property>
+                            <property name="margin-start">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="WID_nbOpts_cbtn_SmithGBnotRX">
+                            <property name="label">Admitance / susceptance Smith grid</property>
+                            <property name="margin-start">2</property>
+                            <property name="tooltip-text">Show G+jB rather than R+jZ grid.</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="WID_nbOpts_cbtn_DeltaMarkerAbsolute">
+                            <property name="label">Delta marker: use actual values</property>
+                            <property name="margin-start">2</property>
+                            <property name="tooltip-text">The HP8753 shows the reference delta marker
+as 0 and other marker measurements as
+offests from this. 
+Show the actual value of the reference marker.</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="WID_nbOpts_cbtn_DoNotRetrieveHPGL">
+                            <property name="label">Do not retrieve HPGL screen plot</property>
+                            <property name="margin-start">2</property>
+                            <property name="tooltip-text">If the HPGL plot is not required, do not
+retrieve it from the HP8753 to save time.</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="WID_nbOpts_cbtn_ShowHPlogo">
+                            <property name="label">Show HP logo on plot</property>
+                            <property name="margin-start">2</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="margin-bottom">2</property>
+                            <property name="margin-start">4</property>
+                            <property name="spacing">10</property>
+                            <child>
+                              <object class="GtkButton" id="WID_nbOpts_btn_AnalyzeLS">
+                                <property name="label">Analyze Learn String</property>
+                                <property name="tooltip-text">Analyze Learn String of HP8753 to determine
+the location of configuration data not
+available through regular GPIB queries.
+This includes the active channel, enabled 
+markers and the number of enabled 
+segments (in list frequency sweep)</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="WID_nbOpts_lbl_Firmware">
+                                <property name="label">firmware unknown</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkFrame">
+                            <property name="css-classes">square
+noSideBorder</property>
+                            <property name="label">PDF &amp; SVG page size</property>
+                            <property name="margin-start">0</property>
+                            <property name="tooltip-text">Set the size of the PDF and SVG page.</property>
+                            <child>
+                              <object class="GtkGrid">
+                                <property name="column-homogeneous">True</property>
+                                <child>
+                                  <object class="GtkCheckButton" id="WID_nbOpts_rbtn_PDF_A4">
+                                    <property name="label">A4 (210 × 297mm)</property>
+                                    <layout>
+                                      <property name="column">0</property>
+                                      <property name="column-span">1</property>
+                                      <property name="row">0</property>
+                                      <property name="row-span">1</property>
+                                    </layout>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="WID_nbOpts_rbtn_PDF_LTR">
+                                    <property name="group">WID_nbOpts_rbtn_PDF_A4</property>
+                                    <property name="label">Letter (8.5" × 11")</property>
+                                    <layout>
+                                      <property name="column">1</property>
+                                      <property name="column-span">1</property>
+                                      <property name="row">0</property>
+                                      <property name="row-span">1</property>
+                                    </layout>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="WID_nbOpts_rbtn_PDF_A3">
+                                    <property name="group">WID_nbOpts_rbtn_PDF_A4</property>
+                                    <property name="label">A3 (297 × 420mm)</property>
+                                    <layout>
+                                      <property name="column">0</property>
+                                      <property name="column-span">1</property>
+                                      <property name="row">1</property>
+                                      <property name="row-span">1</property>
+                                    </layout>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="WID_nbOpts_rbtn_PDF_TBL">
+                                    <property name="group">WID_nbOpts_rbtn_PDF_A4</property>
+                                    <property name="label">Tabloid (11" × 17")</property>
+                                    <layout>
+                                      <property name="column">1</property>
+                                      <property name="column-span">1</property>
+                                      <property name="row">1</property>
+                                      <property name="row-span">1</property>
+                                    </layout>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="tab">
+                  <object class="GtkLabel">
+                    <property name="label">Options</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkScrolledWindow" id="Tab_GPIB">
+                    <property name="margin-end">2</property>
+                    <property name="margin-start">4</property>
+                    <property name="margin-top">4</property>
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="margin-bottom">0</property>
+                        <property name="margin-end">0</property>
+                        <property name="margin-start">0</property>
+                        <property name="margin-top">0</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="hexpand">False</property>
+                            <property name="homogeneous">True</property>
+                            <property name="margin-bottom">0</property>
+                            <property name="margin-top">0</property>
+                            <property name="orientation">vertical</property>
+                            <property name="spacing">4</property>
+                            <property name="vexpand">False</property>
+                            <child>
+                              <object class="GtkFrame" id="WID_nbGPIB_frame_HP8753_name">
+                                <property name="css-classes">noborder</property>
+                                <property name="hexpand">True</property>
+                                <property name="label">HP8753 device name (in gpib.conf)</property>
+                                <property name="margin-end">0</property>
+                                <property name="margin-start">0</property>
+                                <property name="valign">start</property>
+                                <child>
+                                  <object class="GtkEntry" id="WID_nbGPIB_entry_HP8753_name">
+                                    <property name="buffer">WID_nbGPIB_buf_HP8753_name</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="margin-bottom">4</property>
+                                    <property name="margin-end">0</property>
+                                    <property name="margin-start">0</property>
+                                    <property name="margin-top">0</property>
+                                    <property name="tooltip-text">The device name of the HP8753 listed
+in /etc/gpib.conf</property>
+                                    <property name="valign">start</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="css-classes">
+</property>
+                                <property name="homogeneous">True</property>
+                                <property name="orientation">horizontal</property>
+                                <child>
+                                  <object class="GtkFrame" id="WID_nbGPIB_frame_minorDeviceNo">
+                                    <property name="css-classes">noborder
+</property>
+                                    <property name="label">Minor Device No.</property>
+                                    <property name="margin-start">0</property>
+                                    <child>
+                                      <object class="GtkSpinButton" id="WID_nbGPIB_spin_minorDeviceNo">
+                                        <property name="adjustment">adj_GPIB_Controller_Card</property>
+                                        <property name="margin-bottom">0</property>
+                                        <property name="margin-end">0</property>
+                                        <property name="margin-start">0</property>
+                                        <property name="margin-top">0</property>
+                                        <property name="numeric">True</property>
+                                        <property name="tooltip-text">The minor device number for the GPIB controller.
+(used as the GPIB board number).</property>
+                                        <property name="valign">start</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkFrame" id="WID_nbOpts_frame_HP8753_PID">
+                                    <property name="css-classes">noborder
+</property>
+                                    <property name="label">GPIB PID</property>
+                                    <property name="margin-start">4</property>
+                                    <property name="margin-top">0</property>
+                                    <child>
+                                      <object class="GtkSpinButton" id="WID_nbOpts_spin_HP8753_PID">
+                                        <property name="adjustment">adj_HP8753_GPIB_ID</property>
+                                        <property name="margin-bottom">0</property>
+                                        <property name="margin-end">0</property>
+                                        <property name="margin-start">0</property>
+                                        <property name="margin-top">0</property>
+                                        <property name="numeric">True</property>
+                                        <property name="tooltip-text">PID of the HP8753 on the GPIB.</property>
+                                        <property name="valign">start</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="WID_nbGPIB_cbtn_UseGPIB_PID">
+                            <property name="label">Use Minor Device No. &amp; PID</property>
+                            <property name="margin-bottom">4</property>
+                            <property name="margin-start">0</property>
+                            <property name="margin-top">2</property>
+                            <property name="tooltip-text">Use the minor device number and PID secified rather than
+the settings in /etc/gpib.conf defined for the device name.</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkFrame">
+                            <property name="css-classes">square
+noSideBorder</property>
+                            <property name="label">Interface</property>
+                            <property name="margin-start">4</property>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="homogeneous">True</property>
+                                <property name="margin-bottom">4</property>
+                                <property name="margin-top">0</property>
+                                <child>
+                                  <object class="GtkCheckButton" id="WID_nbGPIB_rbtn_interfaceGPIB">
+                                    <property name="label">GPIB</property>
+                                    <property name="tooltip-text">Use the GPIB controller.</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="WID_nbGPIB_rbtn_interfaceUSBTMC">
+                                    <property name="group">WID_nbGPIB_rbtn_interfaceGPIB</property>
+                                    <property name="label">USBTMC</property>
+                                    <property name="tooltip-text">Use a USBTMC interface.</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="WID_nbGPIB_rbtn_interfacePrologix">
+                                    <property name="group">WID_nbGPIB_rbtn_interfaceGPIB</property>
+                                    <property name="label">Prologix</property>
+                                    <property name="sensitive">False</property>
+                                    <property name="tooltip-text">not yet implimented</property>
+                                    <property name="visible">True</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="tab">
+                  <object class="GtkLabel">
+                    <property name="label">GPIB</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox" id="Tab_CalKits">
+                    <property name="margin-end">2</property>
+                    <property name="margin-start">4</property>
+                    <property name="margin-top">4</property>
+                    <property name="orientation">vertical</property>
+                    <property name="spacing">10</property>
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="homogeneous">True</property>
+                        <property name="orientation">vertical</property>
+                        <child>
+                          <object class="GtkComboBoxText" id="WID_nbCalKit_cbt_Kit">
+                            <property name="margin-bottom">4</property>
+                            <property name="margin-end">0</property>
+                            <property name="margin-start">0</property>
+                            <property name="margin-top">4</property>
+                            <property name="tooltip-text">Calibration kits that have been imported and can be sent to the HP8753</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="WID_nbCalKit_lbl_Desc">
+                            <property name="css-classes">italicBlue</property>
+                            <property name="margin-bottom">2</property>
+                            <property name="margin-end">2</property>
+                            <property name="margin-start">2</property>
+                            <property name="margin-top">2</property>
+                            <property name="xalign">0.0</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="homogeneous">True</property>
+                        <property name="margin-end">0</property>
+                        <property name="margin-start">0</property>
+                        <property name="spacing">10</property>
+                        <child>
+                          <object class="GtkButton" id="WID_nbCalKit_btn_SendKit">
+                            <property name="label">Send Kit</property>
+                            <property name="tooltip-text">Send the selected cal kit to the HP8753</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="WID_nbCalKit_btn_ImportXKT">
+                            <property name="label">Read XKT</property>
+                            <property name="tooltip-text">Read a .xkt file with calibration paramaters for a kit</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="WID_nbCalKit_btn_DeleteKit">
+                            <property name="label">Delete</property>
+                            <property name="tooltip-text">Remove a calibration kit previously imported</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="valign">start</property>
+                        <child>
+                          <object class="GtkCheckButton" id="WID_nbCalKit_cbtn_SaveUserKit">
+                            <property name="label">+ save as user kit</property>
+                            <property name="margin-start">4</property>
+                            <property name="tooltip-text">Check to save calibration kit as the 'user' kit on the HP8753</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="tab">
+                  <object class="GtkLabel">
+                    <property name="label">Cal Kits</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox" id="Tab_Color">
+                    <property name="homogeneous">True</property>
+                    <property name="margin-end">2</property>
+                    <property name="margin-start">4</property>
+                    <property name="margin-top">4</property>
+                    <property name="orientation">vertical</property>
+                    <property name="visible">True</property>
+                    <child>
+                      <object class="GtkFrame">
+                        <property name="css-classes">noborder
+</property>
+                        <property name="label">High Resolution Plot Colors</property>
+                        <property name="label-xalign">0.02</property>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="margin-end">0</property>
+                            <property name="margin-start">0</property>
+                            <property name="spacing">10</property>
+                            <child>
+                              <object class="GtkDropDown" id="WID_nbColor_dd_elementHR">
+                                <property name="enable-search">False</property>
+                                <property name="hexpand">True</property>
+                                <property name="margin-start">0</property>
+                                <property name="model">WID_nbColor_strLst_element</property>
+                                <property name="selected">0</property>
+                                <property name="tooltip-text">Element of plot that the ajacent color button sets</property>
+                                <property name="valign">center</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkColorDialogButton" id="WID_nbColor_colbtn_element">
+                                <property name="dialog">
+                                  <object class="GtkColorDialog"/>
+                                </property>
+                                <property name="margin-end">2</property>
+                                <property name="valign">fill</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkFrame">
+                        <property name="css-classes">noborder</property>
+                        <property name="label">HPGL Plot Colors</property>
+                        <property name="label-xalign">0.02</property>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="margin-end">0</property>
+                            <property name="margin-start">0</property>
+                            <property name="spacing">10</property>
+                            <child>
+                              <object class="GtkDropDown" id="WID_nbColor_dd_HPGLpen">
+                                <property name="enable-search">False</property>
+                                <property name="hexpand">True</property>
+                                <property name="margin-start">0</property>
+                                <property name="model">WID_nbColor_strLst_HPGLpen</property>
+                                <property name="search-match-mode">prefix</property>
+                                <property name="tooltip-text">HPIB pen that the ajacent color button sets</property>
+                                <property name="valign">center</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkColorDialogButton" id="WID_nbColor_colbtn_HPGLpen">
+                                <property name="dialog">
+                                  <object class="GtkColorDialog"/>
+                                </property>
+                                <property name="margin-end">2</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="homogeneous">True</property>
+                        <property name="margin-bottom">2</property>
+                        <property name="margin-end">0</property>
+                        <property name="margin-start">0</property>
+                        <property name="margin-top">12</property>
+                        <property name="spacing">10</property>
+                        <property name="valign">start</property>
+                        <child>
+                          <object class="GtkButton" id="WID_nbColor_btn_Reset">
+                            <property name="label">Reset</property>
+                            <property name="margin-start">4</property>
+                            <property name="tooltip-text">Reset colors to default settings</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkLabel"/>
+                        </child>
+                        <child>
+                          <object class="GtkLabel"/>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="tab">
+                  <object class="GtkLabel">
+                    <property name="label">Color</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkFrame">
+                <property name="css-classes">square
+noSideBorder</property>
+                <property name="label">Setup, calibratioin &amp; trace data</property>
+                <property name="margin-bottom">4</property>
+                <property name="margin-end">0</property>
+                <property name="margin-top">5</property>
+                <property name="visible">True</property>
+                <child>
+                  <object class="GtkBox" id="WID_BoxRecallSaveDelete">
+                    <property name="margin-bottom">2</property>
+                    <property name="orientation">vertical</property>
+                    <property name="spacing">4</property>
+                    <child>
+                      <object class="GtkFrame" id="WID_frm_Project">
+                        <property name="css-classes">square
+noborder</property>
+                        <property name="focus-on-click">True</property>
+                        <property name="focusable">True</property>
+                        <property name="label">Project</property>
+                        <property name="margin-bottom">0</property>
+                        <property name="margin-end">2</property>
+                        <property name="margin-start">2</property>
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkComboBoxText" id="WID_cbt_Project">
+                            <property name="has-entry">True</property>
+                            <property name="margin-bottom">2</property>
+                            <property name="margin-end">0</property>
+                            <property name="margin-start">3</property>
+                            <property name="margin-top">2</property>
+                            <property name="tooltip-markup">Project name to group calibration, setup and traces.
+&lt;span style="italic"&gt;(press F2 to rename project)&lt;/span&gt;</property>
+                            <child internal-child="entry">
+                              <object class="GtkEntry" id="WID_entry_Project">
+                                <property name="buffer">WID_buf_Project</property>
+                                <property name="margin-bottom">0</property>
+                                <property name="margin-end">0</property>
+                                <property name="margin-start">0</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="margin-end">2</property>
+                        <property name="margin-start">4</property>
+                        <property name="orientation">horizontal</property>
+                        <property name="spacing">4</property>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="homogeneous">True</property>
+                            <property name="orientation">vertical</property>
+                            <property name="spacing">6</property>
+                            <child>
+                              <object class="GtkComboBoxText" id="WID_cbt_CalProfile">
+                                <property name="has-entry">True</property>
+                                <property name="hexpand">True</property>
+                                <property name="tooltip-markup">Calibration/setup profile
+&lt;span style="italic"&gt;(press F2 to rename the profile or to move or copy it to another project)&lt;/span&gt;</property>
+                                <property name="valign">start</property>
+                                <child internal-child="entry">
+                                  <object class="GtkEntry" id="WID_entry_CalProfile">
+                                    <property name="buffer">WID_buf_CalProfile</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkComboBoxText" id="WID_cbt_TraceProfile">
+                                <property name="has-entry">True</property>
+                                <property name="hexpand">True</property>
+                                <property name="tooltip-markup">Trace profile
+&lt;span style="italic"&gt;(press F2 to rename the profile or to move or copy it to another project)&lt;/span&gt;</property>
+                                <property name="valign">start</property>
+                                <child internal-child="entry">
+                                  <object class="GtkEntry" id="WID_entry_TraceProfile"/>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="homogeneous">True</property>
+                            <property name="orientation">vertical</property>
+                            <property name="spacing">2</property>
+                            <child>
+                              <object class="GtkCheckButton" id="WID_rbtn_Cal">
+                                <property name="label">Cal. &amp; Setup</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkCheckButton" id="WID_rbtn_Traces">
+                                <property name="group">WID_rbtn_Cal</property>
+                                <property name="label">Trace</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox" id="WID_box_SaveRecallDelete">
+                        <property name="homogeneous">True</property>
+                        <property name="margin-end">2</property>
+                        <property name="margin-start">2</property>
+                        <property name="spacing">2</property>
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkButton" id="WID_btn_Recall">
+                            <property name="has-tooltip">True</property>
+                            <property name="label">restore</property>
+                            <property name="margin-bottom">2</property>
+                            <property name="margin-end">2</property>
+                            <property name="margin-start">2</property>
+                            <property name="margin-top">2</property>
+                            <property name="tooltip-text">Restore trace from database or send calibration to HP8753</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="WID_btn_Save">
+                            <property name="label">save </property>
+                            <property name="margin-bottom">2</property>
+                            <property name="margin-end">2</property>
+                            <property name="margin-start">2</property>
+                            <property name="margin-top">2</property>
+                            <property name="tooltip-text">Save the currently displayed trace,
+or obtain and save the setup and calibration
+from the HP8753 to the database.</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="WID_btn_Delete">
+                            <property name="label">delete</property>
+                            <property name="margin-bottom">2</property>
+                            <property name="margin-end">2</property>
+                            <property name="margin-start">2</property>
+                            <property name="margin-top">2</property>
+                            <property name="tooltip-text">Remove the currently selected trace
+or setup &amp; calibration from the database</property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="WID_lbl_Status">
+                <property name="ellipsize">end</property>
+                <property name="halign">start</property>
+                <property name="hexpand">True</property>
+                <property name="margin-bottom">2</property>
+                <property name="margin-end">2</property>
+                <property name="margin-start">2</property>
+                <property name="margin-top">2</property>
+                <property name="vexpand">False</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkSeparator">
+            <property name="margin-bottom">4</property>
+            <property name="margin-end">4</property>
+            <property name="margin-start">0</property>
+            <property name="margin-top">4</property>
+            <property name="visible">True</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAspectFrame" id="WID_frame_Plot_A">
+            <property name="margin-bottom">4</property>
+            <property name="margin-top">4</property>
+            <child>
+              <object class="GtkDrawingArea" id="WID_drawingArea_Plot_A">
+                <property name="css-classes">plot</property>
+                <property name="height-request">600</property>
+                <property name="hexpand">True</property>
+                <property name="margin-end">2</property>
+                <property name="width-request">777</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAspectFrame" id="WID_frame_Plot_B">
+            <property name="margin-bottom">4</property>
+            <property name="margin-top">4</property>
+            <child>
+              <object class="GtkDrawingArea" id="WID_drawingArea_Plot_B">
+                <property name="css-classes">plot</property>
+                <property name="height-request">600</property>
+                <property name="hexpand">True</property>
+                <property name="margin-end">4</property>
+                <property name="margin-start">2</property>
+                <property name="vexpand">True</property>
+                <property name="width-request">777</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkAdjustment" id="adj_GPIB_Controller_Card">
+    <property name="page-increment">10.0</property>
+    <property name="step-increment">1.0</property>
+    <property name="upper">8.0</property>
+  </object>
+  <object class="GtkAdjustment" id="adj_HP8753_GPIB_ID">
+    <property name="page-increment">5.0</property>
+    <property name="step-increment">1.0</property>
+    <property name="upper">30.0</property>
+    <property name="value">16.0</property>
+  </object>
+  <object class="GtkEntryBuffer" id="WID_nbTrace_buf_Title"/>
+  <object class="GtkEntryBuffer" id="WID_buf_Project"/>
+  <object class="GtkEntryBuffer" id="WID_buf_CalProfile"/>
+  <object class="GtkEntryBuffer" id="WID_buf_TraceProfile"/>
+  <object class="GtkEntryBuffer" id="WID_nbGPIB_buf_HP8753_name"/>
+  <object class="GtkFileFilter" id="filterPDF">
+    <property name="mime-types">application/pdf</property>
+    <property name="patterns">*.pdf
+*</property>
+    <property name="suffixes">pdf</property>
+    <mime-types>
+      <mime-type/>
+    </mime-types>
+  </object>
+  <object class="GtkWindow" id="WID_Splash">
+    <property name="decorated">False</property>
+    <property name="margin-bottom">15</property>
+    <property name="margin-end">15</property>
+    <property name="margin-start">15</property>
+    <property name="margin-top">15</property>
+    <property name="transient-for">WID_hp8753_main</property>
+    <child>
+      <object class="GtkFrame">
+        <child>
+          <object class="GtkBox">
+            <property name="margin-bottom">15</property>
+            <property name="margin-end">15</property>
+            <property name="margin-start">15</property>
+            <property name="margin-top">15</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkLabel">
+                <property name="css-classes">splash_name</property>
+                <property name="label">HP8753 Companion</property>
+                <property name="margin-bottom">11</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="WID_lbl_Version">
+                <property name="label">Version 2.02-1 - (November 2025)</property>
+                <property name="margin-bottom">11</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparator">
+                <property name="css-classes">separator</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="justify">center</property>
+                <property name="label">Author:  Michael G. Katzmann (NV3Z / VK2BEA / G4NYV)
+</property>
+                <property name="margin-bottom">9</property>
+                <property name="margin-top">10</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="css-classes">bold</property>
+                <property name="label">Press F1 for help</property>
+                <property name="margin-bottom">15</property>
+                <property name="margin-start">0</property>
+                <property name="margin-top">15</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparator">
+                <property name="css-classes">separator</property>
+                <property name="margin-bottom">10</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="label">Copyright © 2022-2026  Michael G. Katzmann
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+express or implied.
+
+See the License for the specific language governing permissions and
+limitations under the License.</property>
+                <property name="margin-bottom">0</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkFileDialog" id="WID_Dlg_PDFfileChooser"/>
+  <object class="GtkStringList" id="WID_nbColor_strLst_element">
+    <property name="strings">Trace (overlay 1️⃣)
+Trace (overlay 2️⃣)
+Trace (separate)
+Grid
+Grid (polar/Smith overlay)
+Source /div text (separate)
+Title
+Smith grid text
+Reference line 1️⃣
+Reference line 2️⃣
+Live Marker Cursor</property>
+  </object>
+  <object class="GtkStringList" id="WID_nbColor_strLst_HPGLpen">
+    <property name="strings">Pen 0
+Pen 1
+Pen 2
+Pen 3
+Pen 4
+Pen 5
+Pen 6
+Pen 7
+Pen 8
+Pen 9
+Pen 10</property>
+  </object>
+  <object class="GtkDialog" id="WID_dlg_Rename">
+    <property name="default-width">400</property>
+    <property name="hide-on-close">True</property>
+    <property name="margin-bottom">4</property>
+    <property name="margin-end">4</property>
+    <property name="margin-start">4</property>
+    <property name="margin-top">4</property>
+    <property name="title">Rename / Move / Copy</property>
+    <property name="transient-for">WID_hp8753_main</property>
+    <child internal-child="action_area">
+      <object class="GtkBox">
+        <property name="margin-bottom">4</property>
+        <property name="margin-end">4</property>
+        <property name="margin-start">4</property>
+        <property name="margin-top">4</property>
+        <property name="spacing">10</property>
+        <child>
+          <object class="GtkButton" id="WID_DR_btn_Cancel">
+            <property name="label">Cancel</property>
+            <property name="valign">start</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkButton" id="WID_DR_btn_OK">
+            <property name="label">OK</property>
+            <property name="valign">start</property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child internal-child="content_area">
+      <object class="GtkBox">
+        <property name="margin-end">4</property>
+        <property name="margin-start">4</property>
+        <property name="margin-top">4</property>
+        <child>
+          <object class="GtkBox">
+            <property name="homogeneous">True</property>
+            <child>
+              <object class="GtkCheckButton" id="WID_DR_rbtn_Rename">
+                <property name="label">Rename</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="WID_DR_rbtn_Move">
+                <property name="group">WID_DR_rbtn_Rename</property>
+                <property name="label">Move</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="WID_DR_rbtn_Copy">
+                <property name="group">WID_DR_rbtn_Rename</property>
+                <property name="label">copy</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkSeparator"/>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="homogeneous">True</property>
+            <child>
+              <object class="GtkCheckButton" id="WID_DR_rbtn_Project">
+                <property name="label">Project</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="WID_DR_rbtn_Calibration">
+                <property name="group">WID_DR_rbtn_Project</property>
+                <property name="label">Calibration</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkCheckButton" id="WID_DR_rbtn_Trace">
+                <property name="group">WID_DR_rbtn_Project</property>
+                <property name="label">Trace</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkSeparator"/>
+        </child>
+        <child>
+          <object class="GtkLabel" id="WID_DR_lbl_From">
+            <property name="justify">left</property>
+            <property name="label">From</property>
+            <property name="margin-start">4</property>
+            <property name="margin-top">4</property>
+            <property name="use-markup">True</property>
+            <property name="xalign">0.0</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkEntry" id="WID_DR_entry_From">
+            <property name="buffer">
+              <object class="GtkEntryBuffer" id="WID_DR_buf_From"/>
+            </property>
+            <property name="margin-bottom">2</property>
+            <property name="margin-end">4</property>
+            <property name="margin-start">4</property>
+            <property name="margin-top">2</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="WID_DR_lbl_To">
+            <property name="label">To</property>
+            <property name="margin-start">4</property>
+            <property name="margin-top">4</property>
+            <property name="use-markup">True</property>
+            <property name="xalign">0.0</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkEntry" id="WID_DR_entry_To">
+            <property name="buffer">
+              <object class="GtkEntryBuffer" id="WID_DR_buf_To"/>
+            </property>
+            <property name="margin-bottom">2</property>
+            <property name="margin-end">2</property>
+            <property name="margin-start">2</property>
+            <property name="margin-top">2</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkComboBoxText" id="WID_DR_cbt_Project">
+            <property name="margin-bottom">2</property>
+            <property name="margin-end">2</property>
+            <property name="margin-start">2</property>
+            <property name="margin-top">2</property>
+          </object>
+        </child>
+      </object>
+    </child>
+    <action-widgets>
+      <action-widget response="-5">WID_DR_btn_OK</action-widget>
+      <action-widget response="-6">WID_DR_btn_Cancel</action-widget>
+    </action-widgets>
+  </object>
+</interface>

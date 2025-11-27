@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Michael G. Katzmann
+ * Copyright (c) 2022-2026 Michael G. Katzmann
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <cairo/cairo.h>
 #include <glib-2.0/glib.h>
-#include <hp8753.h>
-#include <GTKplot.h>
 #include <math.h>
+
+#include "hp8753.h"
+#include "GTKplot.h"
 
 /*!     \brief  Search for stimulus sample corresponding to the frequency (list segments)
  *

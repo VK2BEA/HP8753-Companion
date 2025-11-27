@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Michael G. Katzmann
+ * Copyright (c) 2022-2026 Michael G. Katzmann
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <glib.h>
-#include <hp8753.h>
 #include <math.h>
+#include <ghostscript/ierrors.h>
+#include <ghostscript/iapi.h>
 
+#include "hp8753.h"
 #include "smithChartPS.h"
-
-#include "ghostscript/ierrors.h"
-#include "ghostscript/iapi.h"
 
 /* stdio functions */
 static int GSDLLCALL

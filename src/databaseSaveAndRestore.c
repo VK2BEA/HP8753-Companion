@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Michael G. Katzmann
+ * Copyright (c) 2026 Michael G. Katzmann
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,21 @@
 #include <sqlite3.h>
 #include <sys/stat.h>
 
+#include "widgetID.h"
 #include "messageEvent.h"
 #include "calibrationKit.h"
 
 static sqlite3 *db = NULL;
+
+static gint
+bind_string( sqlite3_stmt* statement, gint posn, const gchar * string )
+{
+    if( string != NULL )
+        return ( sqlite3_bind_text( statement , posn, string,
+                STRLENGTH, SQLITE_STATIC ) );
+        else
+            return ( sqlite3_bind_null( statement, posn ) );
+}
 
 /*!     \brief  Callback for every row in SQL query to fill combo box list
  *
@@ -39,20 +50,22 @@ static sqlite3 *db = NULL;
 int
 sqlCBtraceAbstract(void *ppGList, gint nCols, gchar **columnData, gchar **columnNames) {
 	GList **ppList = ppGList;
-	tHP8753traceAbstract *pProjectAbstract;
+	tHP8753traceAbstract *pTraceAbstract;
 
 	// project and name
 	if( nCols >= 1 ) {
-		pProjectAbstract = g_malloc0( sizeof( tHP8753traceAbstract ));
+	    pTraceAbstract = g_new0( tHP8753traceAbstract, 1 );
 
-		pProjectAbstract->projectAndName.sProject = g_strdup((gchar *)columnData[0]);
-		pProjectAbstract->projectAndName.sName = g_strdup((gchar *)columnData[1]);
-		pProjectAbstract->projectAndName.bSelected = (*(gchar *)columnData[2] == '0' ? FALSE:TRUE);
-		pProjectAbstract->sTitle = g_strdup((gchar *)columnData[3]);
-		pProjectAbstract->sNote = g_strdup((gchar *)columnData[4]);
-		pProjectAbstract->sDateTime = g_strdup((gchar *)columnData[5]);
+	    pTraceAbstract->projectAndName.sProject = g_strdup((gchar *)columnData[0]);
+	    pTraceAbstract->projectAndName.sName = g_strdup((gchar *)columnData[1]);
+	    pTraceAbstract->projectAndName.bbFlags.bSelectedAtStart = (*(gchar *)columnData[2] == '0' ? FALSE:TRUE);
+	    pTraceAbstract->projectAndName.bbFlags.bSelected
+		            = pTraceAbstract->projectAndName.bbFlags.bSelectedAtStart;
+	    pTraceAbstract->sTitle = g_strdup((gchar *)columnData[3]);
+	    pTraceAbstract->sNote = g_strdup((gchar *)columnData[4]);
+	    pTraceAbstract->sDateTime = g_strdup((gchar *)columnData[5]);
 
-		*ppList = g_list_prepend(*ppList, pProjectAbstract );
+		*ppList = g_list_prepend(*ppList, pTraceAbstract );
 	}
 
 	return 0;
@@ -207,13 +220,13 @@ openOrCreateDB(void) {
  */
 void
 freeCalListItem( gpointer pCalItem ) {
-	tHP8753cal *pCal = (tHP8753cal *)pCalItem;
+	tHP8753cal *pCalAbstract = (tHP8753cal *)pCalItem;
 
-	g_free( pCal->projectAndName.sProject );
-	g_free( pCal->projectAndName.sName );
-	g_free( pCal->sNote );
+	g_free( pCalAbstract->projectAndName.sProject );
+	g_free( pCalAbstract->projectAndName.sName );
+	g_free( pCalAbstract->sNote );
 
-	g_free( pCal );
+	g_free( pCalAbstract );
 }
 
 /*!     \brief  Free the g_malloced strings in the tHP8753traceAbstract structure
@@ -228,7 +241,7 @@ freeTraceListItem( gpointer pTraceItem ) {
 
 	g_free( pTraceAbstract->projectAndName.sProject );
 	g_free( pTraceAbstract->projectAndName.sName );
-	g_free( pTraceAbstract->sTitle );
+//	g_free( pTraceAbstract->sTitle );
 	g_free( pTraceAbstract->sDateTime );
 	g_free( pTraceAbstract->sNote );
 
@@ -361,7 +374,9 @@ inventorySavedSetupsAndCal(tGlobal *pGlobal) {
 			//name
 			pCal->projectAndName.sName = g_strdup( (gchar *)sqlite3_column_text(stmt, queryIndex++) );
 			//if selected
-			pCal->projectAndName.bSelected = (int)sqlite3_column_int(stmt, queryIndex++) == 0 ? FALSE:TRUE;
+			pCal->projectAndName.bbFlags.bSelectedAtStart =
+			        pCal->projectAndName.bbFlags.bSelected
+			            = (int)sqlite3_column_int(stmt, queryIndex++) == 0 ? FALSE:TRUE;
 			// note
 			pCal->sNote = g_strdup( (gchar *)sqlite3_column_text(stmt, queryIndex++) );
 			// sweepStart
@@ -406,7 +421,7 @@ inventorySavedSetupsAndCal(tGlobal *pGlobal) {
     for( GList *l = pGlobal->pCalList; l != NULL; l = l->next ){
         tHP8753cal *pCalibration = (tHP8753cal *)(l->data);
             tProjectAndName *pProjectAndName = &pCalibration->projectAndName;
-            if( pProjectAndName->bSelected && g_strcmp0( pProjectAndName->sProject, pGlobal->sProject ) == 0) {
+            if( pProjectAndName->bbFlags.bSelected && g_strcmp0( pProjectAndName->sProject, pGlobal->sProject ) == 0) {
                 pGlobal->pCalibrationAbstract = pCalibration;
             }
     }
@@ -495,13 +510,15 @@ inventorySavedTraceNames(tGlobal *pGlobal) {
 	for( GList *l = pGlobal->pTraceList; l != NULL; l = l->next ){
 	    tHP8753traceAbstract *pTraceAbstract = (tHP8753traceAbstract *)(l->data);
 	        tProjectAndName *pProjectAndName = &pTraceAbstract->projectAndName;
-	        if( pProjectAndName->bSelected && g_strcmp0( pProjectAndName->sProject, pGlobal->sProject ) == 0) {
+	        if( pProjectAndName->bbFlags.bSelected
+	                && g_strcmp0( pProjectAndName->sProject, pGlobal->sProject ) == 0) {
 	            pGlobal->pTraceAbstract = pTraceAbstract;
 	        }
 	}
 	return OK;
 }
 
+#define EMPTYifNULL( x ) ((x)==NULL?"":(x))
 /*!     \brief  Save the trace profile
  *
  * Save the selected trace data to the database
@@ -535,11 +552,11 @@ saveTraceData(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 	for (eChannel channel = 0; channel < eNUM_CH; channel++) {
 		queryIndex = 0;
 		// project
-		if (sqlite3_bind_text(stmt, ++queryIndex, sProject, STRLENGTH, SQLITE_STATIC) != SQLITE_OK) {
+		if ( bind_string(stmt, ++queryIndex, sProject) != SQLITE_OK) {
 			goto err;
 		}
 		// name
-		if (sqlite3_bind_text(stmt, ++queryIndex, sName, STRLENGTH, SQLITE_STATIC) != SQLITE_OK) {
+		if ( bind_string(stmt, ++queryIndex, sName ) != SQLITE_OK) {
 			goto err;
 		}
 		// channel
@@ -649,10 +666,10 @@ saveTraceData(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 		    ++queryIndex;
 		}
 		// title
-		if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->HP8753.sTitle, STRLENGTH, SQLITE_STATIC) != SQLITE_OK)
+		if ( bind_string( stmt, ++queryIndex, pGlobal->HP8753.sTitle ) != SQLITE_OK )
 			goto err;
 		// notes
-		if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->HP8753.sNote, STRLENGTH, SQLITE_STATIC) != SQLITE_OK)
+		if ( bind_string( stmt, ++queryIndex, pGlobal->HP8753.sNote ) != SQLITE_OK )
 			goto err;
 		memcpy(&perChannelFlags, &pGlobal->HP8753.channels[channel].chFlags, sizeof(guint32));
 		memcpy(&generalFlags, &pGlobal->HP8753.flags, sizeof(guint16));
@@ -664,7 +681,7 @@ saveTraceData(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 		if (sqlite3_bind_int(stmt, ++queryIndex, generalFlags) != SQLITE_OK)
 			goto err;
 		// time
-		if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->HP8753.dateTime, STRLENGTH, SQLITE_STATIC) != SQLITE_OK)
+		if ( bind_string( stmt, ++queryIndex, pGlobal->HP8753.dateTime ) != SQLITE_OK)
 			goto err;
 
 		if (sqlite3_step(stmt) != SQLITE_DONE)
@@ -717,16 +734,13 @@ recoverTraceData(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 	}
 
 	// bind project
-	if( sProject == NULL )
-		sqlite3_bind_null(stmt, 1);
-	else
-		sqlite3_bind_text(stmt, 1, sProject, STRLENGTH, SQLITE_STATIC);
+	bind_string(stmt, 1, sProject );
 	if( sqlite3_errcode( db ) != SQLITE_OK) {
 		traceRetrieved = ERROR;
 		goto err;
 	}
 	// bind name
-	if (sqlite3_bind_text(stmt, 2, sName, STRLENGTH, SQLITE_STATIC) != SQLITE_OK) {
+	if ( bind_string( stmt, 2, sName ) != SQLITE_OK) {
 		traceRetrieved = ERROR;
 		goto err;
 	}
@@ -736,12 +750,12 @@ recoverTraceData(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 		queryIndex = 0;
 		traceRetrieved = TRUE;
 
-		channel     = sqlite3_column_int(stmt,     queryIndex++);
+		channel = sqlite3_column_int(stmt, queryIndex++);
 		pGlobal->HP8753.channels[channel].sweepStart   = sqlite3_column_double(stmt,  queryIndex++);
 		pGlobal->HP8753.channels[channel].sweepStop    = sqlite3_column_double(stmt,  queryIndex++);
 		pGlobal->HP8753.channels[channel].IFbandwidth  = sqlite3_column_double(stmt,  queryIndex++);
 		pGlobal->HP8753.channels[channel].CWfrequency  = sqlite3_column_double(stmt,  queryIndex++);
-		pGlobal->HP8753.channels[channel].sweepType    = sqlite3_column_int(stmt,    queryIndex++);
+		pGlobal->HP8753.channels[channel].sweepType    = (tSweepType)sqlite3_column_int(stmt,    queryIndex++);
 
 		nPoints = sqlite3_column_int(stmt, queryIndex++);
 		// points
@@ -765,12 +779,12 @@ recoverTraceData(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 			pGlobal->HP8753.channels[channel].stimulusPoints = NULL;
 		}
 
-		pGlobal->HP8753.channels[channel].format = sqlite3_column_int(stmt, queryIndex++);
+		pGlobal->HP8753.channels[channel].format = (tFormat)sqlite3_column_int(stmt, queryIndex++);
 		pGlobal->HP8753.channels[channel].scaleVal = sqlite3_column_double(stmt, queryIndex++);
 		pGlobal->HP8753.channels[channel].scaleRefPos = sqlite3_column_double(stmt, queryIndex++);
 		pGlobal->HP8753.channels[channel].scaleRefVal = sqlite3_column_double(stmt, queryIndex++);
 
-		pGlobal->HP8753.channels[channel].measurementType = sqlite3_column_int(stmt, queryIndex++);
+		pGlobal->HP8753.channels[channel].measurementType = (tMeasurement)sqlite3_column_int(stmt, queryIndex++);
 
 		mkrSize = sqlite3_column_bytes(stmt, queryIndex);
 		markers = sqlite3_column_blob(stmt, queryIndex++);
@@ -781,7 +795,7 @@ recoverTraceData(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 
 		pGlobal->HP8753.channels[channel].activeMarker = sqlite3_column_int(stmt,queryIndex++);
 		pGlobal->HP8753.channels[channel].deltaMarker = sqlite3_column_int(stmt, queryIndex++);
-		pGlobal->HP8753.channels[channel].mkrType = sqlite3_column_int(stmt, queryIndex++);
+		pGlobal->HP8753.channels[channel].mkrType = (tMkrType)sqlite3_column_int(stmt, queryIndex++);
 
 		bandwidthSize = sqlite3_column_bytes(stmt, queryIndex);
 		bandwidth = sqlite3_column_blob(stmt, queryIndex++);
@@ -818,7 +832,7 @@ recoverTraceData(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 		}
 
 		perChannelFlags = sqlite3_column_int(stmt, queryIndex++);
-		memcpy(&pGlobal->HP8753.channels[channel].chFlags, &perChannelFlags, sizeof(guint32));
+		memcpy(&pGlobal->HP8753.channels[channel].chFlags, &perChannelFlags, sizeof( guint32 ));
 
 		if( channel == eCH_ONE ) {
 			generalFlags = sqlite3_column_int(stmt, queryIndex++);
@@ -873,19 +887,15 @@ deleteDBentry(tGlobal *pGlobal, gchar *sProject, gchar *sName, tDBtable whichTab
 		goto err;
 	}
 	if( whichTable == eDB_CALKIT ) {
-		if (sqlite3_bind_text(stmt, 1, sName, STRLENGTH,
-				SQLITE_STATIC) != SQLITE_OK)
+		if (bind_string( stmt, 1, sName ) != SQLITE_OK)
 			goto err;
 	} else {
 		// bind project
-		if( sProject == NULL )
-			sqlite3_bind_null(stmt, 1);
-		else
-			sqlite3_bind_text(stmt, 1, sProject, STRLENGTH, SQLITE_STATIC);
+	    bind_string( stmt, 1, sProject );
 		if( sqlite3_errcode( db ) != SQLITE_OK)
 			goto err;
 		// bind name
-		if (sqlite3_bind_text(stmt, 2, sName, STRLENGTH, SQLITE_STATIC) != SQLITE_OK) {
+		if ( bind_string( stmt, 2, sName ) != SQLITE_OK ) {
 			goto err;
 		}
 	}
@@ -965,17 +975,11 @@ saveCalibrationAndSetup(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 		queryIndex = 0;
 
 		// bind project
-		if( sProject == NULL ) {
-			if (sqlite3_bind_null(stmt, ++queryIndex) != SQLITE_OK) {
+		if ( bind_string(stmt, ++queryIndex, sProject ) != SQLITE_OK ) {
 				goto err;
-			}
-		} else {
-			if (sqlite3_bind_text(stmt, ++queryIndex, sProject, STRLENGTH, SQLITE_STATIC) != SQLITE_OK) {
-				goto err;
-			}
 		}
 		// bind name
-		if (sqlite3_bind_text(stmt, ++queryIndex, sName, STRLENGTH, SQLITE_STATIC) != SQLITE_OK) {
+		if ( bind_string( stmt, ++queryIndex, sName ) != SQLITE_OK ) {
 			goto err;
 		}
 		// channel
@@ -1057,7 +1061,7 @@ saveCalibrationAndSetup(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 	}
 	sqlite3_finalize(stmt);
 
-	tProjectAndName projectAndName = { sProject, sName, FALSE };
+	tProjectAndName projectAndName = { sProject, sName, {FALSE, FALSE} };
 	GList *calPreviewElement = g_list_find_custom( pGlobal->pCalList, &projectAndName, (GCompareFunc)compareCalItemsForFind );
 	if( calPreviewElement ) {
 		freeCalListItem( calPreviewElement->data );
@@ -1066,14 +1070,14 @@ saveCalibrationAndSetup(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 	// Mark all other Calibration profiles as unselected
     for( GList *l = pGlobal->pCalList; l != NULL; l = l->next ){
             tProjectAndName *pProjectAndName = &(((tHP8753cal *)l->data)->projectAndName);
-            pProjectAndName->bSelected = FALSE;
+            pProjectAndName->bbFlags.bSelected = FALSE;
     }
 
 	tHP8753cal *pCal = g_new0(tHP8753cal, 1);
 
 	pCal->projectAndName.sProject = g_strdup( sProject );
 	pCal->projectAndName.sName = g_strdup( sName );
-	pCal->projectAndName.bSelected = TRUE;
+	pCal->projectAndName.bbFlags.bSelected = TRUE;
 	pCal->sNote = g_strdup( pGlobal->HP8753cal.sNote );
 	for( eChannel channel = eCH_ONE; channel < eNUM_CH; channel++ ) {
 		pCal->perChannelCal[ channel ].sweepStart = pGlobal->HP8753cal.perChannelCal[ channel ].sweepStart;
@@ -1129,16 +1133,13 @@ recoverCalibrationAndSetup(tGlobal *pGlobal, gchar *sProject, gchar *sName) {
 	}
 
 	// bind project
-	if( sProject == NULL )
-		sqlite3_bind_null(stmt, 1);
-	else
-		sqlite3_bind_text(stmt, 1, sProject, STRLENGTH, SQLITE_STATIC);
+	bind_string( stmt, 1, sProject );
 	if( sqlite3_errcode( db ) != SQLITE_OK) {
 		calRetrieved = ERROR;
 		goto err;
 	}
 	// bind name
-	if (sqlite3_bind_text(stmt, 2, sName, STRLENGTH, SQLITE_STATIC) != SQLITE_OK) {
+	if ( bind_string(stmt, 2, sName ) != SQLITE_OK) {
 		calRetrieved = ERROR;
 		goto err;
 	}
@@ -1218,7 +1219,7 @@ gint
 saveProgramOptions(tGlobal *pGlobal) {
 
 	sqlite3_stmt *stmt = NULL;
-	gchar *zErrMsg = 0;
+	gchar *sSQLcommand;
 	union uOptions {
         struct stOptions {
             guint16 flagsL;
@@ -1253,7 +1254,8 @@ saveProgramOptions(tGlobal *pGlobal) {
 	// No longer using sGPIBcontrollerName
 	++queryIndex;
 	if( pGlobal->sGPIBdeviceName ) {
-		if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->sGPIBdeviceName, strlen(pGlobal->sGPIBdeviceName), SQLITE_STATIC) != SQLITE_OK)
+		if ( sqlite3_bind_text(stmt, ++queryIndex, pGlobal->sGPIBdeviceName,
+		        STRLENGTH, SQLITE_STATIC) != SQLITE_OK)
 			goto err;
 	} else {
 		++queryIndex;
@@ -1287,12 +1289,14 @@ saveProgramOptions(tGlobal *pGlobal) {
 		++queryIndex;
 	}
 	if( pGlobal->sLastDirectory ) {
-		if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->sLastDirectory, strlen( pGlobal->sLastDirectory ), SQLITE_STATIC) != SQLITE_OK)
+		if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->sLastDirectory,
+		        STRLENGTH, SQLITE_STATIC) != SQLITE_OK)
 			goto err;
 	} else {
 		++queryIndex;
 	}
-	// saveing the selected calibration and trace profles are deprecated. They are now determied by the selected project
+	// saving the selected calibration and trace profiles are deprecated.
+	// They are now determined by the selected project
     if (sqlite3_bind_null(stmt, ++queryIndex) ) {
         goto err;
     }
@@ -1301,7 +1305,8 @@ saveProgramOptions(tGlobal *pGlobal) {
     }
 
 	if( pGlobal->sProject ) {
-		if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->sProject, strlen( pGlobal->sProject ), SQLITE_STATIC) != SQLITE_OK)
+		if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->sProject,
+		        STRLENGTH, SQLITE_STATIC) != SQLITE_OK)
 			goto err;
 	} else {
 		++queryIndex;
@@ -1327,7 +1332,8 @@ saveProgramOptions(tGlobal *pGlobal) {
 		++queryIndex;
 	}
 	if( pGlobal->HP8753.sProduct ) {
-		if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->HP8753.sProduct, strlen( pGlobal->HP8753.sProduct ), SQLITE_STATIC) != SQLITE_OK)
+		if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->HP8753.sProduct,
+		        STRLENGTH, SQLITE_STATIC) != SQLITE_OK)
 			goto err;
 	} else {
 		++queryIndex;
@@ -1340,32 +1346,30 @@ saveProgramOptions(tGlobal *pGlobal) {
 	g_bytes_unref( byPrintSettings );
 	g_bytes_unref( byPage );
 
-	// first clear all selections of trace and calibration profiles from the tables
-	if ( sqlite3_exec(db,
-			"UPDATE HP8753C_CALIBRATION SET selected=0;"
-			"UPDATE HP8753C_TRACEDATA SET selected=0;"
-			, NULL, 0, &zErrMsg) != SQLITE_OK) {
-		postMessageToMainLoop(TM_ERROR, zErrMsg);
-		sqlite3_free(zErrMsg);
-		return ERROR;
-	}
 	// set the selected calibration and trace profiles for each project
 	for( GList *l = pGlobal->pCalList; l != NULL; l = l->next ){
 		tProjectAndName *pProjectAndName = &(((tHP8753cal *)l->data)->projectAndName);
-		if( pProjectAndName->bSelected ) {
-			if (sqlite3_prepare_v2(db,
-					"UPDATE HP8753C_CALIBRATION SET selected=1"
-					" WHERE project IS (?) AND name=(?);", -1, &stmt, NULL) != SQLITE_OK) {
+		// no need to update if we didn't change anything
+		if( pProjectAndName->bbFlags.bSelectedAtStart == pProjectAndName->bbFlags.bSelected )
+		    continue;
+
+        sSQLcommand = NULL;
+		if( pProjectAndName->bbFlags.bSelected ) {
+		    sSQLcommand = "UPDATE HP8753C_CALIBRATION SET selected=1"
+                    " WHERE project IS (?) AND name=(?);";
+		} else {
+            sSQLcommand = "UPDATE HP8753C_CALIBRATION SET selected=0"
+                    " WHERE project IS (?) AND name=(?);";
+		}
+        if( sSQLcommand != NULL) {
+			if (sqlite3_prepare_v2(db, sSQLcommand, -1, &stmt, NULL) != SQLITE_OK) {
 				postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
 				return ERROR;
 			}
 			queryIndex = 0;
 			// bind project
-			if( pProjectAndName->sProject == NULL )
-				sqlite3_bind_null(stmt, ++queryIndex);
-			else
-				sqlite3_bind_text(stmt, ++queryIndex, pProjectAndName->sProject, STRLENGTH, SQLITE_STATIC);
-			sqlite3_bind_text(stmt, ++queryIndex, pProjectAndName->sName, STRLENGTH, SQLITE_STATIC);
+			bind_string( stmt, ++queryIndex, pProjectAndName->sProject );
+			bind_string(stmt, ++queryIndex,  pProjectAndName->sName );
 
 			if (sqlite3_step(stmt) != SQLITE_DONE)
 				goto err;
@@ -1374,20 +1378,28 @@ saveProgramOptions(tGlobal *pGlobal) {
 	}
 	for( GList *l = pGlobal->pTraceList; l != NULL; l = l->next ){
 		tProjectAndName *pProjectAndName = &((tHP8753traceAbstract *)(l->data))->projectAndName;
-		if( pProjectAndName->bSelected ) {
-			if (sqlite3_prepare_v2(db,
-					"UPDATE HP8753C_TRACEDATA SET selected=1"
-					" WHERE project IS (?) AND name=(?);", -1, &stmt, NULL) != SQLITE_OK) {
+
+		// no need to update if we didn't change anything
+        if( pProjectAndName->bbFlags.bSelectedAtStart == pProjectAndName->bbFlags.bSelected )
+            continue;
+
+        sSQLcommand = NULL;
+        if( pProjectAndName->bbFlags.bSelected ) {
+            sSQLcommand = "UPDATE HP8753C_TRACEDATA SET selected=1"
+                    " WHERE project IS (?) AND name=(?);";
+        } else {
+            sSQLcommand = "UPDATE HP8753C_TRACEDATA SET selected=0"
+                    " WHERE project IS (?) AND name=(?);";
+        }
+        if( sSQLcommand != NULL) {
+			if (sqlite3_prepare_v2(db, sSQLcommand, -1, &stmt, NULL) != SQLITE_OK) {
 				postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
 				return ERROR;
 			}
 			queryIndex = 0;
 			// bind project
-			if( pProjectAndName->sProject == NULL )
-				sqlite3_bind_null(stmt, ++queryIndex);
-			else
-				sqlite3_bind_text(stmt, ++queryIndex, pProjectAndName->sProject, STRLENGTH, SQLITE_STATIC);
-			sqlite3_bind_text(stmt, ++queryIndex, pProjectAndName->sName, STRLENGTH, SQLITE_STATIC);
+			bind_string(stmt, ++queryIndex, pProjectAndName->sProject);
+			bind_string(stmt, ++queryIndex, pProjectAndName->sName );
 			if (sqlite3_step(stmt) != SQLITE_DONE)
 				goto err;
 			sqlite3_finalize(stmt);
@@ -1450,6 +1462,7 @@ recoverProgramOptions(tGlobal *pGlobal) {
 	gint queryIndex;
 	gint schemaVersion = 0;
 	gboolean bOptionsRecovered  = FALSE;
+
     union uOptions {
         struct stOptions {
             guint16 flagsL;
@@ -1581,8 +1594,7 @@ recoverProgramOptions(tGlobal *pGlobal) {
 			memcpy(&pGlobal->flags, &options.components.flagsL, sizeof( guint16 ) + sizeof( guint8 ));
 			// The top byte is the PDF paper size
 			pGlobal->PDFpaperSize = options.components.PDFpaperSize;
-			GtkComboBox     *wComboPDFpaperSize = GTK_COMBO_BOX ( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_CB_PDFpaperSize" ) );
-			gtk_combo_box_set_active( wComboPDFpaperSize, pGlobal->PDFpaperSize );
+			// set the PDF paper size radio box in the GUI Options notebook page
 
 			pGlobal->flags.bRunning = TRUE;
 			pGlobal->flags.bNoGPIBtimeout = bNoGPIBtimeout;
@@ -1593,14 +1605,8 @@ recoverProgramOptions(tGlobal *pGlobal) {
 
 			g_free( pGlobal->sGPIBdeviceName );
 			pGlobal->sGPIBdeviceName = g_strdup(  (gchar *)sqlite3_column_text(stmt, queryIndex++) );
-			gtk_entry_set_text( GTK_ENTRY(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Entry_GPIB_HP8753" )), pGlobal->sGPIBdeviceName);
-
 			pGlobal->GPIBcontrollerIndex = sqlite3_column_int(stmt, queryIndex++);
-			gtk_spin_button_set_value( GTK_SPIN_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Spin_GPIB_Controller_Card" )), pGlobal->GPIBcontrollerIndex);
-
 			pGlobal->GPIBdevicePID = sqlite3_column_int(stmt, queryIndex++);
-			gtk_spin_button_set_value( GTK_SPIN_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Spin_GPIB_HP8753_ID" )), pGlobal->GPIBdevicePID);
-
 
 			length = sqlite3_column_bytes(stmt, queryIndex);
 			if( length > 0 ) {
@@ -1658,28 +1664,6 @@ recoverProgramOptions(tGlobal *pGlobal) {
 		sqlite3_finalize(stmt);
 	}
 
-    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_UseGPIB_ID" )), pGlobal->flags.bGPIB_UseCardNoAndPID);
-    switch( pGlobal->flags.bbGPIBinterfaceType ) {
-    case eGPIB:
-    default:
-        gtk_button_clicked( GTK_BUTTON( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_RadioInterfaceGPIB")) );
-        break;
-    case eUSBTMC:
-        gtk_button_clicked( GTK_BUTTON( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_RadioInterfaceUSBTMC")) );
-        break;
-    case ePrologix:
-        gtk_button_clicked( GTK_BUTTON( g_hash_table_lookup(pGlobal->widgetHashTable, (gconstpointer )"WID_RadioInterfacePrologix")) );
-
-        break;
-    }
-    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_SmithSpline" )), pGlobal->flags.bSmithSpline);
-    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_ShowDateTime" )), pGlobal->flags.bShowDateTime);
-    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_SmithGBnotRX" )), pGlobal->flags.bAdmitanceSmith);
-    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_DeltaMarkerAbsolute" )), !pGlobal->flags.bDeltaMarkerZero);
-    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_UserCalKit" )), pGlobal->flags.bSaveUserKit);
-    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_DoNotRetrieveHPGL" )), pGlobal->flags.bDoNotRetrieveHPGLdata);
-    gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_ChkBtn_ShowHPlogo" )), pGlobal->flags.bHPlogo);
-
 	return bOptionsRecovered ? TRUE : FALSE;;
 }
 
@@ -1695,7 +1679,7 @@ recoverProgramOptions(tGlobal *pGlobal) {
 gint
 inventorySavedCalibrationKits(tGlobal *pGlobal) {
 
-	g_list_free_full ( g_steal_pointer (&pGlobal->pCalKitList), (GDestroyNotify)freeCalListItem );
+	g_list_free_full ( g_steal_pointer (&pGlobal->pCalKitList), (GDestroyNotify)freeCalKitIdentifierItem );
 	pGlobal->pCalKitList = NULL;
 
 	tCalibrationKitIdentifier *pCal;
@@ -1780,11 +1764,9 @@ saveCalKit(tGlobal *pGlobal) {
 		return ERROR;
 	}
 	queryIndex = 0;
-	if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->HP8753calibrationKit.label,
-			strlen( pGlobal->HP8753calibrationKit.label ), SQLITE_STATIC) != SQLITE_OK)
+	if ( bind_string( stmt, ++queryIndex, pGlobal->HP8753calibrationKit.label ) != SQLITE_OK )
 			goto err;
-	if (sqlite3_bind_text(stmt, ++queryIndex, pGlobal->HP8753calibrationKit.description,
-			strlen( pGlobal->HP8753calibrationKit.description ), SQLITE_STATIC) != SQLITE_OK)
+	if ( bind_string( stmt, ++queryIndex, pGlobal->HP8753calibrationKit.description ) != SQLITE_OK )
 			goto err;
 	if (sqlite3_bind_blob(stmt, ++queryIndex, &pGlobal->HP8753calibrationKit.calibrationStandards,
 			sizeof( tHP8753calibrationStandard) * MAX_CAL_STANDARDS, SQLITE_STATIC) != SQLITE_OK)
@@ -1844,7 +1826,7 @@ recoverCalibrationKit(tGlobal *pGlobal, gchar *sLabel) {
 		return ERROR;
 	} else {
 
-		sqlite3_bind_text(stmt, 1, sLabel, strlen(sLabel), SQLITE_STATIC);
+		bind_string(stmt, 1, sLabel );
 
 		while (sqlite3_step(stmt) == SQLITE_ROW) {
 			queryIndex = 0;
@@ -1881,7 +1863,7 @@ recoverCalibrationKit(tGlobal *pGlobal, gchar *sLabel) {
  * Rename database items
  *
  * \param pGlobal      pointer to tGlobal structure
- * \param target       enum indication if we are refering to the project, the calibration or the trace
+ * \param target       enum indication if we are referring to the project, the calibration or the trace
  * \param purpose      enum indication if we are renaming, moving or copying
  * \param sWhat        the project or name to move, copy or the project (if renaming calibration or trace)
  * \param sFrom        the source
@@ -1912,11 +1894,11 @@ renameMoveCopyDBitems(tGlobal *pGlobal, tRMCtarget target, tRMCpurpose purpose,
             postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
             goto err;
         }
-        if (sqlite3_bind_text(stmt, ++queryIndex, sTo, -1, SQLITE_STATIC) != SQLITE_OK)
+        if (bind_string(stmt, ++queryIndex, sTo ) != SQLITE_OK)
                 goto err;
-        if (sqlite3_bind_text(stmt, ++queryIndex, sFrom, -1, SQLITE_STATIC) != SQLITE_OK)
+        if (bind_string(stmt, ++queryIndex, sFrom ) != SQLITE_OK)
                 goto err;
-        if (sqlite3_bind_text(stmt, ++queryIndex, sWhat, -1, SQLITE_STATIC) != SQLITE_OK)
+        if (bind_string(stmt, ++queryIndex, sWhat ) != SQLITE_OK)
                 goto err;
         break;
     case eCopy:
@@ -1957,11 +1939,11 @@ renameMoveCopyDBitems(tGlobal *pGlobal, tRMCtarget target, tRMCpurpose purpose,
             postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
             goto err;
         }
-        if (sqlite3_bind_text(stmt, ++queryIndex, sTo, -1, SQLITE_STATIC) != SQLITE_OK)
+        if (bind_string(stmt, ++queryIndex, sTo ) != SQLITE_OK)
                 goto err;
-        if (sqlite3_bind_text(stmt, ++queryIndex, sFrom, -1, SQLITE_STATIC) != SQLITE_OK)
+        if (bind_string(stmt, ++queryIndex, sFrom ) != SQLITE_OK)
                 goto err;
-        if (sqlite3_bind_text(stmt, ++queryIndex, sWhat, -1, SQLITE_STATIC) != SQLITE_OK)
+        if (bind_string(stmt, ++queryIndex, sWhat ) != SQLITE_OK)
                 goto err;
         break;
     case eRename:
@@ -1973,9 +1955,9 @@ renameMoveCopyDBitems(tGlobal *pGlobal, tRMCtarget target, tRMCpurpose purpose,
                 postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
                 goto err;
             }
-            if (sqlite3_bind_text(stmt, ++queryIndex, sTo, -1, SQLITE_STATIC) != SQLITE_OK)
+            if (bind_string(stmt, ++queryIndex, sTo ) != SQLITE_OK)
                     goto err;
-            if (sqlite3_bind_text(stmt, ++queryIndex, sFrom, -1, SQLITE_STATIC) != SQLITE_OK)
+            if (bind_string(stmt, ++queryIndex, sFrom ) != SQLITE_OK)
                     goto err;
             if (sqlite3_step(stmt) != SQLITE_DONE) goto err;
             if (sqlite3_finalize(stmt) != SQLITE_OK) goto err;
@@ -1987,9 +1969,9 @@ renameMoveCopyDBitems(tGlobal *pGlobal, tRMCtarget target, tRMCpurpose purpose,
                 goto err;
             }
             queryIndex = 0;
-            if (sqlite3_bind_text(stmt, ++queryIndex, sTo, -1, SQLITE_STATIC) != SQLITE_OK)
+            if ( bind_string(stmt, ++queryIndex, sTo ) != SQLITE_OK )
                     goto err;
-            if (sqlite3_bind_text(stmt, ++queryIndex, sFrom, -1, SQLITE_STATIC) != SQLITE_OK)
+            if ( bind_string(stmt, ++queryIndex, sFrom ) != SQLITE_OK )
                     goto err;
             break;
         case eCalibrationName:
@@ -2000,11 +1982,11 @@ renameMoveCopyDBitems(tGlobal *pGlobal, tRMCtarget target, tRMCpurpose purpose,
                 postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
                 goto err;
             }
-            if (sqlite3_bind_text(stmt, ++queryIndex, sTo, -1, SQLITE_STATIC) != SQLITE_OK)
+            if (bind_string(stmt, ++queryIndex, sTo ) != SQLITE_OK)
                     goto err;
-            if (sqlite3_bind_text(stmt, ++queryIndex, sFrom, -1, SQLITE_STATIC) != SQLITE_OK)
+            if (bind_string(stmt, ++queryIndex, sFrom ) != SQLITE_OK)
                     goto err;
-            if (sqlite3_bind_text(stmt, ++queryIndex, sWhat, -1, SQLITE_STATIC) != SQLITE_OK)
+            if (bind_string(stmt, ++queryIndex, sWhat ) != SQLITE_OK)
                     goto err;
             break;
         case eTraceName:
@@ -2015,11 +1997,11 @@ renameMoveCopyDBitems(tGlobal *pGlobal, tRMCtarget target, tRMCpurpose purpose,
                 postMessageToMainLoop(TM_ERROR, (gchar*) sqlite3_errmsg(db));
                 goto err;
             }
-            if (sqlite3_bind_text(stmt, ++queryIndex, sTo, -1, SQLITE_STATIC) != SQLITE_OK)
+            if ( bind_string(stmt, ++queryIndex, sTo ) != SQLITE_OK)
                     goto err;
-            if (sqlite3_bind_text(stmt, ++queryIndex, sFrom, -1, SQLITE_STATIC) != SQLITE_OK)
+            if ( bind_string(stmt, ++queryIndex, sFrom ) != SQLITE_OK)
                     goto err;
-            if (sqlite3_bind_text(stmt, ++queryIndex, sWhat, -1, SQLITE_STATIC) != SQLITE_OK)
+            if ( bind_string(stmt, ++queryIndex, sWhat ) != SQLITE_OK)
                     goto err;
             break;
         }

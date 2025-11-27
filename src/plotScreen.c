@@ -1,19 +1,28 @@
 /*
- * HPGLplot.c
+ * Copyright (c) 2022-2026 Michael G. Katzmann
  *
- *  Created on: Nov 13, 2023
- *      Author: michael
- */
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
+
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
-
 #include <glib-2.0/glib.h>
 #include <errno.h>
-#include <hp8753.h>
 
+#include "hp8753.h"
 #include "messageEvent.h"
 
 #include "HPGLplot.h"
@@ -450,3 +459,51 @@ plotScreen (cairo_t *cr, guint areaHeight, guint areaWidth, tGlobal *pGlobal)
 	} cairo_restore( cr );
 	return TRUE;
 }
+
+
+/*!     \brief  Clear traces
+ *
+ * Clear data for traces
+ *
+ * \param pHP8753   pointer to tHP8753 structure holding the traces
+ */
+void
+clearHP8753traces( tHP8753 *pHP8753 ) {
+
+    for( eChannel channel=eCH_ONE; channel < eNUM_CH; channel++ ) {
+        pHP8753->channels[channel].sweepStart = kHz( 300.0 );
+        pHP8753->channels[channel].sweepStop = GHz( 3.0 );
+        pHP8753->channels[channel].IFbandwidth = kHz( 3.0 );
+        pHP8753->channels[channel].sweepType = eSWP_LINFREQ;
+        pHP8753->channels[channel].format = eFMT_LOGM;
+
+        pHP8753->channels[channel].chFlags.bSweepHold = FALSE;
+        pHP8753->channels[channel].chFlags.bValidData = FALSE;
+        pHP8753->channels[channel].chFlags.bbMkrs = 0;
+        pHP8753->channels[channel].chFlags.bMkrsDelta = FALSE;
+        pHP8753->channels[channel].chFlags.bCenterSpan = FALSE;
+        pHP8753->channels[channel].chFlags.bBandwidth = FALSE;
+        pHP8753->channels[channel].chFlags.bAllSegments = FALSE;
+        pHP8753->channels[channel].chFlags.bValidSegments = FALSE;
+        pHP8753->channels[channel].chFlags.bAdmitanceSmith = FALSE;
+        pHP8753->channels[channel].chFlags.bAveraging = FALSE;
+
+        g_free( pHP8753->channels[channel].responsePoints );
+        g_free( pHP8753->channels[channel].stimulusPoints );
+        pHP8753->channels[channel].responsePoints = NULL;
+        pHP8753->channels[channel].stimulusPoints = NULL;
+        pHP8753->channels[channel].nPoints = 0;
+        pHP8753->channels[channel].nSegments = 0;
+        for( gint seg=0; seg < MAX_SEGMENTS; seg++ ) {
+            pHP8753->channels[channel].segments[ seg ].nPoints = 0;
+            pHP8753->channels[channel].segments[ seg ].startFreq = 0.0;
+            pHP8753->channels[channel].segments[ seg ].stopFreq = 0.0;
+        }
+
+        pHP8753->channels[channel].chFlags.bValidData = FALSE;
+    }
+    pHP8753->channels[eCH_ONE].measurementType = eMEAS_S11;
+    pHP8753->channels[eCH_TWO].measurementType = eMEAS_S21;
+    pHP8753->flags.bHPGLdataValid = FALSE;
+}
+

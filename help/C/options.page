@@ -46,5 +46,19 @@
     <p>By default, both the trace data and an HPGL plot of the screen contents are retrieved from the HP8753 when the <key>Get Trace</key> button is pressed.</p>
     <p>If the HPGL plot is not needed, selecting this option will instruct the application not to request the HPGL screen plot. This will reduce the data transfer time as there is less traffic on the GPIB; however, the HPGL plot of the screen will not be avaiable for display and will not be saved with the trace.</p>
   </section>
-
+  <section id="HP_Logo">
+    <title>Show HP logo on plot</title>
+    <p>Display the HP logo at the top of the plot, as is done on the network analyzer display.</p>
+  </section>
+  <section id="Analyze">
+    <title>Analyze Learn String</title>
+    <p>The <em>HP8753 Companion</em> uses the GPIB commands defined by in the 8753 documentation to determine the state of the instrument.</p>
+    <p>In some cases, additional information is required wich can be obtained from the instrument's <em>Learn String</em>. The format of the <em>Learn String</em>
+       varies with instument model and firmware. A software routine attempts to analyze the learn string to determine where the required data is located.</p>
+       <p>This procedure is only required to be performed once (unless another variant of the 8753 is used)</p>
+  </section>
+  <section id="PDF_size">
+    <title>PDF & SVG page size</title>
+    <p>Select the size of the page to be generated for the PDF and SVG files.</p>
+  </section>
 </page>

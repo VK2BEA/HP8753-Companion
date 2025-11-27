@@ -12,13 +12,13 @@ else
 endif
 
 hp8753_CPPFLAGS = "-I$(top_srcdir)/include"
-hp8753_CPPFLAGS += @GLIB_CFLAGS@ @GTK3_CFLAGS@ @SQLITE3_CFLAGS@
+hp8753_CPPFLAGS += @GLIB_CFLAGS@ @GTK4_CFLAGS@ @SQLITE3_CFLAGS@
 
 hp8753_CFLAGS = $(AM_CFLAGS)
 hp8753_CXXFLAGS = $(AM_CXXFLAGS)
 
-hp8753_LDFLAGS = -lgpib -lm -lgs -laio -rdynamic
-hp8753_LDFLAGS += @GLIB_LIBS@ @GTK3_LIBS@ @SQLITE3_LIBS@
+hp8753_LDFLAGS = -lgpib -lm -lgs -rdynamic
+hp8753_LDFLAGS += @GLIB_LIBS@ @GTK4_LIBS@ @SQLITE3_LIBS@
 
 #
 # bin program
@@ -27,21 +27,16 @@ hp8753_LDFLAGS += @GLIB_LIBS@ @GTK3_LIBS@ @SQLITE3_LIBS@
 # Program name
 bin_PROGRAMS = hp8753
 
-hp8753_SOURCES = databaseSaveAndRestore.c  GTKplotMarkers.c \
-				 GTKwidgetCallbacks.c HP8753_S2P.c \
-                 HPicon.c noteCalKitWidgetCallbacks.c \
-                 noteOptionsWidgetCallbacks.c plotPolar.c \
-                 printWidgetCallbacks.c utility.c \
-                 GPIBcommsThread.c GTKrenameDialogWidgets.c \
-                 hp8753.c HP8753setupAndCal.c \
-                 HPlogo.c noteDataWidgets.c noteColor.c \
-                 parseCalibrationKit.c plotScreen.c \
-                 resource.c GTKplot.c \
-                 GTKutility.c HP8753comms.c \
-                 HP_FORM1toFORM3.c messageEvent.c \
-                 noteGPIBwidgetCallbacks.c plotCartesian.c \
-                 plotSmith.c smithHighResPDF.c \
-                 GPIB_interface.c USBTMC_interface.c Prologix_interface.c
+hp8753_SOURCES = catalogWidgets.c databaseSaveAndRestore.c GPIBcommsThread.c \
+		GPIBinterface.c GTKmainDialog.c GTKnoteCalibration.c \
+		GTKnoteCalKit.c GTKnoteColor.c GTKnoteData.c GTKnoteGPIB.c \
+		GTKnoteOptions.c GTKnoteTraces.c GTKplot.c GTKplotMarkers.c \
+                GTKprint.c GTKrenameDialog.c GTKutility.c hp8753.c \
+                hp8753comms.c hp8753-GTK4.c hp8753_S2P.c hp8753setupAndCal.c \
+                HP_FORM1toFORM3.c HPlogo.c messageEvent.c parseCalibrationKit.c \
+                PDF+PNG+SVG.c plotCartesian.c plotPolar.c plotScreen.c \
+                plotSmith.c Prologix_interface.c smithHighResPDF.c \
+                USBTMC_interface.c utility.c
 
 hp8753_SOURCES += $(top_srcdir)/include/GPIBcomms.h \
 				  $(top_srcdir)/include/hp8753comms.h \
@@ -50,5 +45,6 @@ hp8753_SOURCES += $(top_srcdir)/include/GPIBcomms.h \
 				  $(top_srcdir)/include/HPGLplot.h \
 				  $(top_srcdir)/include/messageEvent.h \
 				  $(top_srcdir)/include/smithChartPS.h \
-				  $(top_srcdir)/include/calibrationKit.h
+				  $(top_srcdir)/include/calibrationKit.h \
+				  $(top_srcdir)/include/widgetID.h
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Michael G. Katzmann
+ * Copyright (c) 2022-2026 Michael G. Katzmann
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,10 +27,11 @@
 
 #include <cairo/cairo.h>
 #include <glib-2.0/glib.h>
-#include <hp8753.h>
 #include <math.h>
 #include <sys/utsname.h>
 #include <errno.h>
+
+#include "hp8753.h"
 
 // This factor defines the "curviness". Play with it!
 #define CURVE_F 0.25
@@ -127,24 +128,24 @@ drawBezierSpline(cairo_t *ctx, const tComplex *pt, gint cnt)
 /*
 static tComplex
 pointInLine(tComplex A, tComplex B, gdouble T) {
-	tComplex C;
- 	 C.r = A.r - ((A.r - B.r) * T);
- 	 C.i = A.i - ((A.i - B.i) * T);
+    tComplex C;
+     C.r = A.r - ((A.r - B.r) * T);
+     C.i = A.i - ((A.i - B.i) * T);
  return C;
 }
 */
 static tComplex
 pointInLine(tLine line, gdouble frac) {
-	tComplex C;
- 	 C.r = line.A.r - ((line.A.r - line.B.r) * frac);
- 	 C.i = line.A.i - ((line.A.i - line.B.i) * frac);
+    tComplex C;
+     C.r = line.A.r - ((line.A.r - line.B.r) * frac);
+     C.i = line.A.i - ((line.A.i - line.B.i) * frac);
  return C;
 }
 
 // De Casteljau's algorithm
 tComplex
 bezierInterpolate(
-    tComplex pt0,  tComplex pt1, 
+    tComplex pt0,  tComplex pt1,
     tComplex ctl0, tComplex ctl1, gdouble fr ) {
 
     tComplex point1, point2, point3, point4, point5;
@@ -168,7 +169,7 @@ bezierInterpolate(
     line5.A = point2;
     line5.B = point3;
     point5 = pointInLine(line5, fr);
-    
+
     line6.A = point4;
     line6.B = point5;
     return pointInLine(line6, fr);
@@ -180,32 +181,32 @@ bezierInterpolate(
 gint
 splineInterpolate( gint npoints, tComplex curve[], gdouble samplePoint, tComplex *result ) {
 
-	tLine g, l;
-	tComplex c1, c2;
-	gdouble dummy;
+    tLine g, l;
+    tComplex c1, c2;
+    gdouble dummy;
 
-	// We first construct the cubic bezier curve for points around
-	// our sample point (we actually need two below and two above),
-	// then interpolate that curve for the value
+    // We first construct the cubic bezier curve for points around
+    // our sample point (we actually need two below and two above),
+    // then interpolate that curve for the value
 
-	// if insufficient number of points just do linear interpolation
+    // if insufficient number of points just do linear interpolation
     if( npoints < 4 ) {
     }
 
     // we find two points below and two points above sample
-	gint n = (gint) ceil( samplePoint );
+    gint n = (gint) ceil( samplePoint );
 
-	// if ceil is 0, then the sample must have been 0.0 (existing sample)
-	// sample should not have been less than 0 but if it is return something
-	// that won't break things
-	if( n <= 0 ) {
-		*result = curve[0];
-		return( TRUE );
-	} else if( n >= npoints) {
-		// this shouldn't happen
-		*result = curve[npoints-1];
-		return( FALSE );
-	}
+    // if ceil is 0, then the sample must have been 0.0 (existing sample)
+    // sample should not have been less than 0 but if it is return something
+    // that won't break things
+    if( n <= 0 ) {
+        *result = curve[0];
+        return( TRUE );
+    } else if( n >= npoints) {
+        // this shouldn't happen
+        *result = curve[npoints-1];
+        return( FALSE );
+    }
 
     g.A = curve[(n + npoints - 2) % npoints];
     g.B = curve[(n + npoints - 1) % npoints];
@@ -216,9 +217,9 @@ splineInterpolate( gint npoints, tComplex curve[], gdouble samplePoint, tComplex
     bezierControlPoints(&g, &l, &c1, &c2);
     // Fix control points at the curve ends because points are not connected in a loop
     if (n == 1)
-    	c1 = g.B;
+        c1 = g.B;
     if (n == npoints - 1)
-    	c2 = l.A;
+        c2 = l.A;
 
     // now interpolate the bspline to find the point corresponding to sample
     *result = bezierInterpolate( curve[n-1], curve[n], c1, c2, modf( samplePoint, &dummy ) );
@@ -256,60 +257,6 @@ tColor hsv2rgb(tColor HSV)
     return RGB;
 }
 
-gint
-getTimeStamp( gchar **psDateTime ) {
-	g_free( *psDateTime );
-	GDateTime *dt = g_date_time_new_now_local();
-	*psDateTime = g_date_time_format(dt, "%e %b %Y %H:%M:%S");
-	g_date_time_unref(dt);
-
-	return 0;
-}
-
-gchar *
-doubleToStringWithSpaces( gdouble value, gchar *sUnits ) {
-	GString *strFreq = g_string_new(NULL);
-	gint iDB, afterDP, beforeDP;
-	g_string_printf ( strFreq, "%.6f", value );
-	iDB = strFreq->len - (6 + 1);	// this must be where the DP is initially
-	beforeDP = iDB;
-	afterDP = strFreq->len - (iDB + 1);
-	for( int i = iDB+1+3; afterDP > 3; afterDP -= 3, i += 4 ) {
-		g_string_insert_c( strFreq, i, ' ' );
-	}
-	for( int i = iDB-3; beforeDP > 3; beforeDP -= 3, i -= 3 ) {
-		g_string_insert_c( strFreq, i, ' ' );
-	}
-	if( sUnits ) {
-		g_string_append_c( strFreq, ' ' );
-		g_string_append( strFreq, sUnits );
-	}
-	return( g_string_free( strFreq, FALSE ));
-}
-
-/*! \brief Log version to journal
- *
- */
-
-void
-logVersion(void) {
-
-    struct utsname UTSbuffer;
-
-    errno = 0;
-    if ( uname(&UTSbuffer) != 0) {
-    	LOG( G_LOG_LEVEL_CRITICAL, "%s", strerror (errno) );
-        return;
-    }
-    LOG( G_LOG_LEVEL_INFO, "%s %s %s %s %s",
-            UTSbuffer.sysname, UTSbuffer.nodename,
-            UTSbuffer.release, UTSbuffer.version,
-            UTSbuffer.machine);
-    LOG( G_LOG_LEVEL_INFO, "HP8753 Companion version: %s", VERSION );
-
-    return;
-}
-
 
 tHP8753traceAbstract *
 selectFirstTraceProfileInProject( tGlobal *pGlobal ) {
@@ -320,9 +267,9 @@ selectFirstTraceProfileInProject( tGlobal *pGlobal ) {
         if( g_strcmp0( pTraceAbstract->projectAndName.sProject, pGlobal->sProject )  == 0 ) {
             if( firstTraceProfile == NULL ) {
                 firstTraceProfile = pTraceAbstract;
-                pTraceAbstract->projectAndName.bSelected = TRUE;
+                pTraceAbstract->projectAndName.bbFlags.bSelected = TRUE;
             } else {
-                pTraceAbstract->projectAndName.bSelected = FALSE;
+                pTraceAbstract->projectAndName.bbFlags.bSelected = FALSE;
             }
         }
     }
@@ -338,9 +285,9 @@ selectFirstCalibrationProfileInProject( tGlobal *pGlobal ) {
         if( g_strcmp0( pCalibration->projectAndName.sProject, pGlobal->sProject )  == 0 ) {
             if( firstCalProfile == NULL ) {
                 firstCalProfile = pCalibration;
-                pCalibration->projectAndName.bSelected = TRUE;
+                pCalibration->projectAndName.bbFlags.bSelected = TRUE;
             } else {
-                pCalibration->projectAndName.bSelected = FALSE;
+                pCalibration->projectAndName.bbFlags.bSelected = FALSE;
             }
         }
     }
@@ -356,14 +303,14 @@ selectCalibrationProfile( tGlobal *pGlobal, gchar *sProject, gchar *sName ) {
     for( GList *l = pGlobal->pCalList; l != NULL; l = l->next ) {
         tHP8753cal *pCalibration = (tHP8753cal *)(l->data);
         if( g_strcmp0( pCalibration->projectAndName.sProject, sProject )  == 0 )
-            pCalibration->projectAndName.bSelected = FALSE;
+            pCalibration->projectAndName.bbFlags.bSelected = FALSE;
     }
 
     pSelectedCalibrationProfile =
             g_list_find_custom( pGlobal->pCalList, &projectAndName, (GCompareFunc)compareCalItemsForFind )->data;
 
     if( pSelectedCalibrationProfile != NULL )
-        pSelectedCalibrationProfile->projectAndName.bSelected = TRUE;
+        pSelectedCalibrationProfile->projectAndName.bbFlags.bSelected = TRUE;
     return pSelectedCalibrationProfile;
 }
 
@@ -376,20 +323,20 @@ selectTraceProfile( tGlobal *pGlobal, gchar *sProject, gchar *sName ) {
     for( GList *l = pGlobal->pTraceList; l != NULL; l = l->next ) {
         tHP8753traceAbstract *pTraceAbstract = (tHP8753traceAbstract *)(l->data);
         if( g_strcmp0( pTraceAbstract->projectAndName.sProject, sProject )  == 0 )
-            pTraceAbstract->projectAndName.bSelected = FALSE;
+            pTraceAbstract->projectAndName.bbFlags.bSelected = FALSE;
     }
 
     pSelectedTraceProfile =
             g_list_find_custom( pGlobal->pTraceList, &projectAndName, (GCompareFunc)compareTraceItemsForFind )->data;
 
     if( pSelectedTraceProfile != NULL )
-        pSelectedTraceProfile->projectAndName.bSelected = TRUE;
+        pSelectedTraceProfile->projectAndName.bbFlags.bSelected = TRUE;
     return pSelectedTraceProfile;
 }
 
 tHP8753cal *
 cloneCalibrationProfile( tHP8753cal *pOrigCal, gchar *newProject ) {
-    tHP8753cal *pNewCal = g_new0(tHP8753cal, 1);
+    tHP8753cal *pNewCal = g_new0( tHP8753cal, 1 );
     memcpy( pNewCal, pOrigCal, sizeof( tHP8753cal ));
     for( int i=0; i < MAX_CAL_ARRAYS; i++ ) {
         pNewCal->perChannelCal[ eCH_ONE ].pCalArrays[i] = NULL;
@@ -405,7 +352,7 @@ cloneCalibrationProfile( tHP8753cal *pOrigCal, gchar *newProject ) {
 
 tHP8753traceAbstract *
 cloneTraceProfileAbstract( tHP8753traceAbstract *pOrigTraceAbstract, gchar *newProject ) {
-    tHP8753traceAbstract *pNewTraceAbstract = g_new0(tHP8753traceAbstract, 1);
+    tHP8753traceAbstract *pNewTraceAbstract = g_new0( tHP8753traceAbstract, 1 );
 
     pNewTraceAbstract->projectAndName.sProject = g_strdup(newProject);
     pNewTraceAbstract->projectAndName.sName = g_strdup(pOrigTraceAbstract->projectAndName.sName);
@@ -415,3 +362,184 @@ cloneTraceProfileAbstract( tHP8753traceAbstract *pOrigTraceAbstract, gchar *newP
 
     return pNewTraceAbstract;
 }
+
+/*! \brief Log version to journal
+ *
+ */
+
+void
+logVersion (void) {
+
+    struct utsname UTSbuffer;
+
+    errno = 0;
+    if (uname (&UTSbuffer) != 0) {
+        LOG(G_LOG_LEVEL_CRITICAL, "%s", strerror (errno));
+        return;
+    }
+    LOG(G_LOG_LEVEL_INFO, "%s %s %s %s %s", UTSbuffer.sysname, UTSbuffer.nodename, UTSbuffer.release, UTSbuffer.version,
+        UTSbuffer.machine);
+    LOG(G_LOG_LEVEL_INFO, "HP8970 version: %s", VERSION);
+
+    return;
+}
+
+/*!     \brief  Generate a timestamp string
+ *
+ *  Generate a timestamp string
+ *
+ * \param  psDateTime  pointer to where the string is to be stored
+ * \return             0
+ */
+gint
+getTimeStamp( gchar **psDateTime ) {
+        g_free( *psDateTime );
+        GDateTime *dt = g_date_time_new_now_local();
+        *psDateTime = g_date_time_format(dt, "%e %b %Y %H:%M:%S");
+        g_date_time_unref(dt);
+
+        return 0;
+}
+
+/*!     \brief  Create a string from a double with spaces (like 300 000 MHz)
+ *
+ *  Create a string from a double with spaces (like 300 000 MHz)
+ *
+ * \param value    double value
+ * \param units     pointer to units string (e,.g. "MHz")
+ * \return          allocated string
+ */
+gchar *
+doubleToStringWithSpaces( gdouble value, gchar *sUnits ) {
+        GString *strFreq = g_string_new(NULL);
+        gint iDB, afterDP, beforeDP;
+        g_string_printf ( strFreq, "%.6f", value );
+        iDB = strFreq->len - (6 + 1);   // this must be where the DP is initially
+        beforeDP = iDB;
+        afterDP = strFreq->len - (iDB + 1);
+        for( int i = iDB+1+3; afterDP > 3; afterDP -= 3, i += 4 ) {
+                g_string_insert_c( strFreq, i, ' ' );
+        }
+        for( int i = iDB-3; beforeDP > 3; beforeDP -= 3, i -= 3 ) {
+                g_string_insert_c( strFreq, i, ' ' );
+        }
+        if( sUnits ) {
+                g_string_append_c( strFreq, ' ' );
+                g_string_append( strFreq, sUnits );
+        }
+        return( g_string_free( strFreq, FALSE ));
+}
+
+
+/*!     \brief  Check to see if all cal and trace items have been deleted from a project
+ *
+ * Check to see if all cal and trace items have been deleted from a project
+ *
+ * \param   pGlobal pointer to global data
+ * \param   project name
+ * \return  true if empty
+ */
+gboolean
+isProjectEmpty( tGlobal *pGlobal, gchar *sProject ) {
+    gboolean bEmpty = TRUE;
+    GList *l;
+    tProjectAndName *pProjectAndName;
+
+    for( l = pGlobal->pCalList; l != NULL && bEmpty; l = l->next ){
+        pProjectAndName = &(((tHP8753cal *)l->data)->projectAndName);
+        if( g_strcmp0(  pProjectAndName->sProject, sProject ) == 0 )
+            bEmpty = FALSE;
+    }
+
+    for( l = pGlobal->pTraceList; l != NULL && bEmpty; l = l->next ){
+        pProjectAndName = &(((tHP8753traceAbstract *)l->data)->projectAndName);
+        if( g_strcmp0(  pProjectAndName->sProject, sProject ) == 0 )
+            bEmpty = FALSE;
+    }
+
+    return bEmpty;
+}
+
+/*!     \brief  handler for the 1 second timer tick
+ *
+ * Check to see if all cal and trace items have been deleted from a project
+ *
+ * \param   pGlobal pointer to global data
+ * \return  true
+ */
+gboolean timer_handler(tGlobal *pGlobal)
+{
+    GDateTime *date_time;
+    gchar *dt_format;
+
+    date_time = g_date_time_new_now_local();                           // get local time
+    dt_format = g_date_time_format(date_time, "%d %b %y %H:%M:%S");    // 24hr time format
+    gtk_label_set_text( GTK_LABEL( pGlobal->widgets[ eW_lbl_Status] ), dt_format);    // update label
+    g_free (dt_format);
+
+    return TRUE;
+}
+
+/*!     \brief  Display the splash screen
+ *
+ * Show the splash screen
+ *
+ * \ingroup initialize
+ *
+ * \param  pGlobal : Pointer to global data
+ * \return once only
+ */
+gint
+splashCreate (tGlobal *pGlobal)
+{
+    gchar *sVersion;
+    static gboolean bFirst = TRUE;
+
+    if( pGlobal->widgets[ eW_Splash ] ) {
+        if( bFirst ) {
+            gtk_window_set_auto_startup_notification( FALSE );
+            // This is a kludge because of Wayland not showing the application window immediately
+            // therefore if we show the splash screen it is half off the screen.
+            // Come back here after a delay, so that we can be assured that the splash screen is
+            // shown in relation to the application window.
+            bFirst = FALSE;
+            g_timeout_add( 50, (GSourceFunc)splashCreate, pGlobal );
+        } else {
+            sVersion = g_strdup_printf( "Version %s\t(🔨 %s)", VERSION, __DATE__ ); // Changelog date is used in RPM
+            gtk_label_set_label( GTK_LABEL( pGlobal->widgets[ eW_lbl_Version ] ), sVersion );
+            g_free( sVersion );
+            // this is needed for Wayland to get rid of the warning notice about transient window not attached
+            // to parent. It is now set in the Cambalache setup (.ui file).
+            // gtk_window_set_transient_for( GTK_WINDOW( wSplash ), GTK_WINDOW( wApplicationWidget ));
+            // gtk_window_set_position(GTK_WINDOW(wSplash), GTK_WIN_POS_CENTER_ALWAYS);
+            gtk_window_present( GTK_WINDOW( pGlobal->widgets[ eW_Splash ] ) ); // make sure we are on top
+            // after 5 seconds ... destroy
+            g_timeout_add( 5000, (GSourceFunc)splashDestroy, pGlobal );
+        }
+    }
+    return G_SOURCE_REMOVE;
+}
+
+
+/*!     \brief  Destroy the splash screen
+ *
+ * After a few seconds destroy the splash screen
+ *
+ * \ingroup initialize
+ *
+ * \param  Splash : Pointer to Splash widget to destroy
+ * \return once only
+ */
+gint
+splashDestroy (tGlobal *pGlobal)
+{
+    GtkWidget *wSplash = GTK_WIDGET( pGlobal->widgets[ eW_Splash ] );
+    if( GTK_IS_WIDGET( wSplash ) ) {
+        gtk_window_destroy( GTK_WINDOW( wSplash ) );
+    }
+    gtk_window_set_auto_startup_notification( TRUE );
+    return G_SOURCE_REMOVE;
+}
+
+
+

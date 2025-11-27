@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Michael G. Katzmann
+ * Copyright (c) 2022-2026 Michael G. Katzmann
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,12 +28,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <cairo/cairo.h>
 #include <glib-2.0/glib.h>
-#include <hp8753.h>
-#include <GTKplot.h>
 #include <math.h>
+
+#include "hp8753.h"
+#include "GTKplot.h"
 
 const	gchar *formatSymbols[] = { "dB", "°", "s", "U", "U", "U", "U", "", "U", "U" };
 const	gchar *formatSmithOrPolarSymbols[][2] = { {"U", "°"}, {"dB", "°"}, {"U", "U"}, {"Ω", "Ω"}, {"S", "S"} };
@@ -981,26 +981,27 @@ gboolean plotA (guint areaWidth, guint areaHeight, gdouble margin, cairo_t *cr, 
     return FALSE;
 }
 
-/*!     \brief  Signal received to draw the first drawing area
+/*!     \brief  Signal received to draw the drawing area
  *
  * Draw the plot for area A
  *
- * \param widget	pointer to GtkDrawingArea widget
- * \param cr		pointer to cairo structure
- * \param pGlobal	pointer to the global data structure
- * \return			FALSE
+ * \param widget        pointer to GtkDrawingArea widget
+ * \param cr            pointer to cairo structure
+ * \param areaWidth     width
+ * \param areaHeight    height
+ * \param udata         unused
  */
-gboolean CB_DrawingArea_A_Draw (GtkWidget *widget, cairo_t *cr, tGlobal *pGlobal)
+void
+CB_drawingArea_A_Draw ( GtkDrawingArea *widget, cairo_t *cr,
+                gint areaWidth, gint areaHeight, gpointer udata )
 {
-
-	guint areaWidth   = gtk_widget_get_allocated_width (widget);
-    guint areaHeight  = gtk_widget_get_allocated_height (widget);
+    tGlobal *pGlobal = (tGlobal *)g_object_get_data(G_OBJECT( widget ), "data");
 
     // clear the screen
 	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0 );
 	cairo_paint( cr );
 
-    return plotA ( areaWidth,  areaHeight, 0, cr, pGlobal);
+    plotA ( areaWidth,  areaHeight, 0, cr, pGlobal);
 }
 
 /*!     \brief  Plot the second channel
@@ -1062,105 +1063,62 @@ gboolean plotB (guint areaWidth, guint areaHeight, gdouble margin, cairo_t *cr, 
     return FALSE;
 }
 
-/*!     \brief  Signal received to draw the first drawing area
+/*!     \brief  Signal received to draw the drawing area
  *
  * Draw the plot for area B
  *
- * \param widget	pointer to GtkDrawingArea widget
- * \param cr		pointer to cairo structure
- * \param pGlobal	pointer to the global data structure
- * \return			FALSE
+ * \param widget        pointer to GtkDrawingArea widget
+ * \param cr            pointer to cairo structure
+ * \param areaWidth     width
+ * \param areaHeight    height
+ * \param udata         unused
  */
-gboolean
-CB_DrawingArea_B_Draw (GtkWidget *widget, cairo_t *cr, tGlobal *pGlobal)
+void
+CB_drawingArea_B_Draw ( GtkDrawingArea *widget, cairo_t *cr,
+                gint areaWidth, gint areaHeight, gpointer udata )
 {
-	// get with and height in points (1/72")
-	guint areaWidth   = gtk_widget_get_allocated_width  (widget);
-    guint areaHeight  = gtk_widget_get_allocated_height (widget);
+    tGlobal *pGlobal = (tGlobal *)g_object_get_data(G_OBJECT( widget ), "data");
 
     // clear the screen
 	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0 );
 	cairo_paint( cr );
 
-    return plotB ( areaWidth,  areaHeight, 0.0, cr, pGlobal);
+    plotB ( areaWidth,  areaHeight, 0.0, cr, pGlobal);
 }
 
-/*!     \brief  Act on mouse movement, enty or exit into the drawing area
+/*!     \brief  Show or hide plot b
  *
- * Show dynamic marker based on mouse position in the plot area
+ * Show or hide plot b and shrink wrap around the drawing widgets
  *
- * \param widget	pointer to GtkDrawingArea widget
- * \param event		pointer to GdkEvent for the mouse
- * \param pGlobal	pointer to the global data structure
- * \return			FALSE
+ * \param wDrawingAreaA GtkDrawingArea widget pointer
+ * \param pGlobal  pointer to global data
+ * \param bVisible make or hide plot b
  */
-gboolean CB_DrawingArea_A_MouseAction(GtkWidget *widget, GdkEvent *event, tGlobal *pGlobal) {
-	GdkEventMotion* e;
-	GdkEventCrossing* ec;
+void
+visibilityFramePlot_B (tGlobal *pGlobal, gint visible)
+{
+#define YES_NO_MASK 0x01
+    GtkWidget *wFramePlotB = pGlobal->widgets[ eW_frame_Plot_B ];
+    gboolean bWasVisible = gtk_widget_get_visible( wFramePlotB );
 
-	for( gint channel=0; channel < MAX_CHANNELS; channel++ )
-		switch (event->type ) {
-		case GDK_ENTER_NOTIFY:
-			ec=(GdkEventCrossing*)event;
-			pGlobal->mousePosition[channel].r = ec->x;
-			pGlobal->mousePosition[channel].i = ec->y;
-			break;
-		case GDK_MOTION_NOTIFY:
-			e=(GdkEventMotion*)event;
-			pGlobal->mousePosition[channel].r = e->x;
-			pGlobal->mousePosition[channel].i = e->y;
-			break;
-		case GDK_LEAVE_NOTIFY:
-			pGlobal->mousePosition[channel].r = 0.0;
-			pGlobal->mousePosition[channel].i = 0.0;
-			break;
-		default:
-			break;
-		}
-
-	gtk_widget_queue_draw( widget );
-	gtk_widget_queue_draw( GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DrawingArea_Plot_B") ));
-	return FALSE;
-
+    // We shrink wrap the app around the drawing areas but we have to go through
+    // a complicated calculation to avoid the app shrinking to it's minimum
+    // Also handle the case when going from a single to dual plots that will be
+    // larger than the screen
+    if( !(visible & YES_NO_MASK)) {   // hiding plot B
+        gtk_widget_set_visible( wFramePlotB, FALSE );
+    } else {            // showing plot B
+        gtk_widget_set_visible( wFramePlotB, TRUE );
+    }
+#if 1
+    /// try to shrink wrap
+    if( bWasVisible != gtk_widget_get_visible( wFramePlotB ) )
+        gtk_window_set_default_size ( GTK_WINDOW( pGlobal->widgets[ eW_hp8753_main ] ), -1, -1 );
+#endif
+    // make sure the resize happens ASAP
+     while (g_main_context_pending ( NULL ))
+         g_main_context_iteration (NULL, TRUE);
 }
 
-/*!     \brief  Act on mouse movement, enty or exit into the drawing area
- *
- * Show dynamic marker based on mouse position in the plot area
- *
- * \param widget	pointer to GtkDrawingArea widget
- * \param event		pointer to GdkEvent for the mouse
- * \param pGlobal	pointer to the global data structure
- * \return			FALSE
- */
-gboolean
-CB_DrawingArea_B_MouseAction(GtkWidget *widget,  GdkEvent *event, tGlobal *pGlobal) {
-	GdkEventMotion* e;
-	GdkEventCrossing* ec;
 
-	for( eChannel channel=eCH_ONE; channel < eNUM_CH; channel++ )
-		switch (event->type ) {
-		case GDK_ENTER_NOTIFY:
-			ec=(GdkEventCrossing*)event;
-			pGlobal->mousePosition[channel].r = ec->x;
-			pGlobal->mousePosition[channel].i = ec->y;
-			break;
-		case GDK_MOTION_NOTIFY:
-			e=(GdkEventMotion*)event;
-			pGlobal->mousePosition[channel].r = e->x;
-			pGlobal->mousePosition[channel].i = e->y;
-			break;
-		case GDK_LEAVE_NOTIFY:
-			pGlobal->mousePosition[channel].r = 0.0;
-			pGlobal->mousePosition[channel].i = 0.0;
-			break;
-		default:
-			break;
-		}
-
-	gtk_widget_queue_draw( widget );
-	gtk_widget_queue_draw( GTK_WIDGET(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DrawingArea_Plot_A") ));
-	return FALSE;
-
-}
 

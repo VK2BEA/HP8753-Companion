@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Michael G. Katzmann
+ * Copyright (c) 2022-2026 Michael G. Katzmann
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <glib-2.0/glib.h>
+
 #include "hp8753.h"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 /*!     \brief  Sensitise the OK button if data validated
  *
@@ -33,10 +36,9 @@
  */
 void
 SensitizeDR_OKbtn( tGlobal *pGlobal ) {
-    GtkWidget *wOK = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_BtnOK");
-    const gchar *sTargetName = gtk_entry_buffer_get_text( gtk_entry_get_buffer(
-            GTK_ENTRY(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_Entry_To"))) );
-    GtkWidget *wDRprojectCombo = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_ComboProject" );
+    GtkWidget *wOK = pGlobal->widgets[ eW_DR_btn_OK ];
+    const gchar *sTargetName = gtk_entry_buffer_get_text( gtk_entry_get_buffer( GTK_ENTRY( pGlobal->widgets[ eW_DR_entry_To] )) );
+    GtkWidget *wDRprojectCombo = pGlobal->widgets[ eW_DR_cbt_Project ];
 
     gchar *sTargetProject = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(wDRprojectCombo));
     gchar *sTargetNameSanitized = g_strchomp(g_strdup( sTargetName ));
@@ -107,11 +109,12 @@ SensitizeDR_OKbtn( tGlobal *pGlobal ) {
  * \ingroup Rename dialog widget callback
  *
  * \param wEditable     GtkEditable widget from the GtkEdit widget
- * \param pGlobal       pointer to global data
+ * \param udata         unused
  */
 void
-CB_DR_ToNameChanged (GtkEditable* wEditable, tGlobal *pGlobal)
+CB_DR_ToNameChanged (GtkEditable* wEditable, gpointer udata)
 {
+    tGlobal *pGlobal = (tGlobal *)g_object_get_data(G_OBJECT(gtk_widget_get_root(GTK_WIDGET(wEditable))), "data");
     SensitizeDR_OKbtn( pGlobal );
 }
 
@@ -148,18 +151,21 @@ keepProjectListUpdated( const gchar *possiblyNewProject, tGlobal *pGlobal ) {
  *
  * \param wDialog       pointer to the rename/move/copy dialog widget
  * \param response      code returned from the OK or Cancel buttons
- * \param pGlobal       pointer to global data
+ * \param udata         unused
  */
 void
-CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
-    GtkEntry *wEntryTo = GTK_ENTRY(
-            g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_Entry_To" ));
-    GtkComboBoxText *wDRprojectCombo = GTK_COMBO_BOX_TEXT(
-            g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_ComboProject" ));
+CB_DR_RenameResponse( GtkDialog *wDialog, gint response, gpointer udata )
+{
+    tGlobal *pGlobal = (tGlobal *)g_object_get_data(G_OBJECT( wDialog ), "data");
+
+    GtkEntry *wEntryTo = GTK_ENTRY( pGlobal->widgets[ eW_DR_entry_To ] );
+    GtkEntryBuffer *wEntryBuffer = gtk_entry_get_buffer( wEntryTo );
+    GtkComboBoxText *wDRprojectCombo = GTK_COMBO_BOX_TEXT( pGlobal->widgets[ eW_DR_cbt_Project ] );
+
     GtkComboBoxText *wComboBox;
 
-    const gchar *sTo = gtk_entry_get_text( wEntryTo );
-    gchar *sProjectTo = gtk_combo_box_text_get_active_text(wDRprojectCombo);
+    const gchar *sTo = gtk_entry_buffer_get_text( wEntryBuffer );
+    gchar *sProjectTo = gtk_combo_box_text_get_active_text( wDRprojectCombo );
     gchar *sFrom = 0;
     GList *l;
 
@@ -205,18 +211,17 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
 
             populateProjectComboBoxWidget( pGlobal );
             // Block signals while we populate the entry widget programatically
-            wComboBox = GTK_COMBO_BOX_TEXT(
-                        g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_Project") );
-            g_signal_handlers_block_by_func(G_OBJECT(wComboBox), CB_EditableProjectName, pGlobal);
-            gtk_entry_set_text( GTK_ENTRY( gtk_bin_get_child( GTK_BIN(wComboBox) )), sTo);
-            g_signal_handlers_unblock_by_func(G_OBJECT(wComboBox), CB_EditableProjectName, pGlobal);
+            wComboBox = GTK_COMBO_BOX_TEXT( pGlobal->widgets[ eW_cbt_Project ] );
+            g_signal_handlers_block_by_func(G_OBJECT(wComboBox), CB_editable_ProjectName, NULL);
+            gtk_entry_buffer_set_text( gtk_entry_get_buffer(
+                    GTK_ENTRY( gtk_combo_box_get_child( GTK_COMBO_BOX( wComboBox ) ) ) ), sTo, -1 );
+            g_signal_handlers_unblock_by_func(G_OBJECT(wComboBox), CB_editable_ProjectName, NULL);
 
             // free the string memory that we took
             g_free( sFrom );
             break;
         case eCalibrationName:
-            wComboBox = GTK_COMBO_BOX_TEXT(
-                        g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_CalibrationProfile") );
+            wComboBox = GTK_COMBO_BOX_TEXT( pGlobal->widgets[ eW_cbt_CalProfile ] );
             switch ( pGlobal->RMCdialogPurpose ) {
             case eRename:
                 sFrom = pGlobal->pCalibrationAbstract->projectAndName.sName;
@@ -243,9 +248,10 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
                 populateCalComboBoxWidget( pGlobal );
                 // Block signals while we populate the entry widget programatically
 
-                g_signal_handlers_block_by_func(G_OBJECT(wComboBox), CB_EditableCalibrationProfileName, pGlobal);
-                gtk_entry_set_text( GTK_ENTRY( gtk_bin_get_child( GTK_BIN(wComboBox) )), sTo);
-                g_signal_handlers_unblock_by_func(G_OBJECT(wComboBox), CB_EditableCalibrationProfileName, pGlobal);
+                g_signal_handlers_block_by_func(G_OBJECT(wComboBox), CB_editable_CalibrationProfileName, NULL);
+                gtk_entry_buffer_set_text( gtk_entry_get_buffer(
+                        GTK_ENTRY( gtk_combo_box_get_child( GTK_COMBO_BOX( wComboBox ) ) ) ), sTo, -1 );
+                g_signal_handlers_unblock_by_func(G_OBJECT(wComboBox), CB_editable_CalibrationProfileName, NULL);
                 g_free( sFrom );
                 break;
             case eMove:
@@ -281,8 +287,8 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
             }
         break;
         case eTraceName:
-            wComboBox = GTK_COMBO_BOX_TEXT(
-                        g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_TraceProfile") );
+            wComboBox =  GTK_COMBO_BOX_TEXT( pGlobal->widgets[ eW_cbt_TraceProfile ] );
+
             switch ( pGlobal->RMCdialogPurpose ) {
             case eRename:
                 sFrom = pGlobal->pTraceAbstract->projectAndName.sName;
@@ -310,10 +316,11 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
                 // Update the widget
                 populateTraceComboBoxWidget( pGlobal );
 
-                // Block signals while we populate the entry widget programatically
-                g_signal_handlers_block_by_func(G_OBJECT(wComboBox), CB_EditableTraceProfileName, pGlobal);
-                gtk_entry_set_text( GTK_ENTRY( gtk_bin_get_child( GTK_BIN(wComboBox) )), sTo);
-                g_signal_handlers_unblock_by_func(G_OBJECT(wComboBox), CB_EditableTraceProfileName, pGlobal);
+                // Block signals while we populate the entry widget programmatically
+                g_signal_handlers_block_by_func(G_OBJECT(wComboBox), CB_editable_TraceProfileName, NULL);
+                gtk_entry_buffer_set_text( gtk_entry_get_buffer(
+                        GTK_ENTRY( gtk_combo_box_get_child( GTK_COMBO_BOX( wComboBox ) ) ) ), sTo, -1 );
+                g_signal_handlers_unblock_by_func(G_OBJECT(wComboBox), CB_editable_TraceProfileName, NULL);
                 g_free( sFrom );
                 break;
             case eMove:
@@ -363,6 +370,8 @@ CB_DR_RenameResponse( GtkDialog *wDialog, int response, tGlobal *pGlobal ) {
         break;
     }
     g_free( sProjectTo );
+
+    gtk_widget_hide (GTK_WIDGET( wDialog ));
 }
 
 
@@ -396,7 +405,7 @@ setFromLabel( tGlobal *pGlobal ) {
             sName = pGlobal->pTraceAbstract->projectAndName.sName;
         sFrom = " from";   // add leading space to separate name
     }
-    GtkWidget *wLblFrom = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_Lbl_From" );
+    GtkWidget *wLblFrom = pGlobal->widgets[ eW_DR_lbl_From ];
     sName = g_markup_escape_text( sName, -1 );  // this allocates a string that must be freed
     gchar *sFromLabel = g_strdup_printf( "%s %s <span style='italic' weight='bold'>%s</span>%s",
             sPurpose[pGlobal->RMCdialogPurpose], sTarget[pGlobal->RMCdialogTarget], sName, sFrom );
@@ -416,7 +425,7 @@ setFromLabel( tGlobal *pGlobal ) {
  */
 static void
 setFromName( tGlobal *pGlobal ) {
-    GtkWidget *wEntryFrom = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_Edit_From" );
+    GtkWidget *wEntryFrom =  pGlobal->widgets[ eW_DR_entry_From ];
 
     gchar *sFromName = 0;
 
@@ -446,26 +455,27 @@ setFromName( tGlobal *pGlobal ) {
  * \ingroup Rename dialog widget callback
  *
  * \param purposeButton widget for button that has changed
- * \param pGlobal       pointer to global data
+ * \param whichRadio    which of the radio group are we
  */
 void
-CB_DR_RadioPurpose(GtkToggleButton *purposeButton, tGlobal *pGlobal) {
+CB_DR_radioPurpose( GtkCheckButton *purposeButton, gpointer which )
+{
 
     // rename, move, copy
+    tGlobal *pGlobal = (tGlobal *)g_object_get_data(G_OBJECT(gtk_widget_get_root(GTK_WIDGET( purposeButton ))), "data");
+    GtkWidget *wDRprojectCombo =  pGlobal->widgets[ eW_DR_cbt_Project ];
+    GtkWidget *wDRtoEdit = pGlobal->widgets[ eW_DR_entry_To ];
+    GtkWidget *wDRprojectToggleBtn = pGlobal->widgets[ eW_DR_rbtn_Project ];
+    GtkWidget *wDRcalToggleBtn = pGlobal->widgets[ eW_DR_rbtn_Calibration ];
+    GtkWidget *wDRtraceToggleBtn = pGlobal->widgets[ eW_DR_rbtn_Trace ];
 
-    GtkWidget *wDRprojectCombo = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_ComboProject" );
-    GtkWidget *wDRtoEdit = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_Entry_To" );
-    GtkWidget *wDRprojectToggleBtn = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_RadioProject" );
-    GtkWidget *wDRcalToggleBtn = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_RadioCal" );
-    GtkWidget *wDRtraceToggleBtn = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_RadioTrace" );
-
-    if ( ! gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (purposeButton)) )
+    if ( ! gtk_check_button_get_active (GTK_CHECK_BUTTON (purposeButton)) )
         return;
 
     // The radio buttons are 2 - rename, 1 - move, 0 - copy
     // we correct to save
-    pGlobal->RMCdialogPurpose = 2 - g_slist_index (gtk_radio_button_get_group (GTK_RADIO_BUTTON (purposeButton)),
-                                                (gconstpointer)purposeButton);
+    pGlobal->RMCdialogPurpose = (intptr_t) which;
+
     setFromLabel( pGlobal );
     setFromName( pGlobal );
     SensitizeDR_OKbtn( pGlobal );
@@ -481,11 +491,11 @@ CB_DR_RadioPurpose(GtkToggleButton *purposeButton, tGlobal *pGlobal) {
         // We cannot move or copy a project..
         // If we choose move or copy and project is also selected, change project to cal
         // unless it has been disabled because there are no entries
-        if ( gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( wDRprojectToggleBtn ) ) ) {
+        if ( gtk_check_button_get_active( GTK_CHECK_BUTTON( wDRprojectToggleBtn ) ) ) {
             if ( gtk_widget_get_sensitive( GTK_WIDGET( wDRcalToggleBtn ) ) )
-                gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( wDRcalToggleBtn ), TRUE );
+                gtk_check_button_set_active( GTK_CHECK_BUTTON( wDRcalToggleBtn ), TRUE );
             else
-                gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( wDRtraceToggleBtn ), TRUE );
+                gtk_check_button_set_active( GTK_CHECK_BUTTON( wDRtraceToggleBtn ), TRUE );
         }
         gtk_widget_set_sensitive( wDRprojectToggleBtn, FALSE );
         break;
@@ -508,13 +518,14 @@ CB_DR_RadioPurpose(GtkToggleButton *purposeButton, tGlobal *pGlobal) {
  * \param pGlobal       pointer to global data
  */
 void
-CB_DR_RadioTarget(GtkToggleButton *targetButton, tGlobal *pGlobal) {
+CB_DR_radioTarget( GtkCheckButton *targetButton, gpointer which )
+{
+    tGlobal *pGlobal = (tGlobal *)g_object_get_data(G_OBJECT(gtk_widget_get_root(GTK_WIDGET( targetButton ))), "data");
 
-    if ( ! gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (targetButton)) )
+    if ( ! gtk_check_button_get_active (GTK_CHECK_BUTTON (targetButton)) )
         return;
 
-    pGlobal->RMCdialogTarget = 2 - g_slist_index (gtk_radio_button_get_group (GTK_RADIO_BUTTON (targetButton)),
-                                        (gconstpointer)targetButton);
+    pGlobal->RMCdialogTarget = (intptr_t) which;
 
     setFromLabel( pGlobal );
     setFromName( pGlobal );
@@ -535,15 +546,13 @@ showRenameMoveCopyDialog( tGlobal *pGlobal ) {
     int i, currentProjectIndex=-1;
     GList *l;
 
-    GtkDialog *wDlgRename = GTK_DIALOG( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Dlg_Rename") );
-    GtkComboBox *wCalCombo = GTK_COMBO_BOX(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_CalibrationProfile"));
-
-    GtkComboBox *wTraceCombo = GTK_COMBO_BOX(g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_Combo_TraceProfile"));
-
-    GtkWidget *wDRmoveToggleBtn = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_RadioMove" );
-    GtkWidget *wDRcopyToggleBtn = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_RadioCopy" );
-    GtkWidget *wDRcalToggleBtn = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_RadioCal" );
-    GtkWidget *wDRtraceToggleBtn = g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_RadioTrace" );
+    GtkDialog *wDlgRename = pGlobal->widgets[ eW_dlg_Rename ];
+    GtkComboBox *wCalCombo = pGlobal->widgets[ eW_cbt_CalProfile ];
+    GtkComboBox *wTraceCombo = pGlobal->widgets[ eW_cbt_TraceProfile ];
+    GtkWidget *wDRmoveCheckBtn = pGlobal->widgets[ eW_DR_rbtn_Move ];
+    GtkWidget *wDRcopyCheckBtn = pGlobal->widgets[ eW_DR_rbtn_Copy];
+    GtkWidget *wDRcalCheckBtn = pGlobal->widgets[ eW_DR_rbtn_Calibration ];
+    GtkWidget *wDRtraceCheckBtn = pGlobal->widgets[ eW_DR_rbtn_Trace ];
 
     // Certain selections are disabled if there are no options (e.g. move cal profile if there are none)
 
@@ -552,19 +561,19 @@ showRenameMoveCopyDialog( tGlobal *pGlobal ) {
     // cal profiles then ther must be at least one trace profile
 
     if( gtk_combo_box_get_active( GTK_COMBO_BOX( wCalCombo ) ) == -1  ) {
-        gtk_widget_set_sensitive( wDRcalToggleBtn, FALSE );
-        if( gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( wDRcalToggleBtn ) ) )
-            gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( wDRtraceToggleBtn ), TRUE );
+        gtk_widget_set_sensitive( wDRcalCheckBtn, FALSE );
+        if( gtk_check_button_get_active( GTK_CHECK_BUTTON( wDRcalCheckBtn ) ) )
+            gtk_check_button_set_active( GTK_CHECK_BUTTON( wDRtraceCheckBtn ), TRUE );
     } else {
-        gtk_widget_set_sensitive( wDRcalToggleBtn, TRUE );
+        gtk_widget_set_sensitive( wDRcalCheckBtn, TRUE );
     }
 
     if( gtk_combo_box_get_active( GTK_COMBO_BOX( wTraceCombo ) ) == -1  ) {
-        gtk_widget_set_sensitive( wDRtraceToggleBtn, FALSE );
-        if( gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON( wDRtraceToggleBtn ) ) )
-            gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON( wDRcalToggleBtn ), TRUE );
+        gtk_widget_set_sensitive( wDRtraceCheckBtn, FALSE );
+        if( gtk_check_button_get_active( GTK_CHECK_BUTTON( wDRtraceCheckBtn ) ) )
+            gtk_check_button_set_active( GTK_CHECK_BUTTON( wDRcalCheckBtn ), TRUE );
     } else {
-        gtk_widget_set_sensitive( wDRtraceToggleBtn, TRUE );
+        gtk_widget_set_sensitive( wDRtraceCheckBtn, TRUE );
     }
 
 
@@ -575,7 +584,7 @@ showRenameMoveCopyDialog( tGlobal *pGlobal ) {
     // Fill in the project combobox in the
     // rename/move/copy dialog box (used when moving or copying cal or trace)
     GtkComboBoxText *wComboBoxProject
-        = GTK_COMBO_BOX_TEXT( g_hash_table_lookup ( pGlobal->widgetHashTable, (gconstpointer)"WID_DR_ComboProject") );
+        = GTK_COMBO_BOX_TEXT( pGlobal->widgets[ eW_DR_cbt_Project ] );
     gchar *currentTargetProject = g_strdup( gtk_combo_box_text_get_active_text( wComboBoxProject ) );
     gtk_combo_box_text_remove_all( wComboBoxProject );
     for( i=0, l = pGlobal->pProjectList; l != NULL; l = l->next ){
@@ -589,27 +598,55 @@ showRenameMoveCopyDialog( tGlobal *pGlobal ) {
         }
     }
 
-    gtk_widget_set_sensitive( wDRmoveToggleBtn, TRUE );
-    gtk_widget_set_sensitive( wDRcopyToggleBtn, TRUE );
+    gtk_widget_set_sensitive( wDRmoveCheckBtn, TRUE );
+    gtk_widget_set_sensitive( wDRcopyCheckBtn, TRUE );
 
     if( i > 0 )
-        gtk_combo_box_set_active( GTK_COMBO_BOX( g_hash_table_lookup ( pGlobal->widgetHashTable,
-                    (gconstpointer)"WID_DR_ComboProject")  ), currentProjectIndex <= 0 ? 0 : currentProjectIndex );
+        gtk_combo_box_set_active( GTK_COMBO_BOX( pGlobal->widgets[ eW_DR_cbt_Project ]  ),
+                currentProjectIndex <= 0 ? 0 : currentProjectIndex );
 
     g_free( currentTargetProject );
 
-
+    // Change the label in the dialog widget based on the action selected
     setFromLabel( pGlobal );
 
-    int renameResponse = gtk_dialog_run(GTK_DIALOG(wDlgRename));
-    switch (renameResponse)
-      {
-        case GTK_RESPONSE_OK:
-           // do_application_specific_something ();
-           break;
-        default:
-           // do_nothing_since_dialog_was_cancelled ();
-           break;
-      }
-       gtk_widget_hide (GTK_WIDGET( wDlgRename ));
+    gtk_widget_show (GTK_WIDGET( wDlgRename ));
 }
+
+
+/*!     \brief  Initialize the 'Main' dialog widgets and callbacks
+ *
+ * Initialize the 'Main' dialog widgets and callbacks
+ *
+ * \param  pGlobal  pointer to global data
+ */
+void
+initializeRenameDialog( tGlobal *pGlobal, tInitFn purpose ) {
+
+    if( purpose == eUpdateWidgets || purpose == eInitAll ) {
+        gtk_check_button_set_active( GTK_CHECK_BUTTON( pGlobal->widgets[ eW_DR_rbtn_Rename ] ), TRUE );
+        gtk_check_button_set_active( GTK_CHECK_BUTTON( pGlobal->widgets[ eW_DR_rbtn_Project ] ), TRUE );
+    }
+
+    if( purpose == eInitCallbacks || purpose == eInitAll ) {
+        // Rename / Copy / Move dialog callbacks
+        // Set the response call back of the OK / Cancel buttons on the Rename dialog (F2)
+        g_signal_connect( pGlobal->widgets[ eW_dlg_Rename ], "response",
+                G_CALLBACK( CB_DR_RenameResponse ), NULL );
+        // Radio button Rename / Move / Copy
+        g_signal_connect ( pGlobal->widgets[ eW_DR_rbtn_Rename ], "toggled",
+                G_CALLBACK (CB_DR_radioPurpose), GINT_TO_POINTER( eRename ) );
+        g_signal_connect ( pGlobal->widgets[ eW_DR_rbtn_Move ], "toggled",
+                G_CALLBACK (CB_DR_radioPurpose), GINT_TO_POINTER( eMove ) );
+        g_signal_connect ( pGlobal->widgets[ eW_DR_rbtn_Copy ], "toggled",
+                G_CALLBACK (CB_DR_radioPurpose), GINT_TO_POINTER( eCopy ) );
+        // Radio button Rename / Move / Copy
+        g_signal_connect ( pGlobal->widgets[ eW_DR_rbtn_Project ], "toggled",
+                G_CALLBACK (CB_DR_radioTarget), GINT_TO_POINTER( eProjectName ) );
+        g_signal_connect ( pGlobal->widgets[ eW_DR_rbtn_Calibration ], "toggled",
+                G_CALLBACK (CB_DR_radioTarget), GINT_TO_POINTER( eCalibrationName ) );
+        g_signal_connect ( pGlobal->widgets[ eW_DR_rbtn_Trace ], "toggled",
+                G_CALLBACK (CB_DR_radioTarget), GINT_TO_POINTER( eTraceName ) );
+    }
+}
+#pragma GCC diagnostic pop

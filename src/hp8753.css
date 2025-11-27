@@ -1,0 +1,328 @@
+Idisplay { color: green; }
+Vdisplay { color: red; }
+
+columnview header {
+    border: none;
+    border-radius: 0;
+    outline: none;
+    padding: 0px 0px 0px 0px; 
+    margin: 5px 0px 0px 0px; 
+    /* color: red; */
+}
+listview {
+    border: none;
+    border-radius: 0;
+    outline: none;
+    padding: 0px 0px 0px 0px; 
+    margin: 0px 0px 0px 0px; 
+    /* color: red; */
+}
+   
+.table { 
+    border: none;
+    border-radius: 0;
+    outline: none;
+    padding: 0px;
+    margin:   0px 0px 0px 0px; 
+    background-color: rgba(255, 255, 255, 0.75);
+ }
+
+.highlight selection {
+    color:white;
+}
+
+.table text selection {
+    /* color:  red; */
+    /* font-style: italic; */
+}
+
+.table entry {
+	    padding: 0px 6px 0px 0px; 
+	    margin: 0px 0px 0px 0px;
+}
+
+.table cell {
+    padding: 0px 8px 0px 8px;  
+}
+   
+.table header { 
+    border: none;
+    border-radius: 0;
+    padding: 0px 0px 0px 3px; 
+ }
+
+.table label { 
+    border: none;
+    border-radius: 0;
+    padding: 0px 0px 0px 3px; 
+ }
+
+.table button { 
+    border: none;
+    border-radius: 0;
+    padding: 0px 0px 0px 3px; 
+ }
+
+.LCDdisplay { 
+    font-size: 300%; 
+    background-image: none; 
+    background-color: #808080; 
+    color:  #F0F0FF;
+    font-weight: bold; 
+    border-radius: 6px; 
+    padding: 0px .5em 0px .0em; 
+    margin-left: 0.5em; 
+}
+ 
+.plot { 
+    background-image: none; 
+    background-color: #FFFFFF; 
+    border: 1px solid grey;
+}
+
+.status { color: darkblue;  font-style: oblique; }
+
+.GPIBframeLeft {
+    border-style:solid;
+    border-top-width: 1px;
+    border-bottom-width: 1px;  
+    border-left-width: 1px;
+    border-right-width: 0px;
+    border-top-left-radius: 6px; 
+    border-bottom-left-radius: 6px; 
+    border-top-right-radius: 0; 
+    border-bottom-right-radius: 0; 
+    border-radius: 0px;
+}
+.GPIBframeRight {
+    border-style:solid;
+    border-top-width: 1px;
+    border-bottom-width: 1px;  
+    border-left-width: 0px;
+    border-right-width: 1px;
+    border-top-left-radius: 0px; 
+    border-bottom-left-radius: 0px; 
+    border-top-right-radius: 6px; 
+    border-bottom-right-radius: 6px; 
+    border-radius: 0px;
+}
+
+.VIframe {
+    border-radius: 5px;
+    padding: 2px 2px 2px 2px;
+    background-color: #FFFFFF; 
+    border:  1px solid #B0B0B0;
+    outline: 1px solid #FFFFFF;
+    font-weight: normal; 
+}
+
+Channelframe {
+    border-radius: 0px;
+    padding: 2px 2px 2px 2px;
+    border:  2px solid #8080E0;
+    outline: 1px solid #FFFFFF;
+}
+
+.on  { 
+    color: darkgreen;  
+    font-weight: bold; 
+}
+
+.warning  { 
+    color: darkred; 
+}
+
+.info  { 
+    color: darkgreen; 
+}
+
+.off  { 
+  color: darkred; 
+  font-weight: bold; 
+}
+
+.addr  { 
+    color: darkgreen; 
+   font-style: italic;  
+}
+
+.off  { 
+  color: darkred; 
+  font-weight: bold; 
+}
+
+.error {
+    border-radius: 5px;
+    padding: 2px 2px 2px 2px;
+    background-color: #EFE0E0; 
+    font-weight: bold; 
+}
+
+entry.LCD, label.LCD { 
+    font-size: 300%; 
+    background-image: none; 
+    background-color: #808080; 
+    color:  #F0F0FF;
+    font-weight: bold; 
+    border-top-left-radius: 6px; 
+    border-bottom-left-radius: 6px; 
+    border-top-right-radius: 0; 
+    border-bottom-right-radius: 0; 
+    padding: 0px 0.5em 0px 0em; 
+    margin-left: 0.5em; 
+ }
+
+entry.LCD1, label.LCD1{ 
+    font-size: 300%; 
+    background-image: none; 
+    background-color: #808080; 
+    color:  #F0F0FF;
+    font-weight: bold; 
+    border: none;
+    outline: 0px solid #FFFFFF;
+    padding: 0px 0em 0px 0em; 
+    margin-left: 0; 
+ }
+label.LCD2 { 
+    font-size: 200%; 
+    background-image: none; 
+    background-color: #808080; 
+    color:  #F0F0FF;
+    font-weight: bold; 
+    border: none;
+    padding: 0px 0.25em 0px .25em; 
+    margin-left: 0; 
+ }
+
+box.LCD1 { 
+    background-image: none; 
+    background-color: #808080; 
+    border-top-left-radius: 6px; 
+    border-bottom-left-radius: 6px; 
+    border-top-right-radius: 6px; 
+    border-bottom-right-radius: 6px; 
+    border: none;
+    padding: 0px 0em 0px 0em; 
+ }
+
+.license {
+   color:  #606060;
+   /* text-align: center; */
+   border: 1px solid green;
+   padding: 10px;
+}
+.splash_name {
+    font-size: 200%; 
+    font-style: italic;
+    color:  #000080;
+}
+.settings_title {
+    font-weight: bold;
+}
+.debug {
+   font-size: 70%; 
+   color: #000000; 
+   background-color: #F6F6FF;
+}
+
+.square {
+    border-radius: 0px;
+}
+
+.smoothing {
+    border-radius: 0px;
+    border-right: 0; 
+    border-bottom: 0; 
+}
+
+.noSideBorder {
+    border-right-width: 0px;
+    border-left-width: 0px;
+}
+
+.noRborder {
+    border-right-width: 0px; 
+}
+
+.noLborder {
+    border-left-width: 0px; 
+}
+
+.bottomBorderOnly {
+    border-right-width: 0px;
+    border-left-width: 0px;
+    border-top-width: 0px;
+}
+
+.reverseLborder {
+    border-top-width: 0px;
+    border-left-width: 1px;
+    border-right-width: 0px; 
+    border-bottom-width: 1px;
+}
+
+.Lborder {
+    border-top-width: 0px;
+    border-left-width: 0px;
+    border-right-width: 1px; 
+    border-bottom-width: 1px;
+}
+
+.leftBorderOnly {
+    border-top-width: 0px;
+    border-left-width: 1px;
+    border-right-width: 0px; 
+    border-bottom-width: 0px;
+}
+
+.topBorderOnly {
+    border-right-width: 0px;
+    border-left-width: 0px;
+    border-bottom-width: 0px;
+}
+.monofont {
+    font-family: monospace;
+}
+
+.noborder  {
+    border: none;
+}
+
+.separator  { 
+    background-color: darkcyan; 
+}
+
+.bold {
+    font-weight: bold;
+}
+
+
+.smallerText {
+    font-size: 85%;
+}
+
+.italicFont {
+    font-style: italic;
+}
+
+.normalFont {
+    font-style: normal;
+}
+
+
+.italicBlue {
+    color:  darkblue;
+    font-style: italic;
+}
+
+.italicLightBlue {
+    color: lightblue;
+    font-style: italic;
+  }
+
+@media (prefers-color-scheme: dark) {
+  .italicBlue {
+    color: lightblue;
+    font-style: italic;
+  }
+}

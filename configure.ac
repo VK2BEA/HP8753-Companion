@@ -70,11 +70,11 @@ fi
 # libgpib
 AC_CHECK_LIB(gpib,ibask,,AC_MSG_ERROR([Please install Linux GPIB driver before continuing.]))
 
-# libaio
-AC_CHECK_LIB(aio,aio_read,,AC_MSG_ERROR([Please install aio library before continuing.]))
-
 # libsystemd
 # AC_CHECK_LIB(systemd,sd_journal_print,,AC_MSG_ERROR([Please install systemd library (libsystemd-dev on Debian type systems).]))
+
+# libaio
+AC_CHECK_LIB(aio,aio_read,,AC_MSG_ERROR([Please install aio library before continuing.]))
 
 # check for Noto font
 fc-list -q "Noto Emoji" || fc-list -q "Noto Color Emoji"
@@ -87,7 +87,7 @@ fi
 YELP_HELP_INIT
 
 PKG_CHECK_MODULES([GLIB], [glib-2.0])
-PKG_CHECK_MODULES([GTK3], [gtk+-3.0])
+PKG_CHECK_MODULES([GTK4], [gtk4])
 PKG_CHECK_MODULES([SQLITE3], [sqlite3])
 
 # files required for building

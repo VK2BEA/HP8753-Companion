@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Michael G. Katzmann
+ * Copyright (c) 2022-2026 Michael G. Katzmann
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,15 +23,13 @@
 #include <linux/usb/tmc.h>
 #include <sys/ioctl.h>
 #include <math.h>
-
 #include <glib-2.0/glib.h>
 #include <gpib/ib.h>
-#include <errno.h>
-#include <hp8753.h>
-#include <GPIBcomms.h>
-#include <hp8753comms.h>
 #include <locale.h>
 
+#include "hp8753.h"
+#include "GPIBcomms.h"
+#include "hp8753comms.h"
 #include "messageEvent.h"
 
 /*!     \brief  Write data from the GPIB device asynchronously

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    use:    'glib-compile-resources - -generate-source hp8753-GTK4.xml' to generate resource.c
+            'sudo gtk-update-icon-cache /usr/share/icons/hicolor' to update the icon cache after icons copied
+         &  'sudo cp us.heterodyne.hp8753.gschema.xml /usr/share/glib-2.0/schemas'
+            'sudo glib-compile-schemas /usr/share/glib-2.0/schemas' for the gsettings schema
+
+-->
+<gresources>
+  <gresource prefix="src">
+    <file preprocess="xml-stripblanks">hp8753.ui</file>
+    <file>hp8753.css</file>
+  </gresource>
+</gresources>

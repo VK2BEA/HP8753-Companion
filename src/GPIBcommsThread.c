@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Michael G. Katzmann
+ * Copyright (c) 2022-2025 Michael G. Katzmann
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,16 +18,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
-
 #include <glib-2.0/glib.h>
 #include <gpib/ib.h>
 #include <linux/usb/tmc.h>
 #include <sys/ioctl.h>
-#include <errno.h>
-#include <hp8753.h>
-#include <GPIBcomms.h>
-#include <hp8753comms.h>
 #include <locale.h>
+#include <errno.h>
+
+#include "hp8753.h"
+#include "GPIBcomms.h"
+#include "hp8753comms.h"
+
 
 #include "messageEvent.h"
 
@@ -443,10 +444,11 @@ threadGPIB(gpointer _pGlobal) {
                 // This can take some time
                 GPIBtimeout( &GPIB_HP8753, T30s, NULL, eTMO_SET );
                 postInfo("Restore setup and calibration");
+#if 0
                 clearHP8753traces(&pGlobal->HP8753);
                 postDataToMainLoop(TM_REFRESH_TRACE, (void*) eCH_ONE);
                 postDataToMainLoop(TM_REFRESH_TRACE, (void*) eCH_TWO);
-
+#endif
                 if (send8753setupAndCal( &GPIB_HP8753, pGlobal ) == OK
                         && GPIBsucceeded( GPIB_HP8753.status )) {
                     postInfo("Setup and Calibration restored");

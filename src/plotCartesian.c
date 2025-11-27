@@ -18,12 +18,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <cairo/cairo.h>
 #include <glib-2.0/glib.h>
-#include <hp8753.h>
-#include <GTKplot.h>
 #include <math.h>
+
+#include "hp8753.h"
+#include "GTKplot.h"
+
 
 
 gdouble logGrids[ NUM_LOG_GRIDS ] = {

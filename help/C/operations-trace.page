@@ -48,7 +48,7 @@
   </section>
   <section id="trace_printing">
   <title>Printing or Saving Trace Images</title>
-  <p>Once retrieved, the traces may be printed or saved as images in PNG or PDF formats.
+  <p>Once retrieved, the traces may be printed or saved as images in PNG, SVG or PDF formats.
   The underlying data and metadata may be saved in a database or exported as a CSV file.</p>
   <p>To print images of the displayed traces, press the <key>Print</key> button.</p>
   <note style="important"><p>The options selected for printing 
@@ -59,9 +59,9 @@
   <media its:translate="no" type="image" mime="image/png" src="media/data.png" />
   <steps>
   <item><p>Select the <em>Data</em> page</p></item>
-  <item><p>Press <key>Get S2P</key>.</p></item>
+  <item><p>Press <key>Get S2P</key> or <key>Get S1P</key>.</p></item>
   <item><p>Select or enter the file name.</p></item>
-  <item><p>The HP8753 will be instructed to measure the four S parameters. The data is retrieved as 
+  <item><p>The HP8753 will be instructed to measure the four S parameters (for S2P). The data is retrieved as 
   		<em>real and imaginary</em> values, and saved to the file.</p></item> 
   </steps>
   </section>
