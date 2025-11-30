@@ -1064,13 +1064,14 @@ or setup &amp; calibration from the database</property>
         <child>
           <object class="GtkAspectFrame" id="WID_frame_Plot_A">
             <property name="margin-bottom">4</property>
+            <property name="margin-end">4</property>
             <property name="margin-top">4</property>
             <child>
               <object class="GtkDrawingArea" id="WID_drawingArea_Plot_A">
                 <property name="css-classes">plot</property>
                 <property name="height-request">600</property>
                 <property name="hexpand">True</property>
-                <property name="margin-end">2</property>
+                <property name="margin-end">0</property>
                 <property name="width-request">777</property>
               </object>
             </child>
@@ -1079,14 +1080,15 @@ or setup &amp; calibration from the database</property>
         <child>
           <object class="GtkAspectFrame" id="WID_frame_Plot_B">
             <property name="margin-bottom">4</property>
+            <property name="margin-end">4</property>
             <property name="margin-top">4</property>
             <child>
               <object class="GtkDrawingArea" id="WID_drawingArea_Plot_B">
                 <property name="css-classes">plot</property>
                 <property name="height-request">600</property>
                 <property name="hexpand">True</property>
-                <property name="margin-end">4</property>
-                <property name="margin-start">2</property>
+                <property name="margin-end">0</property>
+                <property name="margin-start">0</property>
                 <property name="vexpand">True</property>
                 <property name="width-request">777</property>
               </object>
@@ -1099,7 +1101,7 @@ or setup &amp; calibration from the database</property>
   <object class="GtkAdjustment" id="adj_GPIB_Controller_Card">
     <property name="page-increment">10.0</property>
     <property name="step-increment">1.0</property>
-    <property name="upper">8.0</property>
+    <property name="upper">32.0</property>
   </object>
   <object class="GtkAdjustment" id="adj_HP8753_GPIB_ID">
     <property name="page-increment">5.0</property>

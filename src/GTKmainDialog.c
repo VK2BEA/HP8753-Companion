@@ -100,11 +100,11 @@ CB_KeyPressed (GtkEventControllerKey *self, guint keyval, guint keycode,
            switch (state & (GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_ALT_MASK | GDK_SUPER_MASK))
                {
                case GDK_SHIFT_MASK:
-                   GtkRequisition min = {0}, nat = {0};
-                   gtk_widget_get_preferred_size( pGlobal->widgets[ eW_hp8753_main ], &min, &nat );
-                   g_print( "width = %d / %d & height = %d / %d\n", nat.width, min.width, nat.height, min.height );
-                   gtk_widget_set_size_request( pGlobal->widgets[ eW_hp8753_main ], 1116, 647 );
+                   gtk_widget_set_size_request( pGlobal->widgets[ eW_drawingArea_Plot_A ], DRAWING_WIDTH*1.25, DRAWING_HEIGHT*1.25);
+                   gtk_widget_set_size_request( pGlobal->widgets[ eW_drawingArea_Plot_B], DRAWING_WIDTH*1.25 ,DRAWING_HEIGHT*1.25);
+
                    gtk_window_set_default_size ( GTK_WINDOW( pGlobal->widgets[ eW_hp8753_main ] ), -1, -1 );
+
                    while (g_main_context_pending (g_main_context_default ()))
                        g_main_context_iteration (NULL, TRUE);
                    break;
@@ -123,8 +123,20 @@ CB_KeyPressed (GtkEventControllerKey *self, guint keyval, guint keycode,
                    // Don't use this (its used by the desktop)
                    break;
                case GDK_SUPER_MASK:
+                   gtk_widget_set_size_request( pGlobal->widgets[ eW_drawingArea_Plot_A ], DRAWING_WIDTH, DRAWING_HEIGHT);
+                   gtk_widget_set_size_request( pGlobal->widgets[ eW_drawingArea_Plot_B ], DRAWING_WIDTH, DRAWING_HEIGHT);
+
+                   gtk_window_set_default_size ( GTK_WINDOW( pGlobal->widgets[ eW_hp8753_main] ), -1, -1 );
+
+                   while (g_main_context_pending (g_main_context_default ()))
+                       g_main_context_iteration (NULL, TRUE);
+
                    break;
                case 0:
+                   gtk_window_set_default_size ( GTK_WINDOW( pGlobal->widgets[ eW_hp8753_main] ), -1, -1 );
+
+                   while (g_main_context_pending (g_main_context_default ()))
+                       g_main_context_iteration (NULL, TRUE);
                    break;
                }
            break;
@@ -1252,7 +1264,6 @@ CB_cbt_Unfocus( GtkEventControllerFocus *controller, gpointer gpGlobal  ) {
     gtk_widget_grab_focus( GTK_WIDGET( ((tGlobal *)gpGlobal)->widgets[ eW_frm_Project]  ) );
 }
 
-
 /*!     \brief  Initialize the 'Main' dialog widgets and callbacks
  *
  * Initialize the 'Main' dialog widgets and callbacks
@@ -1301,6 +1312,17 @@ initializeMainDialog( tGlobal *pGlobal, tInitFn purpose )
         }
         CB_editable_TraceProfileName( GTK_EDITABLE( gtk_combo_box_get_child(pGlobal->widgets[ eW_cbt_TraceProfile ] )), NULL );
         CB_editable_CalibrationProfileName( GTK_EDITABLE( gtk_combo_box_get_child(pGlobal->widgets[ eW_cbt_CalProfile ] )), NULL );
+
+        gtk_widget_set_size_request( pGlobal->widgets[ eW_frame_Plot_A ], DRAWING_WIDTH, DRAWING_HEIGHT);
+        gtk_widget_set_size_request( pGlobal->widgets[ eW_frame_Plot_B ], DRAWING_WIDTH, DRAWING_HEIGHT);
+#if 0
+        GtkRequisition minFrameA = {0}, minBox={0};
+        gtk_widget_get_preferred_size( pGlobal->widgets[ eW_frame_Plot_A ], &minFrameA, NULL );
+        gtk_widget_get_preferred_size( pGlobal->widgets[ eW_box_main ], &minBox, NULL );
+
+        GtkRequisition drawingFrameMargin = { minFrameA.width - DRAWING_WIDTH, minFrameA.height - DRAWING_HEIGHT };
+        GtkRequisition nonDrawingFrameSize = { minBox.width - (2 * minFrameA.width) };
+#endif
     }
     // Define the Widget callbacks
 
@@ -1461,5 +1483,7 @@ initializeMainDialog( tGlobal *pGlobal, tInitFn purpose )
     }
     sensitizeRecallSaveDeleteButtons( pGlobal ) ;
 }
+
+
 
 #pragma GCC diagnostic pop

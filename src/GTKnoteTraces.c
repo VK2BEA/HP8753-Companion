@@ -102,6 +102,15 @@ initializeNotebookPageTraces( tGlobal *pGlobal, tInitFn purpose )
         gtk_check_button_set_active( GTK_CHECK_BUTTON( pGlobal->widgets[ pGlobal->HP8753.flags.bShowHPGLplot
                                   && pGlobal->HP8753.flags.bHPGLdataValid ? eW_nbTrace_rbtn_PlotTypeHPGL : eW_nbTrace_rbtn_PlotTypeHighRes ] ),
                 TRUE );
+#if ! GTK_CHECK_VERSION(4, 20, 0)
+        // change date/Time color based on dark or light theme
+        if( gtk_widget_has_css_class( GTK_WIDGET( pGlobal->widgets[ eW_nbTrace_lbl_Time ] ),  pGlobal->flags.bDarkTheme ? "italicBlue" : "italicLightBlue" ) ) {
+            // remove the old class
+            gtk_widget_remove_css_class( GTK_WIDGET( pGlobal->widgets[ eW_nbTrace_lbl_Time ] ), pGlobal->flags.bDarkTheme ? "italicBlue" : "italicLightBlue" );
+            // add the new one
+            gtk_widget_add_css_class( GTK_WIDGET( pGlobal->widgets[ eW_nbTrace_lbl_Time ] ), pGlobal->flags.bDarkTheme ? "italicLightBlue" : "italicBlue" );
+        }
+#endif
     }
 
     if( purpose == eInitCallbacks || purpose == eInitAll ) {

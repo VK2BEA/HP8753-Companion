@@ -158,11 +158,13 @@ on_activate (GApplication *app, gpointer udata)
     gtk_style_context_add_provider_for_display (gdk_display_get_default (),
                                                 GTK_STYLE_PROVIDER(cssProvider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
+#if GTK_CHECK_VERSION(4, 20, 0)
     // Set the prefers-color-scheme property in the CSS provider
     // so that we can use alternate colors if the user has a dark desktop
     GtkInterfaceColorScheme color_scheme = pGlobal->flags.bDarkTheme
       ? GTK_INTERFACE_COLOR_SCHEME_DARK : GTK_INTERFACE_COLOR_SCHEME_LIGHT;
     g_object_set (cssProvider, "prefers-color-scheme", color_scheme, NULL);
+#endif
 
     g_object_unref (builder);
 
@@ -214,7 +216,6 @@ on_activate (GApplication *app, gpointer udata)
     else
         gtk_notebook_set_current_page ( GTK_NOTEBOOK( pGlobal->widgets[ eW_notebook ] ),
                     pGlobal->flags.bCalibrationOrTrace ? NPAGE_CALIBRATION : NPAGE_TRACE );
-
 
     // Start the GPIB communication thread
     pGlobal->pGThread = g_thread_new( "GPIBthread", threadGPIB, (gpointer)pGlobal );

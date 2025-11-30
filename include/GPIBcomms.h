@@ -75,7 +75,7 @@ gint GPIBlocal( tGPIBinterface * );
 
 #define NULL_STR	-1
 #define WAIT_STR	-2
-#define TIMEOUT_SAFETY_FACTOR	1.25
+#define TIMEOUT_SAFETY_FACTOR	1.5
 
 #define ERR_TIMEOUT (0x1000)
 #define GPIBfailed(x) (((x) & (ERR | ERR_TIMEOUT)) != 0)

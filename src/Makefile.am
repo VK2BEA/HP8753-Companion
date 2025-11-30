@@ -28,7 +28,7 @@ hp8753_LDFLAGS += @GLIB_LIBS@ @GTK4_LIBS@ @SQLITE3_LIBS@
 bin_PROGRAMS = hp8753
 
 hp8753_SOURCES = catalogWidgets.c databaseSaveAndRestore.c GPIBcommsThread.c \
-		GPIBinterface.c GTKmainDialog.c GTKnoteCalibration.c \
+		GPIB_interface.c GTKmainDialog.c GTKnoteCalibration.c \
 		GTKnoteCalKit.c GTKnoteColor.c GTKnoteData.c GTKnoteGPIB.c \
 		GTKnoteOptions.c GTKnoteTraces.c GTKplot.c GTKplotMarkers.c \
                 GTKprint.c GTKrenameDialog.c GTKutility.c hp8753.c \

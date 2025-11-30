@@ -687,6 +687,11 @@ extern tLearnStringIndexes learnStringIndexes[];
 #define	BUFFER_SIZE_500	500
 #define BYTES_PER_CALPOINT 6;
 
+// Initial size of A and B drawing areas
+// The frames have the additional margin
+#define DRAWING_WIDTH   777
+#define DRAWING_HEIGHT  600
+
 #define ms(x) ((x)*1000)
 
 #define LABEL_FONT	"Nimbus Sans"
