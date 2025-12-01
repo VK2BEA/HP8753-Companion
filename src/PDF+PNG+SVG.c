@@ -39,7 +39,9 @@ tPaperDimensions paperDimensions[ eNumPaperSizes ] = {
         {792, 1224, 10.0}   // Tabloid
 };
 
-enum eWhichPlot { eOnlyPlot, ePlotA, ePlotB };
+enum eWhichPlot { eOnlyPlot = 0, ePlotA = 1, ePlotB = 2 };
+
+const static gchar *sSuffix[] = { ".pdf", ".svg", ".png", ".csv" };
 
 static gboolean bUsedSynthesizedName = TRUE;
 static gchar   *sSynthesizedName = NULL;
@@ -69,17 +71,17 @@ suggestFilename( tGlobal *pGlobal, gchar *sPreviousFileName, gchar *suffix ) {
         sFilename = strdup( sSynthesizedName );
     } else {
         // The user has previously chosen his/her own .. so suggest that
-        GString *filenameLower = g_string_ascii_down( g_string_new( sPreviousFileName ) );
-        gchar *dot = strrchr( filenameLower->str, '.' );
+        gchar *dot = strrchr( sPreviousFileName, '.' );
 
         sFilenameStem = g_strdup( sPreviousFileName );
         if( dot ) {
-            if( g_strcmp0( dot+1, suffix ) == 0 ) {
-                sFilenameStem[ dot - filenameLower->str ] = 0;
+            for( int i = sizeof( sSuffix ) / sizeof( gchar *); i >= 0; i-- ) {
+                if( g_str_has_suffix( sFilenameStem, sSuffix[ i ] ) ) {
+                    *strrchr( sFilenameStem, '.' ) = 0;
+                    break;
+                }
             }
         }
-
-        g_string_free( filenameLower, TRUE );
         sFilename = g_strdup_printf( "%s.%s", sFilenameStem, suffix );
         g_free( sFilenameStem );
     }
@@ -88,7 +90,6 @@ suggestFilename( tGlobal *pGlobal, gchar *sPreviousFileName, gchar *suffix ) {
     return sFilename;
 }
 
-const static gchar *sSuffix[] = { "pdf", "svg", "png", "csv" };
 
 /*!     \brief  Add the appropriate file name suffix
  *
@@ -98,36 +99,39 @@ const static gchar *sSuffix[] = { "pdf", "svg", "png", "csv" };
  * \param  sChosenFilename  file name as selected (may have a suffix already)
  * \param  fileType         enum of file type
  * \param  page             enum of page (sole page, page one or page two)
+ * \param  sExtra           additional suffix like .HR
  * \return                  newly allocated string with modified file name
  */
 gchar *
-addFileNameSuffix( gchar *sChosenFilename, tFileType fileType, enum eWhichPlot page ) {
-    gchar *sLCchosenFilename, *sModifiedFilename;
+addFileNameSuffix( gchar *sChosenFilename, tFileType fileType, enum eWhichPlot page, gchar *sExtra ) {
+    gchar *sLCchosenFilename, *sModifiedFilename, *sWorkingFilename;
     const static gchar *sPageNo[] = { "", ".1", ".2" };
 
-    if( sChosenFilename == NULL )
-        return sChosenFilename;
-
-    sLCchosenFilename = g_ascii_strdown( sChosenFilename, -1 );
+    sWorkingFilename = g_strdup( sChosenFilename );
+    // lower case for comparison
+    sLCchosenFilename = g_ascii_strdown( sWorkingFilename, STRLENGTH );
     // if we have a suffix already ... remove it first (e.g.: .pdf, .1.pdf or .2.pdf)
     if( g_str_has_suffix( sLCchosenFilename, sSuffix[ fileType ] ) ) {
-        gint len = strlen( sLCchosenFilename ) - strlen( sSuffix[ fileType ] );
-        sChosenFilename[ len ] = 0;
-        if( g_strcmp0( sChosenFilename + len - 2 , ".1" )
-                || g_strcmp0( sChosenFilename + len - 2, ".2" ) ) {
-            sChosenFilename[ len - 2] = 0;
-        }
+        gint len = strlen( sWorkingFilename ) - strlen( sSuffix[ fileType ] );
+        sWorkingFilename[ len ] = 0;
+        if( g_strcmp0( sWorkingFilename + len - strlen( sPageNo[ 1 ] ), sPageNo[ 1 ] ) == 0 )
+            sWorkingFilename[ len - strlen( sPageNo[ 1 ] ) ] = 0;
+        else if( g_strcmp0( sWorkingFilename + len - strlen( sPageNo[ 2 ] ), sPageNo[ 2 ] ) == 0 )
+            sWorkingFilename[ len - strlen( sPageNo[ 1 ] ) ] = 0;
     }
-    g_free( sLCchosenFilename );
-    sModifiedFilename = g_strdup_printf( "%s%s.%s", sChosenFilename, sPageNo[ page ], sSuffix[ fileType ]  );
 
-    g_free( sChosenFilename );
+    sModifiedFilename = g_strdup_printf( "%s%s%s%s", sWorkingFilename, sPageNo[ page ],
+            sExtra ? sExtra : "", sSuffix[ fileType ]  );
+
+    g_free( sLCchosenFilename );
+    g_free( sWorkingFilename );
+
     return( sModifiedFilename );
 }
 
 /*!     \brief  Write the PDF image to a file
  *
- * Determine the filename to use for the PNG file and
+ * Determine the filename to use for the PNG / PDF / SVG file and
  * write image(s) of plot using the already retrieved data to the file.
  *
  * \param  wButton  file pointer to the open, writable file
@@ -154,7 +158,9 @@ plotAndSaveFile( GObject *source_object, GAsyncResult *res, gpointer gpGlobal, t
     cairo_surface_t *cs;
 
     if (((file = gtk_file_dialog_save_finish (dialog, res, &err)) != NULL) ) {
+
         gchar *sChosenFilename = g_file_get_path( file );
+        gchar *sAugmentedFilename = NULL;
         gchar *selectedFileBasename = g_file_get_basename( file );
 
         // did we use the synthesized name or did we choose another
@@ -174,24 +180,31 @@ plotAndSaveFile( GObject *source_object, GAsyncResult *res, gpointer gpGlobal, t
 
             g_free( sChosenName );
             sChosenName = selectedFileBasename;
+        } else {
+            g_free( selectedFileBasename );
         }
 
         for( gint page = (bBoth ? ePlotA : eOnlyPlot); page <= ePlotB; page++ ) {
-            sChosenFilename = addFileNameSuffix( sChosenFilename, fileType, page );
+            // We place both plots into the one PDF (so only one file name needed)
+            sAugmentedFilename = addFileNameSuffix( sChosenFilename, fileType,
+                    fileType == ePDF ? eOnlyPlot : page, NULL );
             switch( fileType ) {
             case ePDF:
             default:
                 width  = paperDimensions[pGlobal->PDFpaperSize].width;
                 height = paperDimensions[pGlobal->PDFpaperSize].height;
                 margin = paperDimensions[pGlobal->PDFpaperSize].margin;
-                cs = cairo_pdf_surface_create ( sChosenFilename, width, height );
-                cairo_pdf_surface_set_metadata (cs, CAIRO_PDF_METADATA_CREATOR, "Linux HP8970 Noise Figure Meter");
+                // Only create the surface once
+                if( page != ePlotB ) {
+                    cs = cairo_pdf_surface_create ( sAugmentedFilename, width, height );
+                    cairo_pdf_surface_set_metadata (cs, CAIRO_PDF_METADATA_CREATOR, "HP8753 Network Analyzer");
+                }
                 break;
             case eSVG:
                 width  = paperDimensions[pGlobal->PDFpaperSize].width;
                 height = paperDimensions[pGlobal->PDFpaperSize].height;
                 margin = paperDimensions[pGlobal->PDFpaperSize].margin;
-                cs = cairo_svg_surface_create ( sChosenFilename, width, height );
+                cs = cairo_svg_surface_create ( sAugmentedFilename, width, height );
                 break;
             case ePNG:
                 width  = PNG_WIDTH;
@@ -199,6 +212,7 @@ plotAndSaveFile( GObject *source_object, GAsyncResult *res, gpointer gpGlobal, t
                 cs = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
                 break;
             }
+
             cr = cairo_create (cs);
 
             // Letter and Tabloid size are not in the ratio of our data ( height = width / sqrt( 2 ) )
@@ -224,14 +238,44 @@ plotAndSaveFile( GObject *source_object, GAsyncResult *res, gpointer gpGlobal, t
             cairo_show_page( cr );
 
             if( fileType  == ePNG )
-                cairo_surface_write_to_png (cs, sChosenFilename );
+                cairo_surface_write_to_png (cs, sAugmentedFilename );
 
-            cairo_surface_destroy ( cs );
+            // Don't destroy on the first page of a multi-page PDF
+            if( fileType != ePDF || page == ePlotB || page == eOnlyPlot ) {
+                cairo_surface_destroy ( cs );
+            }
             cairo_destroy( cr );
+
+            g_free( sAugmentedFilename );
 
             if( page == eOnlyPlot )
                 break;
         }
+
+        // now do high resolution smith charts if we are doing PDF & smith
+        if( fileType == ePDF ) {
+            if( bBoth && pGlobal->HP8753.channels[eCH_ONE].format == eFMT_SMITH
+                    && pGlobal->HP8753.channels[eCH_TWO].format == eFMT_SMITH )
+                bBoth = TRUE;
+            else
+                bBoth = FALSE;
+
+            sAugmentedFilename = NULL;
+            if( pGlobal->HP8753.channels[eCH_ONE].format == eFMT_SMITH ) {
+                if( pGlobal->HP8753.channels[eCH_TWO].format == eFMT_SMITH ) {
+                    sAugmentedFilename = addFileNameSuffix( sChosenFilename, ePDF, eOnlyPlot, ".HR" );
+                    smithHighResPDF(pGlobal, sAugmentedFilename, eCH_BOTH );
+                } else {
+                    sAugmentedFilename = addFileNameSuffix( sChosenFilename, ePDF, bBoth ? ePlotA : eOnlyPlot, ".HR" );
+                    smithHighResPDF(pGlobal, sAugmentedFilename, eCH_ONE );
+                }
+            } else if( pGlobal->HP8753.channels[eCH_TWO].format == eFMT_SMITH ) {
+                    sAugmentedFilename = addFileNameSuffix( sChosenFilename, ePDF, bBoth ? ePlotB : eOnlyPlot, ".HR" );
+                    smithHighResPDF(pGlobal, sAugmentedFilename, eCH_TWO );
+            }
+            g_free( sAugmentedFilename );
+        }
+
         GFile *dir = g_file_get_parent( file );
         gchar *sChosenDirectory = g_file_get_path( dir );
         g_free( pGlobal->sLastDirectory );
