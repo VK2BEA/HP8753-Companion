@@ -208,14 +208,11 @@ void
 centreJustifiedCairoTextWithClear(cairo_t *cr, gchar *label, gdouble x, gdouble y)
 {
 	cairo_text_extents_t extents;
-	GdkRGBA  white;
-
-    gdk_rgba_parse (&white,  "white");
 
 	cairo_text_extents (cr, label, &extents);
 
 	cairo_save( cr );
-        gdk_cairo_set_source_rgba (cr, &white );
+        cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
         cairo_new_path( cr );
         cairo_rectangle( cr, x - (extents.width + extents.x_bearing)/2,
                 y - (extents.height + extents.y_bearing)*3/2, (extents.width + extents.x_bearing),
