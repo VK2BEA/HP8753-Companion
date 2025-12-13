@@ -163,6 +163,7 @@ CB_DR_RenameResponse( GtkDialog *wDialog, gint response, gpointer udata )
     GtkComboBoxText *wDRprojectCombo = GTK_COMBO_BOX_TEXT( pGlobal->widgets[ eW_DR_cbt_Project ] );
 
     GtkComboBoxText *wComboBox;
+    GtkEditable *wEditable;
 
     const gchar *sTo = gtk_entry_buffer_get_text( wEntryBuffer );
     gchar *sProjectTo = gtk_combo_box_text_get_active_text( wDRprojectCombo );
@@ -288,6 +289,7 @@ CB_DR_RenameResponse( GtkDialog *wDialog, gint response, gpointer udata )
         break;
         case eTraceName:
             wComboBox =  GTK_COMBO_BOX_TEXT( pGlobal->widgets[ eW_cbt_TraceProfile ] );
+            wEditable = GTK_EDITABLE( gtk_combo_box_get_child( GTK_COMBO_BOX( wComboBox ) ) );
 
             switch ( pGlobal->RMCdialogPurpose ) {
             case eRename:
@@ -303,7 +305,7 @@ CB_DR_RenameResponse( GtkDialog *wDialog, gint response, gpointer udata )
                     tProjectAndName *pProjectAndName = &(((tHP8753traceAbstract *)(l->data))->projectAndName);
                     if( g_strcmp0( pGlobal->sProject, pProjectAndName->sProject  )  == 0
                             && g_strcmp0( sFrom, pProjectAndName->sName  )  == 0  ){
-                        g_free( pProjectAndName->sName );
+                        g_free( pProjectAndName->sName ); // this is the same as sFrom
                         pProjectAndName->sName = g_strdup( sTo );
                     }
                 }
@@ -312,16 +314,16 @@ CB_DR_RenameResponse( GtkDialog *wDialog, gint response, gpointer udata )
                 // Find the trace in the list
                 tProjectAndName projectAndName = { pGlobal->sProject, (gchar *)sTo };
                 pGlobal->pTraceAbstract =
-                        g_list_find_custom( pGlobal->pTraceList, &projectAndName, (GCompareFunc)compareCalItemsForFind )->data;
+                        g_list_find_custom( pGlobal->pTraceList, &projectAndName, (GCompareFunc)compareTraceItemsForFind )->data;
                 // Update the widget
                 populateTraceComboBoxWidget( pGlobal );
 
                 // Block signals while we populate the entry widget programmatically
-                g_signal_handlers_block_by_func(G_OBJECT(wComboBox), CB_editable_TraceProfileName, NULL);
+                g_signal_handlers_block_by_func(G_OBJECT(wEditable), CB_editable_TraceProfileName, NULL);
                 gtk_entry_buffer_set_text( gtk_entry_get_buffer(
                         GTK_ENTRY( gtk_combo_box_get_child( GTK_COMBO_BOX( wComboBox ) ) ) ), sTo, -1 );
-                g_signal_handlers_unblock_by_func(G_OBJECT(wComboBox), CB_editable_TraceProfileName, NULL);
-                g_free( sFrom );
+                g_signal_handlers_unblock_by_func(G_OBJECT(wEditable), CB_editable_TraceProfileName, NULL);
+
                 break;
             case eMove:
                 sFrom = pGlobal->sProject;
@@ -613,6 +615,21 @@ showRenameMoveCopyDialog( tGlobal *pGlobal ) {
     gtk_widget_show (GTK_WIDGET( wDlgRename ));
 }
 
+/*!     \brief  Callback when user types in the entry (editable) for the 'To' rename / move / copy
+ *
+ * Callback when user types in the entry (editable) for the 'To' rename / move / copy
+ * Sensitize the 'OK' button if its no blank
+ *
+ * \param  wEditable    pointer to GtkCheckBoxText widget
+ * \param  udate        unused
+ */
+void
+CB_DR_ediatble_To( GtkEditable *wEditable, gpointer udata )
+{
+    tGlobal *pGlobal = (tGlobal *)g_object_get_data(G_OBJECT( wEditable ), "data");
+
+    SensitizeDR_OKbtn( pGlobal );
+}
 
 /*!     \brief  Initialize the 'Main' dialog widgets and callbacks
  *
@@ -626,6 +643,8 @@ initializeRenameDialog( tGlobal *pGlobal, tInitFn purpose ) {
     if( purpose == eUpdateWidgets || purpose == eInitAll ) {
         gtk_check_button_set_active( GTK_CHECK_BUTTON( pGlobal->widgets[ eW_DR_rbtn_Rename ] ), TRUE );
         gtk_check_button_set_active( GTK_CHECK_BUTTON( pGlobal->widgets[ eW_DR_rbtn_Project ] ), TRUE );
+
+        gtk_editable_set_editable( GTK_EDITABLE(pGlobal->widgets[ eW_DR_entry_From ] ), FALSE);
     }
 
     if( purpose == eInitCallbacks || purpose == eInitAll ) {
@@ -647,6 +666,9 @@ initializeRenameDialog( tGlobal *pGlobal, tInitFn purpose ) {
                 G_CALLBACK (CB_DR_radioTarget), GINT_TO_POINTER( eCalibrationName ) );
         g_signal_connect ( pGlobal->widgets[ eW_DR_rbtn_Trace ], "toggled",
                 G_CALLBACK (CB_DR_radioTarget), GINT_TO_POINTER( eTraceName ) );
+
+        g_signal_connect ( pGlobal->widgets[ eW_DR_entry_To ], "changed",
+                G_CALLBACK (CB_DR_ediatble_To), NULL );
     }
 }
 #pragma GCC diagnostic pop
