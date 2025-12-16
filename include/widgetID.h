@@ -12,6 +12,7 @@ typedef enum {
     // Main application dialog
     eW_hp8753_main,
     eW_box_main,
+    ew_label_Title,
     // Drawing Area A
     eW_frame_Plot_A,
     eW_drawingArea_Plot_A,

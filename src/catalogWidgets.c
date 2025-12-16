@@ -64,6 +64,7 @@ buildWidgetList( tGlobal *pGlobal,  GtkBuilder *builder ) {
     		// Main application dialog
             [ eW_hp8753_main ]                      = "WID_hp8753_main",
             [ eW_box_main ]                         = "WID_box_main",
+            [ ew_label_Title ]                      = "WID_label_Title",
 			// Drawing areas
             [ eW_box_Controls ]                     = "WID_box_Controls",
             [ eW_frame_Plot_A ]                     = "WID_frame_Plot_A",

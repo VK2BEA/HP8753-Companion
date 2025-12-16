@@ -560,7 +560,7 @@ showRenameMoveCopyDialog( tGlobal *pGlobal ) {
 
     // We cannot move or copy a cal profile if there are none
     // We must have at least one cal or trace profile, so if there are no
-    // cal profiles then ther must be at least one trace profile
+    // cal profiles then there must be at least one trace profile
 
     if( gtk_combo_box_get_active( GTK_COMBO_BOX( wCalCombo ) ) == -1  ) {
         gtk_widget_set_sensitive( wDRcalCheckBtn, FALSE );

@@ -185,6 +185,7 @@ on_activate (GApplication *app, gpointer udata)
     }
 
     gtk_window_set_title( GTK_WINDOW( wApplicationWindow ), "HP8753 Companion");
+    gtk_label_set_text( GTK_LABEL( pGlobal->widgets[ ew_label_Title ] ), "HP8753 Companion" );
 
 #ifdef __OPTIMIZE__
     g_idle_add((GSourceFunc)splashCreate, pGlobal);
@@ -193,6 +194,7 @@ on_activate (GApplication *app, gpointer udata)
     gchar *sWindowTitle = g_strdup_printf( "HP %s Vector Network Analyzer",
             pGlobal->HP8753.sProduct ? pGlobal->HP8753.sProduct : "8753" );
     gtk_window_set_title( GTK_WINDOW(wApplicationWindow), sWindowTitle );
+    gtk_label_set_text( GTK_LABEL( pGlobal->widgets[ ew_label_Title ] ), sWindowTitle );
     g_free( sWindowTitle );
 
     // Get cal and trace profiles from sqlite3 database

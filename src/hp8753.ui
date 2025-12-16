@@ -11,6 +11,24 @@
     <property name="height-request">-1</property>
     <property name="hexpand">False</property>
     <property name="margin-start">0</property>
+    <property name="titlebar">
+      <object class="GtkHeaderBar">
+        <property name="halign">fill</property>
+        <property name="hexpand">False</property>
+        <property name="title-widget">
+          <object class="GtkLabel" id="WID_label_Title">
+            <property name="css-classes">title</property>
+            <property name="hexpand">True</property>
+            <property name="label">HP8753 Network Analyzer</property>
+          </object>
+        </property>
+        <child type="start">
+          <object class="GtkButton" id="WID_btn_GetTrace">
+            <property name="label">Get Trace</property>
+          </object>
+        </child>
+      </object>
+    </property>
     <property name="vexpand">False</property>
     <property name="width-request">-1</property>
     <child>
@@ -30,84 +48,12 @@
             <property name="vexpand">True</property>
             <property name="width-request">310</property>
             <child>
-              <object class="GtkBox" id="WID_box_GetTrace">
-                <property name="homogeneous">True</property>
-                <property name="margin-bottom">0</property>
-                <property name="margin-end">2</property>
-                <property name="margin-start">2</property>
-                <property name="margin-top">2</property>
-                <property name="spacing">10</property>
-                <property name="valign">start</property>
-                <child>
-                  <object class="GtkButton" id="WID_btn_GetTrace">
-                    <property name="has-tooltip">False</property>
-                    <property name="label">Get Trace</property>
-                    <property name="tooltip-markup">Retrieve the &lt;span foreground="red"&gt;currently displayed&lt;/span&gt;
-traces from the HP8753.</property>
-                    <property name="valign">start</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkLabel"/>
-                </child>
-                <child>
-                  <object class="GtkLabel"/>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkFrame">
-                <property name="css-classes">square
-topBorderOnly</property>
-                <property name="margin-bottom">0</property>
-                <property name="margin-top">4</property>
-                <child>
-                  <object class="GtkBox">
-                    <property name="homogeneous">True</property>
-                    <property name="margin-bottom">4</property>
-                    <property name="margin-end">2</property>
-                    <property name="margin-start">2</property>
-                    <property name="margin-top">4</property>
-                    <property name="spacing">8</property>
-                    <property name="valign">start</property>
-                    <child>
-                      <object class="GtkButton" id="WID_btn_Print">
-                        <property name="has-tooltip">False</property>
-                        <property name="icon-name">document-print</property>
-                        <property name="margin-bottom">0</property>
-                        <property name="tooltip-text">Print plots</property>
-                        <property name="valign">start</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="WID_btn_PDF">
-                        <property name="has-tooltip">False</property>
-                        <property name="label">PDF</property>
-                        <property name="valign">start</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="WID_btn_PNG">
-                        <property name="has-tooltip">True</property>
-                        <property name="label">PNG</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkButton" id="WID_btn_SVG">
-                        <property name="has-tooltip">True</property>
-                        <property name="label">SVG</property>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
               <object class="GtkNotebook" id="WID_notebook">
                 <property name="enable-popup">True</property>
                 <property name="halign">fill</property>
                 <property name="hexpand">False</property>
                 <property name="hexpand-set">True</property>
+                <property name="margin-bottom">2</property>
                 <property name="margin-top">2</property>
                 <property name="scrollable">True</property>
                 <property name="vexpand">True</property>
@@ -136,7 +82,7 @@ e.g. Cable set / adapters</property>
                     <child>
                       <object class="GtkBox" id="WID_nbCal_box_CalInfo">
                         <property name="halign">fill</property>
-                        <property name="height-request">80</property>
+                        <property name="height-request">-1</property>
                         <property name="homogeneous">True</property>
                         <property name="margin-bottom">2</property>
                         <property name="margin-end">0</property>
@@ -768,7 +714,7 @@ noSideBorder</property>
                 </child>
                 <child>
                   <object class="GtkBox" id="Tab_Color">
-                    <property name="homogeneous">True</property>
+                    <property name="homogeneous">False</property>
                     <property name="margin-end">2</property>
                     <property name="margin-start">4</property>
                     <property name="margin-top">4</property>
@@ -776,73 +722,76 @@ noSideBorder</property>
                     <property name="valign">start</property>
                     <property name="visible">True</property>
                     <child>
-                      <object class="GtkFrame">
-                        <property name="css-classes">noborder
-</property>
+                      <object class="GtkLabel">
+                        <property name="halign">fill</property>
                         <property name="label">High Resolution Plot Colors</property>
-                        <property name="label-xalign">0.02</property>
+                        <property name="margin-bottom">4</property>
+                        <property name="margin-start">2</property>
+                        <property name="margin-top">4</property>
+                        <property name="valign">center</property>
+                        <property name="xalign">0.0</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="margin-end">0</property>
+                        <property name="margin-start">0</property>
+                        <property name="spacing">10</property>
                         <property name="valign">start</property>
                         <child>
-                          <object class="GtkBox">
-                            <property name="margin-end">0</property>
-                            <property name="margin-start">0</property>
-                            <property name="spacing">10</property>
-                            <property name="valign">start</property>
-                            <child>
-                              <object class="GtkDropDown" id="WID_nbColor_dd_elementHR">
-                                <property name="enable-search">False</property>
-                                <property name="hexpand">True</property>
-                                <property name="margin-start">3</property>
-                                <property name="model">WID_nbColor_strLst_element</property>
-                                <property name="selected">0</property>
-                                <property name="tooltip-text">Element of plot that the ajacent color button sets</property>
-                                <property name="valign">center</property>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkColorDialogButton" id="WID_nbColor_colbtn_element">
-                                <property name="dialog">
-                                  <object class="GtkColorDialog"/>
-                                </property>
-                                <property name="margin-end">2</property>
-                                <property name="valign">center</property>
-                              </object>
-                            </child>
+                          <object class="GtkDropDown" id="WID_nbColor_dd_elementHR">
+                            <property name="enable-search">False</property>
+                            <property name="hexpand">True</property>
+                            <property name="margin-start">3</property>
+                            <property name="model">WID_nbColor_strLst_element</property>
+                            <property name="selected">0</property>
+                            <property name="tooltip-text">Element of plot that the ajacent color button sets</property>
+                            <property name="valign">center</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkColorDialogButton" id="WID_nbColor_colbtn_element">
+                            <property name="dialog">
+                              <object class="GtkColorDialog"/>
+                            </property>
+                            <property name="margin-end">2</property>
+                            <property name="valign">center</property>
                           </object>
                         </child>
                       </object>
                     </child>
                     <child>
-                      <object class="GtkFrame">
-                        <property name="css-classes">noborder</property>
+                      <object class="GtkLabel">
                         <property name="label">HPGL Plot Colors</property>
-                        <property name="label-xalign">0.02</property>
-                        <property name="valign">start</property>
+                        <property name="margin-bottom">4</property>
+                        <property name="margin-start">2</property>
+                        <property name="margin-top">6</property>
+                        <property name="xalign">0.0</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="margin-end">0</property>
+                        <property name="margin-start">0</property>
+                        <property name="spacing">10</property>
                         <child>
-                          <object class="GtkBox">
-                            <property name="margin-end">0</property>
-                            <property name="margin-start">0</property>
-                            <property name="spacing">10</property>
-                            <child>
-                              <object class="GtkDropDown" id="WID_nbColor_dd_HPGLpen">
-                                <property name="enable-search">False</property>
-                                <property name="hexpand">True</property>
-                                <property name="margin-start">3</property>
-                                <property name="model">WID_nbColor_strLst_HPGLpen</property>
-                                <property name="search-match-mode">prefix</property>
-                                <property name="tooltip-text">HPIB pen that the ajacent color button sets</property>
-                                <property name="valign">center</property>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkColorDialogButton" id="WID_nbColor_colbtn_HPGLpen">
-                                <property name="dialog">
-                                  <object class="GtkColorDialog"/>
-                                </property>
-                                <property name="margin-end">2</property>
-                                <property name="valign">center</property>
-                              </object>
-                            </child>
+                          <object class="GtkDropDown" id="WID_nbColor_dd_HPGLpen">
+                            <property name="enable-search">False</property>
+                            <property name="hexpand">True</property>
+                            <property name="margin-start">3</property>
+                            <property name="model">WID_nbColor_strLst_HPGLpen</property>
+                            <property name="search-match-mode">prefix</property>
+                            <property name="tooltip-text">HPIB pen that the ajacent color button sets</property>
+                            <property name="valign">center</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkColorDialogButton" id="WID_nbColor_colbtn_HPGLpen">
+                            <property name="dialog">
+                              <object class="GtkColorDialog"/>
+                            </property>
+                            <property name="margin-end">2</property>
+                            <property name="valign">center</property>
                           </object>
                         </child>
                       </object>
@@ -881,13 +830,52 @@ noSideBorder</property>
               </object>
             </child>
             <child>
+              <object class="GtkBox">
+                <property name="homogeneous">True</property>
+                <property name="margin-bottom">4</property>
+                <property name="margin-end">2</property>
+                <property name="margin-start">2</property>
+                <property name="margin-top">4</property>
+                <property name="spacing">8</property>
+                <property name="valign">start</property>
+                <child>
+                  <object class="GtkButton" id="WID_btn_Print">
+                    <property name="has-tooltip">False</property>
+                    <property name="icon-name">document-print</property>
+                    <property name="margin-bottom">0</property>
+                    <property name="tooltip-text">Print plots</property>
+                    <property name="valign">start</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="WID_btn_PDF">
+                    <property name="has-tooltip">False</property>
+                    <property name="label">PDF</property>
+                    <property name="valign">start</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="WID_btn_PNG">
+                    <property name="has-tooltip">True</property>
+                    <property name="label">PNG</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkButton" id="WID_btn_SVG">
+                    <property name="has-tooltip">True</property>
+                    <property name="label">SVG</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
               <object class="GtkFrame">
                 <property name="css-classes">square
 noSideBorder</property>
                 <property name="label">Setup, calibratioin &amp; trace data</property>
                 <property name="margin-bottom">4</property>
                 <property name="margin-end">0</property>
-                <property name="margin-top">5</property>
+                <property name="margin-top">2</property>
                 <property name="valign">start</property>
                 <property name="visible">True</property>
                 <child>
