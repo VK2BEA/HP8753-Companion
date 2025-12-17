@@ -45,8 +45,8 @@ void CB_AppFocusIn(GtkEventControllerFocus *controller, gpointer gpwApplication)
         GtkWidget *wFramePlotB = pGlobal->widgets[ eW_frame_Plot_B ];
         visibilityFramePlot_B (pGlobal, gtk_widget_get_visible(wFramePlotB));
     }
-    bResize = FALSE;
-    bFocus = TRUE;
+   bResize = FALSE;
+   bFocus = TRUE;
 }
 
 /*!     \brief  Notification that focus has been taken from the application
@@ -74,16 +74,17 @@ void CB_AppFocusOut(GtkEventControllerFocus *controller, gpointer gpwApplication
 * \param  gpwDrawingArea    pointer to the drawing widget
 */
 void
-CB_gesture_DrawingArea_MousePress (GtkGesture *gesture, int n_press, double x, double y, gpointer gpwDrawingArea)
+CB_gesture_DrawingArea_MousePress (GtkGesture *gesture, int n_press, double x, double y, gpointer areaAnotB)
 {
-    GtkWidget *wDrawing = (GtkWidget *)gpwDrawingArea;
-    tGlobal *pGlobal = (tGlobal *)g_object_get_data(G_OBJECT( wDrawing ), "data");
+    GtkDrawingArea *wDrawingArea= GTK_DRAWING_AREA( gtk_event_controller_get_widget( GTK_EVENT_CONTROLLER( gesture ) ));
+    tGlobal *pGlobal = (tGlobal *)g_object_get_data(G_OBJECT(gtk_widget_get_root(GTK_WIDGET(wDrawingArea))), "data");
 
     gdouble fractionX = 0.0;
 
-    guint areaWidth   = gtk_widget_get_allocated_width (wDrawing);
-
-    fractionX = x / (gdouble)(areaWidth);
+    guint areaWidth   = gtk_widget_get_allocated_width ( GTK_WIDGET( wDrawingArea ));
+    // areawidth gives a number slightly bigger than that given in the drawing callback
+#define EDGE_WIDTH  2
+    fractionX = x / (gdouble)(areaWidth - EDGE_WIDTH);
 
     if( gtk_gesture_single_get_current_button( GTK_GESTURE_SINGLE( gesture ) ) == GDK_BUTTON_PRIMARY ) {
         pGlobal->mouseXpercentHeld = fractionX;

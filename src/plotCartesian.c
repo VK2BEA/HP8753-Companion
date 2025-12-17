@@ -342,7 +342,7 @@ plotCartesianTrace (cairo_t *cr, tGridParameters *pGrid, eChannel channel, tGlob
 				    // dot in the middle of live marker
                     cairo_arc( cr, x * sweepScale, y * levelScale, pGrid->areaWidth / 1000.0 * 1.5, 0.0, 2 * G_PI );
                     cairo_fill(cr);
-                    // circle arount live market
+                    // circle around live market
 	                gdk_cairo_set_source_rgba (cr, &plotElementColors[ eColorLiveMkrCursor ] );
                     cairo_arc( cr, x * sweepScale, y * levelScale, pGrid->areaWidth / 1000.0 * 6.4, 0.0, 2 * G_PI );
                     cairo_stroke(cr);

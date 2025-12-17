@@ -1450,7 +1450,7 @@ initializeMainDialog( tGlobal *pGlobal, tInitFn purpose )
         gtk_gesture_single_set_button (GTK_GESTURE_SINGLE (gesture),  0);
         // Connect the "pressed" signal of the gesture of callback function
         g_signal_connect(gesture, "pressed",
-                G_CALLBACK(CB_gesture_DrawingArea_MousePress), wDrawingArea_Plot_A);
+                G_CALLBACK(CB_gesture_DrawingArea_MousePress), GINT_TO_POINTER(TRUE));
         // Add the gesture to the widget you want to monitor for clicks
         gtk_widget_add_controller( wDrawingArea_Plot_A, GTK_EVENT_CONTROLLER(gesture));
 
@@ -1458,7 +1458,7 @@ initializeMainDialog( tGlobal *pGlobal, tInitFn purpose )
         gtk_gesture_single_set_button (GTK_GESTURE_SINGLE (gesture),  0);
         // Connect the "pressed" signal of the gesture of callback function
         g_signal_connect(gesture, "pressed",
-                G_CALLBACK(CB_gesture_DrawingArea_MousePress), wDrawingArea_Plot_B);
+                G_CALLBACK(CB_gesture_DrawingArea_MousePress), GINT_TO_POINTER(FALSE));
         // Add the gesture to the widget you want to monitor for clicks
         gtk_widget_add_controller( wDrawingArea_Plot_B, GTK_EVENT_CONTROLLER(gesture));
 
