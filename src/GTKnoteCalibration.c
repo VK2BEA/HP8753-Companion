@@ -130,6 +130,7 @@ showCalInfo( tHP8753cal *pChannelCal, tGlobal *pGlobal ) {
             gtk_text_buffer_get_end_iter( wTBcalInfo, &iter );
             gtk_text_buffer_insert_markup( wTBcalInfo, &iter, sBuffer, -1 );
         }
+
         g_free( sStart );
         g_free( sStop );
         g_free( sCWfreq );
